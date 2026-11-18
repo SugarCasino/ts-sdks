@@ -101,3 +101,67 @@ test('slot lookup preserves catalogue metadata and returns undefined for empty s
 	expect(slots['feet']).toBeUndefined();
 	expect(slots['constructor']).toBeUndefined();
 });
+
+test('selects the ground shadow from the resolved sequence when animations change', async () => {
+	view = createTestRoot();
+	const fallingShadow = () =>
+		view?.container.querySelector('g[data-suifren-animation-part="body"] > ellipse');
+	const sequence = { duration: 100, tracks: [] };
+	await view.render(
+		<SuiFrenImageInline
+			attributes={capy}
+			shadow
+			animation={{ sequence: { ...sequence, shadow: 'falling' } }}
+		/>,
+	);
+	expect(fallingShadow()).toBeTruthy();
+	await view.render(
+		<SuiFrenImageInline
+			attributes={capy}
+			shadow
+			animation={{ sequence: { ...sequence, name: 'death' } }}
+		/>,
+	);
+	expect(fallingShadow()).toBeNull();
+});
+
+test.each(['death', 'death2', 'death3'])(
+	'%s uses a falling shadow after resolving the preset',
+	async (preset) => {
+		view = createTestRoot();
+		const fallingShadow = () =>
+			view?.container.querySelector('g[data-suifren-animation-part="body"] > ellipse');
+		await view.render(<SuiFrenImageInline attributes={capy} shadow animation={{ preset }} />);
+		await vi.waitFor(() => {
+			expect(fallingShadow()).toBeTruthy();
+		});
+		await view.render(
+			<SuiFrenImageInline attributes={capy} shadow animation={{ preset: 'knockdown' }} />,
+		);
+		expect(fallingShadow()).toBeNull();
+	},
+);
+
+test('an airborne shadow stays grounded and follows body height through takeoff and landing', async () => {
+	view = createTestRoot();
+	const register = vi.spyOn(AnimationStore.prototype, 'registerAirborneShadow');
+	const animation = { preset: 'jump', playState: 'paused' } as const;
+	await view.render(<SuiFrenImageInline attributes={bullshark} animation={animation} />);
+	const target = register.mock.calls[0]?.[0];
+	const store = register.mock.contexts[0];
+	expect.assert(target);
+	expect.assert(store instanceof AnimationStore);
+	expect(target.querySelector('ellipse')).toBeNull();
+
+	await view.render(<SuiFrenImageInline attributes={bullshark} animation={animation} shadow />);
+	expect(target.querySelector('ellipse')).toBeTruthy();
+	const groundPosition = target.parentElement?.getAttribute('transform');
+	store.setPoses(new Map([['body', { translate: { x: 0, y: -26 } }]]));
+	expect(target.getAttribute('transform')).toBe('scale(0.74)');
+	expect(Number(target.getAttribute('opacity'))).toBeLessThan(1);
+	expect(target.parentElement?.getAttribute('transform')).toBe(groundPosition);
+
+	store.clear();
+	expect(target.getAttribute('transform')).toBe('scale(1)');
+	expect(target.getAttribute('opacity')).toBe('1');
+});

@@ -61,6 +61,14 @@ Choose one animation source, `preset` or `sequence`:
 />
 ```
 
+Enable `shadow` on the image to display its ground shadow. On an `AnimationSequence`, the optional `shadow` field controls its behavior:
+
+| Sequence `shadow` | Behavior |
+| --- | --- |
+| `'static'` (default) | The shadow stays fixed. |
+| `'falling'` | The shadow follows the rotating body, as in the three death presets. |
+| `'airborne'` | The shadow stays on the ground and shrinks and fades as the body moves above its resting height (negative body translation on the y-axis). Used by `jump` and `walkJumpSit`. |
+
 Omit `animation` or pass `null` for a static image. Animations play once at their original speed by default. Set `playState` to control playback and change `trigger` to restart it. The types for the other options, including `AnimationConfig` and component props, are available from `/types`.
 
 ## Public exports

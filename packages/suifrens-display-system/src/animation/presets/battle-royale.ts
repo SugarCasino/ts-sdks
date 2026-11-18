@@ -2607,6 +2607,7 @@ const DEATH_DURATION = 1150;
 
 const DEATH_SEQUENCE: AnimationSequence = {
 	name: 'death',
+	shadow: 'falling',
 	duration: DEATH_DURATION,
 	tracks: [
 		{
@@ -2814,6 +2815,7 @@ const DEATH_SEQUENCE: AnimationSequence = {
 
 const DEATH2_SEQUENCE: AnimationSequence = {
 	name: 'death2',
+	shadow: 'falling',
 	duration: DEATH_DURATION,
 	tracks: [
 		{
@@ -3021,6 +3023,7 @@ const DEATH2_SEQUENCE: AnimationSequence = {
 
 const DEATH3_SEQUENCE: AnimationSequence = {
 	name: 'death3',
+	shadow: 'falling',
 	duration: DEATH_DURATION,
 	tracks: [
 		{

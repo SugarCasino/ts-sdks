@@ -56,8 +56,12 @@ export type AnimationTrack = {
 	keyframes: Array<AnimationKeyframe>;
 };
 
+export type AnimationShadow = 'static' | 'falling' | 'airborne';
+
 export type AnimationSequence = {
 	name?: string;
+	/** Ground shadow behavior when the image enables its shadow. Defaults to 'static'. */
+	shadow?: AnimationShadow;
 	duration: number;
 	tracks: Array<AnimationTrack>;
 };

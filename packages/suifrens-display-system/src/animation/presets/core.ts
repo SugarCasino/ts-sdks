@@ -1048,6 +1048,7 @@ const JUMP_DURATION = 900;
 
 const JUMP_SEQUENCE: AnimationSequence = {
 	name: 'jump',
+	shadow: 'airborne',
 	duration: JUMP_DURATION,
 	tracks: [
 		{
@@ -1759,13 +1760,16 @@ function combineSequences(name: string, items: Array<SequenceWithHold>): Animati
 	};
 }
 
-const SHOWCASE_SEQUENCE = combineSequences('walkJumpSit', [
-	{ sequence: WALK_SEQUENCE },
-	{ sequence: JUMP_SEQUENCE, hold: 120 },
-	{ sequence: SIT_SEQUENCE, hold: 200 },
-	{ sequence: STAND_SEQUENCE },
-	{ sequence: IDLE_SEQUENCE, hold: 0 },
-]);
+const SHOWCASE_SEQUENCE: AnimationSequence = {
+	shadow: 'airborne',
+	...combineSequences('walkJumpSit', [
+		{ sequence: WALK_SEQUENCE },
+		{ sequence: JUMP_SEQUENCE, hold: 120 },
+		{ sequence: SIT_SEQUENCE, hold: 200 },
+		{ sequence: STAND_SEQUENCE },
+		{ sequence: IDLE_SEQUENCE, hold: 0 },
+	]),
+};
 
 export const CORE_PRESET_SEQUENCES = {
 	walk: WALK_SEQUENCE,
