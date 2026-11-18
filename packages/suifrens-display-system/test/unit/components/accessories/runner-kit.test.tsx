@@ -54,15 +54,19 @@ test.each(['runner shorts', 'runner shoes'])(
 		);
 		const front = view.container.querySelector('[id$="frontleg"]')!;
 		const back = view.container.querySelector('[id$="backleg"]')!;
-		const frontBefore = front.getAttribute('transform'),
-			backBefore = back.getAttribute('transform');
+		const frontBefore = front.getAttribute('transform');
+		const backBefore = back.getAttribute('transform');
 		await act(async () => {
 			context.store!.setPose('leftLeg', { rotate: 24 });
+
+			await Promise.resolve();
 		});
 		expect(front.getAttribute('transform')).not.toBe(frontBefore);
 		expect(back.getAttribute('transform')).toBe(backBefore);
 		await act(async () => {
 			context.store!.setPose('rightLeg', { rotate: -24 });
+
+			await Promise.resolve();
 		});
 		expect(back.getAttribute('transform')).not.toBe(backBefore);
 	},
@@ -75,8 +79,8 @@ test('shoe details keep local, distinct clip targets for every racer and limb', 
 	const accessory = buildRunnerAccessories().find((item) => item.name === 'runner shoes')!;
 	await view.render(
 		<svg>
-			{['capy', 'bullshark'].map((species) => (
-				<KitArtwork key={species} accessory={accessory} species={species as 'capy' | 'bullshark'} />
+			{(['capy', 'bullshark'] as const).map((species) => (
+				<KitArtwork key={species} accessory={accessory} species={species} />
 			))}
 		</svg>,
 	);
@@ -117,12 +121,13 @@ test.each(['full', 'head'] as const)(
 		const bands = view.container.querySelectorAll('#runner-headband-head');
 		expect(bands).toHaveLength(1);
 		const band = bands.item(0);
-		const coordinates = (
+		const coordinates = Array.from(
 			band
 				.querySelector('path')!
 				.getAttribute('d')!
-				.match(/-?\d+(?:\.\d+)?/g) ?? []
-		).map(Number);
+				.matchAll(/-?\d+(?:\.\d+)?/gu),
+			([value]) => Number(value),
+		);
 		// The short wrap rises just beyond the far ear; the muzzle starts much farther right.
 		expect(Math.max(...coordinates)).toBeLessThan(250);
 		const ear = view.container.querySelector(
@@ -141,12 +146,14 @@ test.each(['full', 'head'] as const)(
 test('changing shoe color registers the replacement SVG legs for animation', async () => {
 	view = createTestRoot();
 	context.store = new AnimationStore();
-	const shoes = (color: string) =>
-		buildRunnerAccessories({ color }).find((item) => item.name === 'runner shoes')!;
+
 	for (const color of ['#123456', '#654321']) {
+		const shoes = buildRunnerAccessories({ color }).find((item) => item.name === 'runner shoes');
+		expect.assert(shoes);
+		// oxlint-disable-next-line no-await-in-loop -- Render both colors on the same root in order to test SVG replacement.
 		await view.render(
 			<svg>
-				<KitArtwork accessory={shoes(color)} species="capy" fallbackPart="rightLeg" />
+				<KitArtwork accessory={shoes} species="capy" fallbackPart="rightLeg" />
 			</svg>,
 		);
 		const front = view.container.querySelector('#runner-shoes-frontleg')!;

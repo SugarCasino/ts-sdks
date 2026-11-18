@@ -29,6 +29,7 @@ import { TypeName } from './contracts/stdlib/type_name.js';
 import {
 	DEFAULT_CACHE_TTL_MS,
 	normalizeGameParameterValues,
+	parseGameParameters,
 	readCache,
 	resolvePartnerAddress,
 	resolveSugarConfig,
@@ -61,28 +62,33 @@ import type {
 	GameParameters,
 	GetGameParametersOptions,
 	MintNftV1Options,
-	OnChainGameParameters,
 	PvPCoinflipGameOptions,
 	RedeemSweetHouseRequestOptions,
 	SugarConfig,
 	SugarExtensionOptions,
-	SugarNetwork,
 	WithThrowOnError,
 } from './types/index.js';
 import { SUPPORTED_SUI_NETWORKS } from './types/network.type.js';
 import { DEFAULT_QUERY_LIMIT, parseCoinType } from './utils/index.js';
 
-export function sugar<const Name extends string = 'sugar'>({
-	name = 'sugar' as Name,
+export function sugar<const Name extends string = 'sugar'>(
+	options?: SugarExtensionOptions<Name>,
+): SuiClientRegistration<ClientWithCoreApi, Name, SugarClient>;
+export function sugar({
+	name = 'sugar',
 	...options
-}: SugarExtensionOptions<Name> = {}): SuiClientRegistration<ClientWithCoreApi, Name, SugarClient> {
+}: SugarExtensionOptions<string> = {}): SuiClientRegistration<
+	ClientWithCoreApi,
+	string,
+	SugarClient
+> {
 	return {
 		name,
 		register: (client: ClientWithCoreApi): SugarClient => {
 			return new SugarClient({
 				...options,
 				client,
-				name: String(name),
+				name,
 			});
 		},
 	};
@@ -106,9 +112,9 @@ export class SugarClient {
 		client: ClientWithCoreApi;
 		name: string;
 	}) {
-		const network = client.network as SugarNetwork;
-		if (!SUPPORTED_SUI_NETWORKS.includes(network)) {
-			throw new RangeError(`Unsupported network: ${network}`);
+		const network = SUPPORTED_SUI_NETWORKS.find((supported) => supported === client.network);
+		if (!network) {
+			throw new RangeError(`Unsupported network: ${client.network}`);
 		}
 
 		this.#client = client;
@@ -218,13 +224,11 @@ export class SugarClient {
 				...optionalOptions({ signal }),
 			});
 
-			if (!object?.content) {
+			if (object?.content == null) {
 				throw new Error(`Missing parameters object content for ${game} and coin type ${coinType}`);
 			}
 
-			return normalizeGameParameterValues(
-				gameDefinition.parameters.parse(object.content) as OnChainGameParameters<TGame>,
-			);
+			return normalizeGameParameterValues(parseGameParameters(game, object.content));
 		};
 
 		return readCache({
@@ -281,11 +285,9 @@ export class SugarClient {
 	 *   returned array.
 	 */
 	async getPvPCoinflipGames(
-		options: WithThrowOnError<Omit<SuiClientTypes.ListDynamicFieldsOptions, 'parentId'>> = {
-			limit: DEFAULT_QUERY_LIMIT,
-		},
+		options?: WithThrowOnError<Omit<SuiClientTypes.ListDynamicFieldsOptions, 'parentId'>>,
 	): Promise<Array<InferBcsType<typeof PvPCoinflipGame> & { coin_type: string }>> {
-		const { throwOnError = false, ...listOptions } = options;
+		const { throwOnError = false, ...listOptions } = options ?? { limit: DEFAULT_QUERY_LIMIT };
 		const { dynamicFields } = await this.#client.core.listDynamicFields({
 			...listOptions,
 			parentId: await this.#getPvPCoinflipRegistryId(listOptions.signal),
@@ -305,7 +307,7 @@ export class SugarClient {
 					throw object;
 				}
 
-				if (!object.content) {
+				if (object.content == null) {
 					throw new Error('Unable to resolve PvP Coinflip game from retrieved object');
 				}
 

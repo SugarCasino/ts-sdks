@@ -147,7 +147,7 @@ export function useDuelScript<TExpression extends string = string>({
 				preset,
 				...(playback && { playback }),
 				trigger,
-				...(holdOnComplete !== undefined && { holdOnComplete }),
+				...(holdOnComplete != null && { holdOnComplete }),
 			};
 			commit((prev) => ({
 				...prev,
@@ -212,6 +212,7 @@ export function useDuelScript<TExpression extends string = string>({
 
 				switch (step.type) {
 					case 'wait': {
+						// oxlint-disable-next-line no-await-in-loop -- Run script steps in order.
 						await wait(step.ms, signal);
 						break;
 					}
@@ -219,16 +220,18 @@ export function useDuelScript<TExpression extends string = string>({
 						if (stateRef.current[step.side].status === 'dead') {
 							break;
 						}
-						if (step.expression) {
+						if (step.expression != null && step.expression !== '') {
 							setExpression(step.side, step.expression);
 						}
 						playPreset(step.side, step.preset, step.playback, step.holdOnComplete);
-						if (step.durationMs !== undefined) {
-							await wait(step.durationMs, signal);
-							if (step.revertToIdle !== false && stateRef.current[step.side].status !== 'dead') {
-								idle(step.side);
-								setExpression(step.side, stateRef.current[step.side].baseExpression);
-							}
+						if (step.durationMs == null) {
+							break;
+						}
+						// oxlint-disable-next-line no-await-in-loop -- Keep the pose active for its scripted duration.
+						await wait(step.durationMs, signal);
+						if (step.revertToIdle !== false && stateRef.current[step.side].status !== 'dead') {
+							idle(step.side);
+							setExpression(step.side, stateRef.current[step.side].baseExpression);
 						}
 						break;
 					}
@@ -242,15 +245,16 @@ export function useDuelScript<TExpression extends string = string>({
 						const hitDelayMs = target.delayMs ?? 140;
 						const afterMs = step.afterMs ?? 140;
 
-						if (attacker.expression) {
+						if (attacker.expression != null && attacker.expression !== '') {
 							setExpression(attacker.side, attacker.expression);
 						}
-						if (target.expression) {
+						if (target.expression != null && target.expression !== '') {
 							setExpression(targetSide, target.expression);
 						}
 
 						playPreset(attacker.side, attacker.preset, { iterations: 1 as const });
 
+						// oxlint-disable-next-line no-await-in-loop -- Apply damage only after the attack reaches its hit frame.
 						await wait(hitDelayMs, signal);
 
 						if (stateRef.current[targetSide].status !== 'dead') {
@@ -265,8 +269,10 @@ export function useDuelScript<TExpression extends string = string>({
 						const totalDuration = Math.max(attackDuration, hitDelayMs + reactionDuration);
 						const remaining = Math.max(0, totalDuration - hitDelayMs);
 						if (remaining > 0) {
+							// oxlint-disable-next-line no-await-in-loop -- Wait for attack and reaction animations before returning to idle.
 							await wait(remaining, signal);
 						}
+						// oxlint-disable-next-line no-await-in-loop -- Preserve the pause between consecutive attacks.
 						await wait(afterMs, signal);
 
 						if (stateRef.current[attacker.side].status !== 'dead') {
@@ -287,16 +293,18 @@ export function useDuelScript<TExpression extends string = string>({
 						if (stateRef.current[step.side].status === 'dead') {
 							break;
 						}
-						if (step.expression) {
+						if (step.expression != null && step.expression !== '') {
 							setExpression(step.side, step.expression);
 						}
 						playPreset(step.side, step.preset, { iterations: 1 as const }, true);
 						markDead(step.side);
 						const duration = getPresetDurationMs(step.preset, { iterations: 1 as const });
-						if (duration) {
+						if (duration != null && duration !== 0 && !Number.isNaN(duration)) {
+							// oxlint-disable-next-line no-await-in-loop -- Complete the death animation before the next step.
 							await wait(duration, signal);
 						}
-						if (step.afterMs) {
+						if (step.afterMs != null && step.afterMs !== 0 && !Number.isNaN(step.afterMs)) {
+							// oxlint-disable-next-line no-await-in-loop -- Preserve the scripted pause after death.
 							await wait(step.afterMs, signal);
 						}
 						break;
@@ -308,16 +316,18 @@ export function useDuelScript<TExpression extends string = string>({
 
 						const preset = step.preset ?? 'victory';
 						const playback = { iterations: step.iterations ?? 5 };
-						if (step.expression) {
+						if (step.expression != null && step.expression !== '') {
 							setExpression(step.side, step.expression);
 						}
 
 						playPreset(step.side, preset, playback);
 						const duration = getPresetDurationMs(preset, playback);
-						if (duration) {
+						if (duration != null && duration !== 0 && !Number.isNaN(duration)) {
+							// oxlint-disable-next-line no-await-in-loop -- Complete the victory animation before the next step.
 							await wait(duration, signal);
 						}
-						if (step.afterMs) {
+						if (step.afterMs != null && step.afterMs !== 0 && !Number.isNaN(step.afterMs)) {
+							// oxlint-disable-next-line no-await-in-loop -- Preserve the scripted pause after victory.
 							await wait(step.afterMs, signal);
 						}
 
@@ -328,8 +338,7 @@ export function useDuelScript<TExpression extends string = string>({
 						break;
 					}
 					default: {
-						const exhaustive: never = step;
-						throw new Error(`Unknown duel step: ${JSON.stringify(exhaustive)}`);
+						throw new Error(`Unknown duel step: ${JSON.stringify(step satisfies never)}`);
 					}
 				}
 			}
@@ -338,7 +347,7 @@ export function useDuelScript<TExpression extends string = string>({
 				setPhase('Complete');
 			}
 		} catch (error) {
-			if ((error as Error)?.name !== 'AbortError') {
+			if (!(error instanceof Error && error.name === 'AbortError')) {
 				setPhase('Error');
 				// Swallow errors to keep the hook safe in Storybook / long-lived UIs.
 				// Consumers can introspect `phase` or fork the hook for stricter handling.
@@ -381,7 +390,9 @@ export function useDuelScript<TExpression extends string = string>({
 			return;
 		}
 		void start();
-		return () => abortRun();
+		return () => {
+			abortRun();
+		};
 	}, [abortRun, autoStart, disabled, start]);
 
 	return {

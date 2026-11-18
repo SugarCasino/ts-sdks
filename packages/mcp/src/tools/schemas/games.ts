@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { z } from 'zod/v4';
+import { COIN_SIDES } from '@sugar/sdk/games';
 import { POSITIVE_INTEGER_PATTERN } from '../../utils/index.js';
 import { configInputSchema } from './config.js';
 import {
@@ -65,12 +66,12 @@ const stakeBuildInputSchema = commonBuildInputSchema
 
 export const coinflipInputSchema = stakeBuildInputSchema
 	.extend({
-		side: z.enum(['heads', 'tails']).optional().describe('Selected coinflip side.'),
+		side: z.enum(COIN_SIDES).optional().describe('Selected coinflip side.'),
 	})
 	.strict()
-	.superRefine((input, context) =>
-		requireTransactionFields({ input, context, fields: ['owner', 'stake', 'side'] }),
-	);
+	.superRefine((input, context) => {
+		requireTransactionFields({ input, context, fields: ['owner', 'stake', 'side'] });
+	});
 
 export const kenoInputSchema = stakeBuildInputSchema
 	.extend({
@@ -81,27 +82,27 @@ export const kenoInputSchema = stakeBuildInputSchema
 			.describe('Keno board positions selected by the player.'),
 	})
 	.strict()
-	.superRefine((input, context) =>
-		requireTransactionFields({ input, context, fields: ['owner', 'stake', 'configId', 'picks'] }),
-	);
+	.superRefine((input, context) => {
+		requireTransactionFields({ input, context, fields: ['owner', 'stake', 'configId', 'picks'] });
+	});
 
 export const limboInputSchema = stakeBuildInputSchema
 	.extend({
 		targetMultiplier: z.number().positive().optional().describe('Target multiplier.'),
 	})
 	.strict()
-	.superRefine((input, context) =>
-		requireTransactionFields({ input, context, fields: ['owner', 'stake', 'targetMultiplier'] }),
-	);
+	.superRefine((input, context) => {
+		requireTransactionFields({ input, context, fields: ['owner', 'stake', 'targetMultiplier'] });
+	});
 
 export const configIdInputSchema = stakeBuildInputSchema
 	.extend({
 		configId: z.number().int().min(0).max(255).optional().describe('On-chain game config id.'),
 	})
 	.strict()
-	.superRefine((input, context) =>
-		requireTransactionFields({ input, context, fields: ['owner', 'stake', 'configId'] }),
-	);
+	.superRefine((input, context) => {
+		requireTransactionFields({ input, context, fields: ['owner', 'stake', 'configId'] });
+	});
 
 export const rangeInputSchema = stakeBuildInputSchema
 	.extend({
@@ -113,13 +114,13 @@ export const rangeInputSchema = stakeBuildInputSchema
 			.describe('Whether the bet targets outside the selected range.'),
 	})
 	.strict()
-	.superRefine((input, context) =>
+	.superRefine((input, context) => {
 		requireTransactionFields({
 			input,
 			context,
 			fields: ['owner', 'stake', 'leftPoint', 'rightPoint'],
-		}),
-	);
+		});
+	});
 
 export const soccerInputSchema = stakeBuildInputSchema
 	.extend({
@@ -140,26 +141,26 @@ export const soccerInputSchema = stakeBuildInputSchema
 			.describe('On-chain Soccer shot zone id.'),
 	})
 	.strict()
-	.superRefine((input, context) =>
+	.superRefine((input, context) => {
 		requireTransactionFields({
 			input,
 			context,
 			fields: ['owner', 'stake', 'configId', 'countryId', 'shotZoneId'],
-		}),
-	);
+		});
+	});
 
 export const pvpCoinflipCreateInputSchema = commonBuildInputSchema
 	.extend({
 		stake: currencyAmountSchema
 			.optional()
 			.describe(`Stake per player. ${CURRENCY_AMOUNT_DESCRIPTION}`),
-		creatorSide: z.enum(['heads', 'tails']).optional().describe('Creator side.'),
+		creatorSide: z.enum(COIN_SIDES).optional().describe('Creator side.'),
 		isPrivate: z.boolean().optional().describe('Whether the PvP lobby is private.'),
 	})
 	.strict()
-	.superRefine((input, context) =>
-		requireTransactionFields({ input, context, fields: ['owner', 'stake', 'creatorSide'] }),
-	);
+	.superRefine((input, context) => {
+		requireTransactionFields({ input, context, fields: ['owner', 'stake', 'creatorSide'] });
+	});
 
 export const pvpCoinflipJoinInputSchema = commonBuildInputSchema
 	.extend({
@@ -167,9 +168,9 @@ export const pvpCoinflipJoinInputSchema = commonBuildInputSchema
 		coinType: z.string().min(1).optional().describe(COIN_TYPE_DESCRIPTION),
 	})
 	.strict()
-	.superRefine((input, context) =>
-		requireTransactionFields({ input, context, fields: ['owner', 'gameId'] }),
-	);
+	.superRefine((input, context) => {
+		requireTransactionFields({ input, context, fields: ['owner', 'gameId'] });
+	});
 
 export const pvpCoinflipCancelInputSchema = cancelBuildInputSchema
 	.extend({
@@ -177,9 +178,9 @@ export const pvpCoinflipCancelInputSchema = cancelBuildInputSchema
 		coinType: z.string().min(1).optional().describe(COIN_TYPE_DESCRIPTION),
 	})
 	.strict()
-	.superRefine((input, context) =>
-		requireTransactionFields({ input, context, fields: ['owner', 'gameId'] }),
-	);
+	.superRefine((input, context) => {
+		requireTransactionFields({ input, context, fields: ['owner', 'gameId'] });
+	});
 
 export type CommonBuildInput = z.input<typeof commonBuildInputSchema>;
 export type CoinflipInput = z.input<typeof coinflipInputSchema>;

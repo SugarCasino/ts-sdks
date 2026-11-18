@@ -1,7 +1,7 @@
 // Copyright (c) Sugar
 // SPDX-License-Identifier: Apache-2.0
 
-import Type, { type Static } from 'typebox';
+import { type Static, Type } from 'typebox';
 import { SugarLogo } from '../../components/logos/SugarLogo.js';
 import { SuiLogo } from '../../components/logos/SuiLogo.js';
 

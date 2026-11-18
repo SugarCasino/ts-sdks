@@ -27,6 +27,10 @@ function Part({ base }: { base: string }) {
 	return <g data-part transform={transform} />;
 }
 
+function RefPropShape({ ref: elementRef }: { ref: Ref<SVGGElement> }) {
+	return <g ref={elementRef} data-inner />;
+}
+
 test('base transforms update without a provider and after leaving a legacy animation store', async () => {
 	const store = new AnimationStore();
 	Object.defineProperty(store, 'usesDirectDomTransforms', { value: false });
@@ -46,6 +50,8 @@ test('base transforms update without a provider and after leaving a legacy anima
 	);
 	await act(async () => {
 		store.setPose('head', { translate: { x: 1, y: 2 } });
+
+		await Promise.resolve();
 	});
 	const animated = view.container.querySelector('[data-part]')?.getAttribute('transform');
 	expect(animated).not.toBe('matrix(1,0,0,1,10,20)');
@@ -66,6 +72,8 @@ test('base transforms update without a provider and after leaving a legacy anima
 	);
 	await act(async () => {
 		store.setPose('head', { rotate: 90 });
+
+		await Promise.resolve();
 	});
 	expect(view.container.querySelector('[data-part]')?.getAttribute('transform')).toBe(
 		'matrix(1,0,0,1,50,60)',
@@ -117,9 +125,9 @@ test('React 19 callback refs are preserved on rerender and cleared on detach', a
 
 test('object refs and forwarded refs still reach the SVG element', async () => {
 	const ref = createRef<SVGGElement>();
-	const Shape = forwardRef<SVGGElement>((_props, forwardedRef) => (
-		<g ref={forwardedRef} data-forwarded />
-	));
+	const Shape = forwardRef<SVGGElement>(function Shape(_props, forwardedRef) {
+		return <g ref={forwardedRef} data-forwarded />;
+	});
 	await view.render(
 		<svg>
 			<AnimatedAccessory>
@@ -189,18 +197,16 @@ test('an unchanged object ref follows replacement of the child key', async () =>
 
 test('a function component receiving a React 19 ref prop keeps its own ref target', async () => {
 	const ref = createRef<SVGGElement>();
-	function Shape({ ref: elementRef }: { ref: Ref<SVGGElement> }) {
-		return <g ref={elementRef} data-inner />;
-	}
+
 	await view.render(
 		<svg>
 			<AnimatedAccessory fallbackPart="head">
-				<Shape ref={ref} />
+				<RefPropShape ref={ref} />
 			</AnimatedAccessory>
 		</svg>,
 	);
 	expect(ref.current).toBe(view.container.querySelector('[data-inner]'));
-	expect(ref.current?.parentElement?.getAttribute('data-suifren-animation-part')).toBe('head');
+	expect(ref.current?.parentElement?.dataset['suifrenAnimationPart']).toBe('head');
 	await view.render(null);
 	expect(ref.current).toBeNull();
 });

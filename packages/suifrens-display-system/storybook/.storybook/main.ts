@@ -9,9 +9,9 @@ import { withReleaseFilters } from './release-tags.js';
 // Sugar starts with an empty release history; future releases come from the changelog.
 const changelog = readFileSync(new URL('../../CHANGELOG.md', import.meta.url), 'utf8');
 const releases = Array.from(
-	changelog.matchAll(/^## (\d+\.\d+\.\d+)$/gm),
+	changelog.matchAll(/^## (\d+\.\d+\.\d+)$/gmu),
 	([, version]) => version!,
-).reverse();
+).toReversed();
 
 const config: StorybookConfig = {
 	staticDirs: ['../public'],

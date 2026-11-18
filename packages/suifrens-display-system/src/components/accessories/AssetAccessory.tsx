@@ -5,7 +5,7 @@ import { AnimatedAccessory } from '../../animation/AnimatedAccessory.js';
 import {
 	ACCESSORY_ASSET_MANIFEST,
 	SPLIT_LIMB_ASSET_NAMES,
-} from '../../generated/accessory-asset-manifest.js';
+} from '../../generated/accessory-assets/manifest.js';
 import { resolveAccessoryAssetOverride } from '../../helpers/accessories/accessory-asset-override.js';
 import { getVipCrownAssetViewport } from '../../helpers/accessories/crown-assets.js';
 import { resolveAccessoryAnimationPart } from '../../helpers/animation/accessory-animation-part.js';
@@ -18,13 +18,15 @@ function resolveAssetSrc(
 	props: AccessoryRendererProps,
 ): { assetSrc: string; symbolId?: AccessoryAssetVariant } | undefined {
 	const explicitAsset = resolveAccessoryAssetOverride(props.accessory);
-	if (explicitAsset) {
+	if (explicitAsset != null && explicitAsset !== '') {
 		return { assetSrc: explicitAsset };
 	}
 
-	const assetSrc =
-		ACCESSORY_ASSET_MANIFEST[props.accessory.name as keyof typeof ACCESSORY_ASSET_MANIFEST];
-	return assetSrc ? { assetSrc, symbolId: props.layer ?? 'default' } : undefined;
+	const assets: Readonly<Record<string, string>> = ACCESSORY_ASSET_MANIFEST;
+	const assetSrc = assets[props.accessory.name];
+	return assetSrc != null && assetSrc !== ''
+		? { assetSrc, symbolId: props.layer ?? 'default' }
+		: undefined;
 }
 
 export function AssetAccessory(props: AccessoryRendererProps) {

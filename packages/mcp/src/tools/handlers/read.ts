@@ -11,6 +11,7 @@ import {
 } from '../../runtime/index.js';
 import { formatBaseUnitAmount } from '../../utils/index.js';
 import { optionalOptions } from '../../utils/options.js';
+import { requireGame, requireString } from '../../utils/validation.js';
 import type { ListNftsInput, ReadGameMetadataInput } from '../schemas/index.js';
 import {
 	asTextResponse,
@@ -19,8 +20,6 @@ import {
 	GAME_LABELS,
 	getConfigInput,
 	getSugarPackageId,
-	requireGame,
-	requireString,
 	supportedFeatures,
 	supportedGames,
 } from './shared.js';
@@ -81,6 +80,7 @@ export async function listNftsTool(input: Partial<ListNftsInput> = {}): Promise<
 	let cursor: string | null | undefined;
 
 	do {
+		// oxlint-disable-next-line no-await-in-loop -- Each page needs the cursor returned by the previous page.
 		const page = await client.core.listOwnedObjects({
 			owner,
 			type: nftType,
@@ -99,7 +99,7 @@ export async function listNftsTool(input: Partial<ListNftsInput> = {}): Promise<
 			});
 		}
 		cursor = page.cursor;
-	} while (cursor);
+	} while (cursor != null && cursor !== '');
 
 	return asTextResponse({
 		network: config.network,
@@ -111,9 +111,9 @@ export async function listNftsTool(input: Partial<ListNftsInput> = {}): Promise<
 			name: value.name,
 			description: value.description,
 			url: value.url.url,
-			supply: value.supply.toString(),
-			available: value.available.toString(),
-			price: value.price.toString(),
+			supply: value.supply,
+			available: value.available,
+			price: value.price,
 			priceDisplay: formatBaseUnitAmount({ value: value.price }),
 		})),
 		ownedNfts,

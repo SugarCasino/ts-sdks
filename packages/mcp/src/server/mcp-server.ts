@@ -50,13 +50,17 @@ export function createSugarMcpServer(): McpServer {
 	return server;
 }
 
-export async function startSugarMcpServer(): Promise<void> {
-	serveSugarMcpStdio();
+export function startSugarMcpServer(): Promise<void> {
+	return Promise.try(() => {
+		serveSugarMcpStdio();
+	});
 }
 
 export function serveSugarMcpStdio(transport: Transport = new StdioServerTransport()) {
 	const handle = serveStdio(createSugarMcpServer, { transport });
 	const onmessage = transport.onmessage;
+	// MCP Transport exposes onmessage callbacks, not an EventTarget API.
+	// oxlint-disable-next-line unicorn/prefer-add-event-listener
 	transport.onmessage = (message, extra) => {
 		if ('method' in message && 'id' in message) {
 			const requested = message.params?._meta?.['io.modelcontextprotocol/protocolVersion'];

@@ -37,7 +37,9 @@ export interface SugarExtensionOptions<Name extends string = 'sugar'> {
 	cacheTtl?: number | undefined;
 }
 
-export type SugarCoin = 'sui' | 'usdc';
+export const SUGAR_COINS = ['sui', 'usdc'] as const;
+
+export type SugarCoin = (typeof SUGAR_COINS)[number];
 
 export type SugarCoinRegistry = Record<SugarCoin, SugarCoinMetadata>;
 

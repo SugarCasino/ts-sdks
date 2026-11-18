@@ -15,11 +15,8 @@ import { AnimationController } from './animation-controller.js';
 import { AnimationStore } from './animation-store.js';
 import { matchPartByTransform } from './parts.js';
 import { observePlaybackVisibility } from './playback-visibility.js';
-import {
-	isDeferredPreset,
-	loadDeferredPresetSequence,
-	resolvePresetSequenceSync,
-} from './presets/resolver.js';
+import { getCorePresetSequence } from './presets/core.js';
+import { isDeferredPreset, loadDeferredPresetSequence } from './presets/resolver.js';
 import { startWaapiAnimation } from './waapi-backend.js';
 
 type AnimationContextValue = {
@@ -36,14 +33,20 @@ const AnimationContext = createContext<AnimationContextValue | null>(null);
 
 function useResolvedAnimationConfig(animation: AnimationConfig | null): AnimationConfig | null {
 	const presetName = animation && 'preset' in animation ? animation.preset : undefined;
-	const immediateSequence = presetName ? resolvePresetSequenceSync(presetName) : undefined;
+	const immediateSequence =
+		presetName != null && presetName !== '' ? getCorePresetSequence(presetName) : undefined;
 	const [deferred, setDeferred] = useState<{
 		preset: string;
-		sequence: ReturnType<typeof resolvePresetSequenceSync> | null;
+		sequence: ReturnType<typeof getCorePresetSequence> | null;
 	} | null>(null);
 
 	useEffect(() => {
-		if (!presetName || immediateSequence || !isDeferredPreset(presetName)) {
+		if (
+			presetName == null ||
+			presetName === '' ||
+			immediateSequence ||
+			!isDeferredPreset(presetName)
+		) {
 			return;
 		}
 
@@ -109,7 +112,11 @@ export function AnimationProvider({ animation = null, children }: AnimationProvi
 			}
 		});
 
-		return () => unregister.forEach((cleanup) => cleanup());
+		return () => {
+			unregister.forEach((cleanup) => {
+				cleanup();
+			});
+		};
 	}, [store]);
 
 	useEffect(() => {
@@ -142,13 +149,13 @@ export function AnimationProvider({ animation = null, children }: AnimationProvi
 		};
 
 		const play = (): void => {
-			if (raf === null && controller.needsAnimationFrame()) {
+			if (raf == null && controller.needsAnimationFrame()) {
 				last = performance.now();
 				raf = requestAnimationFrame(tick);
 			}
 		};
 		const pause = (): void => {
-			if (raf !== null) {
+			if (raf != null) {
 				cancelAnimationFrame(raf);
 				raf = null;
 			}

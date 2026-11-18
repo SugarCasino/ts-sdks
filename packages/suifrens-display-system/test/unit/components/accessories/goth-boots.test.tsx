@@ -18,7 +18,10 @@ test('individual goth boots contain only the requested geometry, without clippin
 	);
 	const paths = [...both.querySelectorAll('path')];
 	expect(paths).toHaveLength(10);
-	for (const side of ['left', 'right'] as const) {
+	for (const [side, start] of [
+		['left', 5],
+		['right', 0],
+	] as const) {
 		const container = document.createElement('div');
 		container.innerHTML = renderToStaticMarkup(
 			<InlineAccessory
@@ -28,7 +31,7 @@ test('individual goth boots contain only the requested geometry, without clippin
 		);
 		expect(container.querySelector('clipPath')).toBeNull();
 		expect(container.querySelectorAll(`[data-boot-side="${side}"] path`)).toHaveLength(5);
-		const expected = paths.slice(side === 'right' ? 0 : 5, side === 'right' ? 5 : 10);
+		const expected = paths.slice(start, start + 5);
 		expect([...container.querySelectorAll('path')].map((path) => path.outerHTML)).toEqual(
 			expected.map((path) => path.outerHTML),
 		);
@@ -36,7 +39,7 @@ test('individual goth boots contain only the requested geometry, without clippin
 });
 
 test.each(['left', 'right'])('generated %s goth boot symbols exclude the opposite boot', (side) => {
-	const svg = readFileSync(`src/generated/accessory-assets/${side}-goth-boot.svg`, 'utf8');
+	const svg = readFileSync(`src/generated/accessory-assets/svg/${side}-goth-boot.svg`, 'utf8');
 	const container = document.createElement('div');
 	container.innerHTML = svg;
 	for (const symbol of container.querySelectorAll('symbol')) {

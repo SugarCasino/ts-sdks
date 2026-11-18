@@ -78,7 +78,7 @@ type ActiveFight = {
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 const randomBetween = (min: number, max: number) => min + Math.random() * (max - min);
-const nowMs = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
+const nowMs = () => (typeof performance === 'undefined' ? Date.now() : performance.now());
 const randomVelocity = () => {
 	const speed = randomBetween(WANDER_MIN_SPEED, WANDER_MAX_SPEED);
 	return (Math.random() < 0.5 ? -1 : 1) * speed;
@@ -119,10 +119,8 @@ const mirrorScript = (script: DuelScript<SuiFrenExpression>): DuelScript<SuiFren
 				return { ...step, side: mirrorSide(step.side) };
 			case 'wait':
 				return step;
-			default: {
-				const exhaustive: never = step;
-				return exhaustive;
-			}
+			default:
+				return step satisfies never;
 		}
 	}),
 });
@@ -150,6 +148,29 @@ const separateVelocityVector = (dx: number, dy: number) => {
 	const speed = randomBetween(RUN_SPEED_THRESHOLD, WANDER_MAX_SPEED);
 	return { x: (dx / distance) * speed, y: (dy / distance) * speed };
 };
+function findClosestPair(candidates: ReadonlyArray<FighterState>): [number, number] {
+	let bestA = 0;
+	let bestB = 1;
+	let bestDistanceSq = Number.POSITIVE_INFINITY;
+	for (const [i, first] of candidates.entries()) {
+		for (let j = i + 1; j < candidates.length; j += 1) {
+			const second = candidates[j];
+			if (!second) {
+				continue;
+			}
+			const dx = first.position.x - second.position.x;
+			const dy = first.position.y - second.position.y;
+			const distanceSq = dx * dx + dy * dy;
+			if (distanceSq < bestDistanceSq) {
+				bestDistanceSq = distanceSq;
+				bestA = i;
+				bestB = j;
+			}
+		}
+	}
+	return [bestA, bestB];
+}
+
 const seekVelocityVector = (fighter: FighterState, roster: Array<FighterState>) => {
 	let closest: FighterState | null = null;
 	let closestDistanceSq = Number.POSITIVE_INFINITY;
@@ -464,7 +485,7 @@ function BattleControls({
 }
 
 export const Duel: Story = {
-	render: () => {
+	render: function SuifrenDuel() {
 		const isDocs =
 			typeof window !== 'undefined' &&
 			new URLSearchParams(window.location.search).get('viewMode') === 'docs';
@@ -501,17 +522,25 @@ export const Duel: Story = {
 			if (!stage) {
 				return;
 			}
-			const update = () => setStageWidth(stage.clientWidth);
+			const update = () => {
+				setStageWidth(stage.clientWidth);
+			};
 			update();
 
 			if (typeof ResizeObserver === 'undefined') {
 				window.addEventListener('resize', update);
-				return () => window.removeEventListener('resize', update);
+				return () => {
+					window.removeEventListener('resize', update);
+				};
 			}
 
-			const observer = new ResizeObserver(() => update());
+			const observer = new ResizeObserver(() => {
+				update();
+			});
 			observer.observe(stage);
-			return () => observer.disconnect();
+			return () => {
+				observer.disconnect();
+			};
 		}, []);
 
 		const setWanderVelocity = useCallback(
@@ -657,7 +686,9 @@ export const Duel: Story = {
 			};
 
 			frameId = window.requestAnimationFrame(tick);
-			return () => window.cancelAnimationFrame(frameId);
+			return () => {
+				window.cancelAnimationFrame(frameId);
+			};
 		}, [isDocs, mode, setWanderVelocity, stageWidth, startFight]);
 
 		const leftDead = state.left.status === 'dead';
@@ -754,11 +785,13 @@ export const Duel: Story = {
 					<BattleControls
 						canStart={Boolean(stageWidth) && !state.running}
 						canStop={state.running}
-						onStart={() =>
-							mode === 'roam'
-								? startFight(positionsRef.current.left, positionsRef.current.right)
-								: restart()
-						}
+						onStart={() => {
+							if (mode === 'roam') {
+								startFight(positionsRef.current.left, positionsRef.current.right);
+							} else {
+								restart();
+							}
+						}}
 						onRestart={handleRestart}
 						onStop={stop}
 					/>
@@ -816,7 +849,7 @@ export const Duel: Story = {
 };
 
 export const Ring: Story = {
-	render: () => {
+	render: function SuifrenBattleRoyale() {
 		const [session, setSession] = useState<'ready' | 'running' | 'stopped'>('ready');
 		const ringRef = useRef<HTMLDivElement | null>(null);
 		const [ringSize, setRingSize] = useState(0);
@@ -874,17 +907,25 @@ export const Ring: Story = {
 			if (!ring) {
 				return;
 			}
-			const update = () => setRingSize(ring.clientWidth);
+			const update = () => {
+				setRingSize(ring.clientWidth);
+			};
 			update();
 
 			if (typeof ResizeObserver === 'undefined') {
 				window.addEventListener('resize', update);
-				return () => window.removeEventListener('resize', update);
+				return () => {
+					window.removeEventListener('resize', update);
+				};
 			}
 
-			const observer = new ResizeObserver(() => update());
+			const observer = new ResizeObserver(() => {
+				update();
+			});
 			observer.observe(ring);
-			return () => observer.disconnect();
+			return () => {
+				observer.disconnect();
+			};
 		}, []);
 
 		const updateVelocity = useCallback(
@@ -940,7 +981,7 @@ export const Ring: Story = {
 			fightIdRef.current = 0;
 			ringWinnerRef.current = null;
 			setRingWinnerId(null);
-			if (ringWinnerTimeoutRef.current) {
+			if (ringWinnerTimeoutRef.current != null) {
 				window.clearTimeout(ringWinnerTimeoutRef.current);
 				ringWinnerTimeoutRef.current = null;
 			}
@@ -956,7 +997,12 @@ export const Ring: Story = {
 		}, [resetRing, ringSize]);
 
 		useEffect(() => {
-			if (typeof window === 'undefined' || session !== 'running' || ringWinnerId || !ringSize) {
+			if (
+				typeof window === 'undefined' ||
+				session !== 'running' ||
+				(ringWinnerId != null && ringWinnerId !== '') ||
+				!ringSize
+			) {
 				return;
 			}
 
@@ -975,7 +1021,8 @@ export const Ring: Story = {
 				const dt = Math.min(MAX_FRAME_MS, now - last);
 				last = now;
 				const canSeekFight =
-					!ringWinnerRef.current && activeFightsRef.current.length < FIGHT_SLOT_COUNT;
+					(ringWinnerRef.current == null || ringWinnerRef.current === '') &&
+					activeFightsRef.current.length < FIGHT_SLOT_COUNT;
 
 				let next = fightersRef.current.map((fighter) => {
 					if (fighter.status !== 'roam') {
@@ -1100,7 +1147,10 @@ export const Ring: Story = {
 					activeIds.add(leftId);
 					activeIds.add(rightId);
 				};
-				if (!ringWinnerRef.current && availableSlots.length) {
+				if (
+					(ringWinnerRef.current == null || ringWinnerRef.current === '') &&
+					availableSlots.length > 0
+				) {
 					outer: for (const [i, first] of next.entries()) {
 						if (first.status !== 'roam' || activeIds.has(first.id)) {
 							continue;
@@ -1115,48 +1165,34 @@ export const Ring: Story = {
 							}
 							const dx = first.position.x - second.position.x;
 							const dy = first.position.y - second.position.y;
-							if (dx * dx + dy * dy <= collisionDistanceSq) {
-								const slot = availableSlots.shift();
-								if (slot === undefined) {
-									break outer;
-								}
-								startFight(first, second, slot);
-
-								if (!availableSlots.length) {
-									break outer;
-								}
-								break;
+							if (!(dx * dx + dy * dy <= collisionDistanceSq)) {
+								continue;
 							}
+							const slot = availableSlots.shift();
+							if (slot == null) {
+								break outer;
+							}
+							startFight(first, second, slot);
+
+							if (availableSlots.length === 0) {
+								break outer;
+							}
+							break;
 						}
 					}
 				}
 
-				if (!ringWinnerRef.current && availableSlots.length) {
+				if (
+					(ringWinnerRef.current == null || ringWinnerRef.current === '') &&
+					availableSlots.length > 0
+				) {
 					let candidates = next.filter(
 						(fighter) => fighter.status === 'roam' && !activeIds.has(fighter.id),
 					);
-					while (availableSlots.length && candidates.length >= 2) {
-						let bestA = 0;
-						let bestB = 1;
-						let bestDistanceSq = Number.POSITIVE_INFINITY;
-						for (const [i, first] of candidates.entries()) {
-							for (let j = i + 1; j < candidates.length; j += 1) {
-								const second = candidates[j];
-								if (!second) {
-									continue;
-								}
-								const dx = first.position.x - second.position.x;
-								const dy = first.position.y - second.position.y;
-								const distanceSq = dx * dx + dy * dy;
-								if (distanceSq < bestDistanceSq) {
-									bestDistanceSq = distanceSq;
-									bestA = i;
-									bestB = j;
-								}
-							}
-						}
+					while (availableSlots.length > 0 && candidates.length >= 2) {
+						const [bestA, bestB] = findClosestPair(candidates);
 						const slot = availableSlots.shift();
-						if (slot === undefined) {
+						if (slot == null) {
 							break;
 						}
 						const first = candidates[bestA];
@@ -1170,13 +1206,16 @@ export const Ring: Story = {
 					}
 				}
 
-				if (startedFights.length) {
+				if (startedFights.length > 0) {
 					const updatedFights = [...activeFightsRef.current, ...startedFights];
 					activeFightsRef.current = updatedFights;
 					setActiveFights(updatedFights);
 				}
 
-				if (!ringWinnerRef.current && !availableSlots.length) {
+				if (
+					(ringWinnerRef.current == null || ringWinnerRef.current === '') &&
+					availableSlots.length === 0
+				) {
 					const avoidVelocities = new Map<string, { x: number; y: number }>();
 					for (const [i, first] of next.entries()) {
 						if (first.status !== 'roam' || activeIds.has(first.id)) {
@@ -1199,7 +1238,7 @@ export const Ring: Story = {
 							}
 						}
 					}
-					if (avoidVelocities.size) {
+					if (avoidVelocities.size > 0) {
 						next = next.map((fighter): FighterState => {
 							const velocity = avoidVelocities.get(fighter.id);
 							if (!velocity) {
@@ -1216,11 +1255,13 @@ export const Ring: Story = {
 			};
 
 			frameId = window.requestAnimationFrame(tick);
-			return () => window.cancelAnimationFrame(frameId);
+			return () => {
+				window.cancelAnimationFrame(frameId);
+			};
 		}, [session, ringWinnerId, ringSize, updateVelocity]);
 
 		useEffect(() => {
-			if (session !== 'running' || !activeFights.length) {
+			if (session !== 'running' || activeFights.length === 0) {
 				return;
 			}
 
@@ -1248,7 +1289,12 @@ export const Ring: Story = {
 				}
 
 				const duelComplete = !duelState.running && duelState.phase === 'Complete';
-				const fightDuration = fightMeta.startedAt ? now - fightMeta.startedAt : 0;
+				const fightDuration =
+					fightMeta.startedAt != null &&
+					fightMeta.startedAt !== 0 &&
+					!Number.isNaN(fightMeta.startedAt)
+						? now - fightMeta.startedAt
+						: 0;
 				const readyToResolve = fightMeta.duelStarted && fightDuration >= MIN_RING_FIGHT_MS;
 
 				if (!duelComplete || !readyToResolve) {
@@ -1307,7 +1353,10 @@ export const Ring: Story = {
 				setActiveFights(remainingFights);
 			}
 
-			if (!remainingFights.length && !ringWinnerRef.current) {
+			if (
+				remainingFights.length === 0 &&
+				(ringWinnerRef.current == null || ringWinnerRef.current === '')
+			) {
 				const alive = next.filter((fighter) => fighter.status !== 'dead');
 				const [winner] = alive;
 				if (winner && alive.length === 1) {
@@ -1368,7 +1417,7 @@ export const Ring: Story = {
 
 		useEffect(
 			() => () => {
-				if (ringWinnerTimeoutRef.current) {
+				if (ringWinnerTimeoutRef.current != null) {
 					window.clearTimeout(ringWinnerTimeoutRef.current);
 					ringWinnerTimeoutRef.current = null;
 				}
@@ -1409,7 +1458,7 @@ export const Ring: Story = {
 			}
 			return fighter.power > best.power ? fighter : best;
 		}, null);
-		const sortedActiveFights = [...activeFights].sort((a, b) => a.id - b.id);
+		const sortedActiveFights = activeFights.toSorted((a, b) => a.id - b.id);
 		const firstFight = sortedActiveFights[0];
 		const firstPredictedWinner = firstFight
 			? (fightersById.get(firstFight.winnerId) ?? null)
@@ -1417,9 +1466,9 @@ export const Ring: Story = {
 		const ringPhase =
 			session === 'stopped'
 				? 'Stopped'
-				: ringWinnerId
+				: ringWinnerId != null && ringWinnerId !== ''
 					? 'Victory'
-					: activeFights.length
+					: activeFights.length > 0
 						? 'Fighting'
 						: 'Roaming';
 
@@ -1428,9 +1477,9 @@ export const Ring: Story = {
 				<div className="flex flex-wrap items-center gap-3">
 					<BattleControls
 						canStart={Boolean(ringSize) && (session !== 'running' || Boolean(ringWinnerId))}
-						canStop={session === 'running' && !ringWinnerId}
+						canStop={session === 'running' && (ringWinnerId == null || ringWinnerId === '')}
 						onStart={() => {
-							if (session === 'stopped' || ringWinnerId) {
+							if (session === 'stopped' || (ringWinnerId != null && ringWinnerId !== '')) {
 								resetRing();
 							}
 							setSession('running');
@@ -1479,7 +1528,7 @@ export const Ring: Story = {
 									: predictedChampion.label
 								: 'Unknown'}
 						</div>
-						{ringWinnerId ? (
+						{ringWinnerId != null && ringWinnerId !== '' ? (
 							<div>
 								<span className="font-semibold text-slate-900 dark:text-slate-100">Winner:</span>{' '}
 								{ringWinnerId === CURRENT_USER_FIGHTER_ID
@@ -1504,7 +1553,7 @@ export const Ring: Story = {
 							<div className="mb-2 text-sm font-semibold text-slate-800 dark:text-slate-200">
 								Active fights
 							</div>
-							{activeFights.length ? (
+							{activeFights.length > 0 ? (
 								<div className="grid gap-1">
 									{sortedActiveFights.map((fight) => {
 										const left = fightersById.get(fight.leftId);

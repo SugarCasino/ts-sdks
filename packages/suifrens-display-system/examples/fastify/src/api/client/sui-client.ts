@@ -42,6 +42,7 @@ export async function getSuiFrenAccessories(suiFrenId: string) {
 	const equipped: Array<AccessoryMetadata> = [];
 	let cursor: string | null = null;
 	do {
+		// oxlint-disable-next-line no-await-in-loop -- Each page needs the cursor returned by the previous page.
 		const page: SuiClientTypes.ListDynamicFieldsResponse = await suiClient.listDynamicFields({
 			parentId: suiFrenId,
 			cursor,
@@ -50,6 +51,7 @@ export async function getSuiFrenAccessories(suiFrenId: string) {
 			if (field.name.type !== ACCESSORIES_KEY_TYPE) {
 				continue;
 			}
+			// oxlint-disable-next-line no-await-in-loop -- Keep only one accessory RPC request in flight at a time.
 			const { object } = await suiClient.getDynamicObjectField({
 				parentId: suiFrenId,
 				name: field.name,
@@ -65,7 +67,7 @@ export async function getSuiFrenAccessories(suiFrenId: string) {
 			}
 		}
 		cursor = page.hasNextPage ? page.cursor : null;
-	} while (cursor);
+	} while (cursor != null && cursor !== '');
 	return equipped;
 }
 

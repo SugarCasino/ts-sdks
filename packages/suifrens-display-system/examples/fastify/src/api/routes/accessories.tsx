@@ -3,15 +3,15 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
-import type { FastifyPluginAsync } from 'fastify';
+import type { FastifyPluginCallback } from 'fastify';
 import { renderToStaticMarkup } from 'react-dom/server';
-import Type from 'typebox';
+import { Type } from 'typebox';
 import { ACCESSORIES as suiFrensAccessories } from '@sugar/suifrens-display-system/accessories';
 import { SuiFrenImageInline } from '@sugar/suifrens-display-system/image-inline';
 import { IMAGE_LOGO_SCHEMA, renderImageLogo } from '../lib/image-logo.js';
 import { renderImage } from '../lib/render-image.js';
 
-export const accessories: FastifyPluginAsync = async (fastify) => {
+export const accessories: FastifyPluginCallback = (fastify, _options, done) => {
 	for (const format of ['svg', 'png'] as const) {
 		fastify.withTypeProvider<TypeBoxTypeProvider>().get(
 			`/accessories/:name/${format}`,
@@ -43,7 +43,7 @@ export const accessories: FastifyPluginAsync = async (fastify) => {
 			},
 			async (request, reply) => {
 				const accessoryName = request.params.name;
-				const accessory = suiFrensAccessories.find((accessory) => accessory.name === accessoryName);
+				const accessory = suiFrensAccessories.find((candidate) => candidate.name === accessoryName);
 
 				if (!accessory) {
 					return reply.status(404).send(null);
@@ -73,7 +73,7 @@ export const accessories: FastifyPluginAsync = async (fastify) => {
 							: undefined,
 					);
 					reply.header('Content-Type', image.contentType);
-					return reply.send(image.body);
+					return await reply.send(image.body);
 				} catch (error: unknown) {
 					request.log.error({ err: error, accessoryName }, 'Failed to render accessory');
 					return reply.status(500).send(null);
@@ -81,4 +81,5 @@ export const accessories: FastifyPluginAsync = async (fastify) => {
 			},
 		);
 	}
+	done();
 };

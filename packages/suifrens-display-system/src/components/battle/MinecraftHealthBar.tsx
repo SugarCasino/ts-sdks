@@ -142,6 +142,8 @@ export function MinecraftHealthBar({
 		return 0;
 	});
 
+	const hasLabel = Boolean(label);
+
 	return (
 		<div
 			style={{
@@ -154,12 +156,13 @@ export function MinecraftHealthBar({
 				...style,
 			}}
 		>
-			{label ? (
+			{hasLabel ? (
 				<span style={{ fontWeight: 700, textShadow: '0 1px 0 #ffffff99' }}>{label}</span>
 			) : null}
 			{resolvedHearts > 0 ? (
 				<div style={{ display: 'flex', gap: 2, alignItems: 'center' }}>
 					{heartStates.map((fill, index) => (
+						// oxlint-disable-next-line react/no-array-index-key -- Hearts are fixed positional slots and never reorder.
 						<PixelHeart key={index} fill={fill} size={size} />
 					))}
 				</div>

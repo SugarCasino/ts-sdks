@@ -2,11 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import {
-	type ElementType,
 	isValidElement,
 	type ReactElement,
 	type Ref,
-	type RefObject,
 	useEffect,
 	useImperativeHandle,
 	useRef,
@@ -31,12 +29,12 @@ function canAttachRefToType(type: unknown): boolean {
 		const prototype: unknown = type.prototype;
 		return (
 			typeof prototype === 'object' &&
-			prototype !== null &&
+			prototype != null &&
 			'isReactComponent' in prototype &&
 			Boolean(prototype.isReactComponent)
 		);
 	}
-	if (typeof type !== 'object' || type === null || !('$$typeof' in type)) {
+	if (typeof type !== 'object' || type == null || !('$$typeof' in type)) {
 		return false;
 	}
 	return (
@@ -48,17 +46,19 @@ function canAttachRefToType(type: unknown): boolean {
 function getElementRef(element: ReactElement): Ref<SVGElement> | undefined {
 	// React 19 stores refs in props; React 18 stores them on the element.
 	// Inspect data properties so neither version's deprecated getter is invoked.
-	const propsRef = Object.getOwnPropertyDescriptor(element.props, 'ref');
+	const propsRef: TypedPropertyDescriptor<Ref<SVGElement>> | undefined =
+		Object.getOwnPropertyDescriptor(element.props, 'ref');
 	if (propsRef && 'value' in propsRef) {
 		return propsRef.value;
 	}
-	const elementRef = Object.getOwnPropertyDescriptor(element, 'ref');
+	const elementRef: TypedPropertyDescriptor<Ref<SVGElement>> | undefined =
+		Object.getOwnPropertyDescriptor(element, 'ref');
 	return elementRef && 'value' in elementRef ? elementRef.value : undefined;
 }
 
 export function AnimatedAccessory({ children, fallbackPart }: AnimatedAccessoryProps) {
 	const store = useAnimationStore();
-	const localRef = useRef<SVGElement | null>(null);
+	const localRef = useRef<SVGGraphicsElement | null>(null);
 	const childRef =
 		isValidElement(children) && canAttachRefToType(children.type)
 			? getElementRef(children)
@@ -77,7 +77,7 @@ export function AnimatedAccessory({ children, fallbackPart }: AnimatedAccessoryP
 
 		const registrations: Array<() => void> = [];
 		const targets = [
-			...(svgElement.matches('g[transform]') ? [svgElement as SVGGraphicsElement] : []),
+			...(svgElement.matches('g[transform]') ? [svgElement] : []),
 			...svgElement.querySelectorAll<SVGGraphicsElement>('g[transform]'),
 		];
 		let matchedTarget = false;
@@ -92,23 +92,25 @@ export function AnimatedAccessory({ children, fallbackPart }: AnimatedAccessoryP
 		});
 
 		if (!matchedTarget && fallbackPart) {
-			registrations.push(store.registerElement(fallbackPart, svgElement as SVGGraphicsElement));
+			registrations.push(store.registerElement(fallbackPart, svgElement));
 		}
 
 		return () => {
-			registrations.forEach((cleanup) => cleanup());
+			registrations.forEach((cleanup) => {
+				cleanup();
+			});
 		};
 	}, [store, fallbackPart]);
 
-	if (!isValidElement(children)) {
+	if (!isValidElement<Record<string, unknown>>(children)) {
 		return children;
 	}
 
 	if (canAttachRefToType(children.type)) {
-		const Child = children.type as ElementType;
+		const Child = children.type;
 		return (
 			<Child
-				{...(children.props as Record<string, unknown>)}
+				{...children.props}
 				key={children.key}
 				ref={localRef}
 				data-suifren-animation-part={fallbackPart}
@@ -117,7 +119,7 @@ export function AnimatedAccessory({ children, fallbackPart }: AnimatedAccessoryP
 	}
 
 	return (
-		<g ref={localRef as RefObject<SVGGElement | null>} data-suifren-animation-part={fallbackPart}>
+		<g ref={localRef} data-suifren-animation-part={fallbackPart}>
 			{children}
 		</g>
 	);

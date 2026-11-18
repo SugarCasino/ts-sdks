@@ -1,11 +1,10 @@
 // Copyright (c) Sugar
 // SPDX-License-Identifier: Apache-2.0
 
-import type { SuiClientTypes } from '@mysten/sui/client';
 import { SUI_DECIMALS } from '@mysten/sui/utils';
-import { type Game, GAMES } from '@sugar/sdk/games';
+import { GAMES } from '@sugar/sdk/games';
 import { parseGameEvent, parseSugarEvent } from '@sugar/sdk/utils';
-import { formatAmount, isAmountFieldName } from '../utils/index.js';
+import { formatAmount, isAmountFieldName, isRecord } from '../utils/index.js';
 import type {
 	DryRunEventSummary,
 	DryRunSummary,
@@ -14,14 +13,9 @@ import type {
 	TransactionSummaryFormattingContext,
 } from './types.js';
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return value !== null && typeof value === 'object';
-}
-
-function getDryRunTransaction(dryRun: RawDryRunResult): RawDryRunResult['Transaction'] | undefined {
-	if (!isRecord(dryRun)) {
-		return undefined;
-	}
+function getDryRunTransaction(
+	dryRun: RawDryRunResult,
+): NonNullable<RawDryRunResult['Transaction']> {
 	return dryRun.FailedTransaction ?? dryRun.Transaction;
 }
 
@@ -84,10 +78,8 @@ function collectStrings({ value, path }: { value: unknown; path: Array<string> }
 }
 
 export function extractDryRunErrors(dryRun: RawDryRunResult): Array<string> {
-	const source: unknown = getDryRunTransaction(dryRun) ?? dryRun;
-	const effects = isRecord(source) ? source['effects'] : undefined;
-	const status = isRecord(effects) ? effects['status'] : undefined;
-	const errorSources = [source, effects, status].filter(isRecord);
+	const source = getDryRunTransaction(dryRun);
+	const errorSources = [source, source.effects, source.effects.status];
 
 	const errors = errorSources.flatMap((item) =>
 		collectStrings({ value: item, path: ['error', 'cleverError', 'message'] }),
@@ -131,7 +123,12 @@ function gasUsedSummary({
 	const rebate = stringField({ record: gasUsed, key: 'storageRebate' });
 	const nonRefundableStorageFee = stringField({ record: gasUsed, key: 'nonRefundableStorageFee' });
 	const net =
-		computation && storage && rebate
+		computation != null &&
+		computation !== '' &&
+		storage != null &&
+		storage !== '' &&
+		rebate != null &&
+		rebate !== ''
 			? String(-(BigInt(computation) + BigInt(storage) - BigInt(rebate)))
 			: undefined;
 
@@ -199,7 +196,7 @@ function parseDryRunEvent({
 			...event,
 			eventType,
 			module,
-		} as never);
+		});
 		if (gameEvent) {
 			return gameEvent;
 		}
@@ -208,10 +205,11 @@ function parseDryRunEvent({
 	}
 
 	const standardBetResult = /::BetResultEvent<[^>]+::([^:<>,]+)::Game>/u.exec(eventType);
-	const game = standardBetResult?.[1]?.replaceAll('_', '-');
-	return game && GAMES.includes(game as Game)
+	const gameName = standardBetResult?.[1]?.replaceAll('_', '-');
+	const game = GAMES.find((known) => known === gameName);
+	return game
 		? {
-				game: game as Game,
+				game,
 				event: 'BetResultEvent',
 			}
 		: null;
@@ -254,7 +252,9 @@ function summarizeDryRunEvent({
 				...event,
 				eventType,
 				module,
-			} as SuiClientTypes.Event);
+
+				bcs: event['bcs'],
+			});
 			if (!sugarEvent) {
 				return null;
 			}
@@ -301,52 +301,24 @@ export function summarizeDryRun({
 	context?: TransactionSummaryFormattingContext | undefined;
 }): DryRunSummary {
 	const transaction = getDryRunTransaction(dryRun);
-	const transactionRecord: Record<string, unknown> = isRecord(transaction) ? transaction : {};
-	const effects = transactionRecord['effects'];
-	const status = isRecord(effects) ? effects['status'] : undefined;
-	const success = isRecord(status) ? status['success'] === true : false;
-	const statusError = isRecord(status) ? status['error'] : undefined;
-	const error =
-		typeof statusError === 'string'
-			? statusError
-			: isRecord(statusError) && typeof statusError['message'] === 'string'
-				? statusError['message']
-				: null;
-	const balanceChanges = Array.isArray(transactionRecord['balanceChanges'])
-		? transactionRecord['balanceChanges'].reduce<DryRunSummary['balanceChanges']>(
-				(changes, change) => {
-					if (isRecord(change)) {
-						const rawAmount = toJsonValue(change['amount']);
-						changes.push({
-							address: typeof change['address'] === 'string' ? change['address'] : '',
-							coinType: typeof change['coinType'] === 'string' ? change['coinType'] : '',
-							amount:
-								formatAmount({ value: change['amount'], decimals: context.coinDecimals }) ??
-								({
-									raw:
-										typeof rawAmount === 'string' ||
-										typeof rawAmount === 'number' ||
-										typeof rawAmount === 'boolean'
-											? String(rawAmount)
-											: '',
-									display: '',
-								} as const),
-						});
-					}
-					return changes;
-				},
-				[],
-			)
-		: [];
-	const events = Array.isArray(transactionRecord['events'])
-		? transactionRecord['events'].reduce<Array<DryRunEventSummary>>((summaries, event) => {
-				const summary = summarizeDryRunEvent({ event, decimals: context.coinDecimals });
-				if (summary) {
-					summaries.push(summary);
-				}
-				return summaries;
-			}, [])
-		: [];
+	const { effects } = transaction;
+	const { success, error: statusError } = effects.status;
+	const error = statusError?.message ?? null;
+	const balanceChanges = transaction.balanceChanges.map((change) => ({
+		address: change.address,
+		coinType: change.coinType,
+		amount: formatAmount({ value: change.amount, decimals: context.coinDecimals }) ?? {
+			raw: change.amount,
+			display: '',
+		},
+	}));
+	const events = transaction.events.reduce<Array<DryRunEventSummary>>((summaries, event) => {
+		const summary = summarizeDryRunEvent({ event, decimals: context.coinDecimals });
+		if (summary) {
+			summaries.push(summary);
+		}
+		return summaries;
+	}, []);
 
 	return {
 		success,

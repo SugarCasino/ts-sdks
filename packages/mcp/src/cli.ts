@@ -4,6 +4,7 @@
 import yargs, { type ArgumentsCamelCase, type Argv, type Options } from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { type SugarNetwork, SUPPORTED_SUI_NETWORKS } from '@sugar/sdk';
+import { normalizeNetwork } from './runtime/client.js';
 import { startSugarMcpServer } from './server/index.js';
 import { VERSION } from './version.js';
 import {
@@ -37,7 +38,7 @@ const JSON_OPTION = {
 	description: 'Output machine-readable JSON instead of human-readable text',
 } satisfies Options;
 
-function addBridgeOptions(command: Argv): Argv {
+function addBridgeOptions<T>(command: Argv<T>) {
 	return command
 		.option('timeout-ms', {
 			type: 'number',
@@ -83,12 +84,11 @@ export async function runSugarCli(argv: Array<string> = hideBin(process.argv)): 
 					})
 					.option('json', JSON_OPTION),
 			async (args) => {
-				const bridgeArgs = args as unknown as BridgeArgs;
-				const network = args.network as SugarNetwork;
+				const network = normalizeNetwork(args.network);
 				const bridge = await createLoginBridge({
 					network,
-					webOrigin: resolveWebOrigin({ network, webUrl: bridgeArgs.webUrl }),
-					...getBridgeOptions(bridgeArgs),
+					webOrigin: resolveWebOrigin({ network, webUrl: args.webUrl }),
+					...getBridgeOptions(args),
 				});
 				process.stderr.write(`Open this URL to connect your wallet:\n${bridge.url}\n`);
 				const profile = await bridge.done;
@@ -118,16 +118,18 @@ export async function runSugarCli(argv: Array<string> = hideBin(process.argv)): 
 					})
 					.option('json', JSON_OPTION),
 			async (args) => {
-				const bridgeArgs = args as unknown as BridgeArgs;
 				const credentials = await loadCredentials();
 				const network = args.network ?? credentials.defaultNetwork;
-				const bridgeOptions = getBridgeOptions(bridgeArgs);
+				const bridgeOptions = getBridgeOptions(args);
 				const useNetworkOrigins =
-					args.all && !bridgeArgs.webUrl && !process.env[BRIDGE_WEB_URL_ENV];
+					args.all &&
+					(args.webUrl == null || args.webUrl === '') &&
+					(process.env[BRIDGE_WEB_URL_ENV] == null || process.env[BRIDGE_WEB_URL_ENV] === '');
 				const bridges: Array<LogoutBridge> = [];
 				if (useNetworkOrigins) {
 					for (const logoutNetwork of SUPPORTED_SUI_NETWORKS) {
 						bridges.push(
+							// oxlint-disable-next-line no-await-in-loop -- Open logout browser pages in network order.
 							await createLogoutBridge({
 								network: logoutNetwork,
 								all: true,
@@ -141,7 +143,7 @@ export async function runSugarCli(argv: Array<string> = hideBin(process.argv)): 
 						await createLogoutBridge({
 							network: args.all ? undefined : network,
 							all: args.all,
-							webOrigin: resolveWebOrigin({ network, webUrl: bridgeArgs.webUrl }),
+							webOrigin: resolveWebOrigin({ network, webUrl: args.webUrl }),
 							...bridgeOptions,
 						}),
 					);

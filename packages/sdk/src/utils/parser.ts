@@ -12,7 +12,7 @@ import {
 } from '../contracts/pvp-coinflip/pvp_coinflip.js';
 import type { SugarEvent } from '../types/event.type.js';
 import { GAME_DETAIL_BCS, GAME_DETAILS_SCHEMAS } from '../types/game-details.type.js';
-import { GAME_EVENTS, GAMES } from '../types/game.type.js';
+import { GAMES } from '../types/game.type.js';
 import type {
 	BetResultGameDetails,
 	Game,
@@ -20,13 +20,10 @@ import type {
 	GameDetails,
 	GameDetailSchemaValueType,
 	GameDetailValueType,
-	GameDetailVectorValueType,
-	GameEvent,
-	MoveFloat,
 	SugarGameEvent,
 	WithGame,
 } from '../types/index.js';
-import { fromMoveFloat } from './numeric.js';
+import { fromMoveFloat, isMoveFloat } from './numeric.js';
 
 const textDecoder = new TextDecoder();
 
@@ -42,7 +39,7 @@ const textDecoder = new TextDecoder();
  */
 export function parseCoinType(type: string): string {
 	const coinType = parseStructTag(type).typeParams[0];
-	if (!coinType) {
+	if (coinType == null || coinType === '') {
 		throw new TypeError(`Unable to parse coin type from ${type}`);
 	}
 
@@ -61,23 +58,28 @@ export function parseCoinType(type: string): string {
  * @returns SDK game and raw Move event name, or `null` when the event name is unsupported or the
  *   game cannot be resolved.
  */
-export function parseGameEvent(suiEvent: SuiClientTypes.Event): SugarGameEvent | null {
+export function parseGameEvent(
+	suiEvent: Pick<SuiClientTypes.Event, 'eventType' | 'module'>,
+): SugarGameEvent | null {
 	const { name: event, typeParams } = parseStructTag(suiEvent.eventType);
 	const module = suiEvent.module.replaceAll('_', '-');
-	const game = GAMES.includes(module as Game) ? module : typeParams[0];
-
-	if (
-		!GAME_EVENTS.includes(event as GameEvent) ||
-		typeof game !== 'string' ||
-		(game !== 'pvp-coinflip' && event !== 'BetResultEvent')
-	) {
+	const game =
+		GAMES.find((known) => known === module) ?? GAMES.find((known) => known === typeParams[0]);
+	if (!game) {
 		return null;
 	}
-
-	return {
-		game,
-		event,
-	} as SugarGameEvent;
+	if (event === 'BetResultEvent') {
+		return { game, event };
+	}
+	if (
+		game === 'pvp-coinflip' &&
+		(event === 'GameCreatedEvent' ||
+			event === 'GameResolvedEvent' ||
+			event === 'GameCancelledEvent')
+	) {
+		return { game, event };
+	}
+	return null;
 }
 
 /**
@@ -92,7 +94,9 @@ export function parseGameEvent(suiEvent: SuiClientTypes.Event): SugarGameEvent |
  *   `BetResultEvent`; or `null` when the event is unsupported, cannot be mapped to a Sugar game, or
  *   does not include a `Uint8Array` BCS payload.
  */
-export function parseSugarEvent(suiEvent: SuiClientTypes.Event): SugarEvent | null {
+export function parseSugarEvent(
+	suiEvent: Pick<SuiClientTypes.Event, 'eventType' | 'module'> & { bcs?: Uint8Array | undefined },
+): SugarEvent | null {
 	const gameEvent = parseGameEvent(suiEvent);
 	if (!gameEvent || !(suiEvent.bcs instanceof Uint8Array)) {
 		return null;
@@ -131,6 +135,8 @@ export function parseSugarEvent(suiEvent: SuiClientTypes.Event): SugarEvent | nu
 					data: PvPCoinflipGameCancelledEvent.parse(suiEvent.bcs),
 				},
 			};
+		default:
+			throw new TypeError('Unsupported Sugar game event.', { cause: gameEvent satisfies never });
 	}
 }
 
@@ -144,85 +150,70 @@ function parseStringGameDetail(value: Array<number>): string {
 	}
 }
 
-function normalizeBcsGameDetailValue<TValueType extends GameDetailValueType>({
+function normalizeBcsGameDetailValue({
 	valueType,
 	value,
 }: {
-	valueType: TValueType;
-	value: unknown;
-}): GameDetail<TValueType> {
-	switch (valueType) {
-		case 'float':
-			return fromMoveFloat(value as MoveFloat) as GameDetail<TValueType>;
-		case 'u64':
-		case 'u128':
-			return BigInt(value as string | number | bigint) as GameDetail<TValueType>;
-		default:
-			return value as GameDetail<TValueType>;
+	valueType: GameDetailValueType;
+	value: ReturnType<(typeof GAME_DETAIL_BCS)[GameDetailValueType]['parse']>;
+}): GameDetail<GameDetailValueType> {
+	if (isMoveFloat(value)) {
+		return fromMoveFloat(value);
 	}
+	if (
+		(valueType === 'u64' || valueType === 'u128') &&
+		(typeof value === 'string' || typeof value === 'number' || typeof value === 'bigint')
+	) {
+		return BigInt(value);
+	}
+	return value;
+}
+
+function isGameDetailValueType(value: string): value is GameDetailValueType {
+	return Object.hasOwn(GAME_DETAIL_BCS, value);
 }
 
 function parseVectorValueType(valueType: GameDetailSchemaValueType): GameDetailValueType | null {
 	if (!valueType.startsWith('vector<') || !valueType.endsWith('>')) {
 		return null;
 	}
-
 	const elementType = valueType.slice(7, -1);
-	return elementType in GAME_DETAIL_BCS ? (elementType as GameDetailValueType) : null;
+	return isGameDetailValueType(elementType) ? elementType : null;
 }
 
-function parseVectorGameDetail<TValueType extends GameDetailVectorValueType>({
-	valueType,
-	elementType,
-	value,
-}: {
-	valueType: TValueType;
-	elementType: GameDetailValueType;
-	value: Array<number>;
-}): GameDetail<TValueType> {
-	const bytes = Uint8Array.from(value);
-	const vectorBcs = bcs.vector(GAME_DETAIL_BCS[elementType]);
-	const parsed = vectorBcs.parse(bytes);
-	const serialized = vectorBcs.serialize(parsed).toBytes();
-
-	if (
-		serialized.length !== bytes.length ||
-		serialized.some((byte, index) => byte !== bytes[index])
-	) {
-		throw new TypeError(`Invalid BCS ${valueType} game detail value.`);
-	}
-
-	return parsed.map((item) =>
-		normalizeBcsGameDetailValue({ valueType: elementType, value: item }),
-	) as GameDetail<TValueType>;
-}
-
-function parseGameDetail<TValueType extends GameDetailSchemaValueType>({
+function parseGameDetail({
 	valueType,
 	value,
 }: {
-	valueType: TValueType;
+	valueType: GameDetailSchemaValueType;
 	value: Array<number>;
-}): GameDetail<TValueType> {
+}): GameDetail<GameDetailValueType> | Array<GameDetail<GameDetailValueType>> {
 	if (valueType === 'string') {
-		return parseStringGameDetail(value) as GameDetail<TValueType>;
+		return parseStringGameDetail(value);
 	}
-
-	const vectorElementType = parseVectorValueType(valueType);
-	if (vectorElementType) {
-		return parseVectorGameDetail({
-			valueType: valueType as GameDetailVectorValueType,
-			elementType: vectorElementType,
-			value,
-		}) as GameDetail<TValueType>;
+	const elementType = parseVectorValueType(valueType);
+	if (elementType) {
+		const bytes = Uint8Array.from(value);
+		const vectorBcs = bcs.vector(GAME_DETAIL_BCS[elementType]);
+		const parsed = vectorBcs.parse(bytes);
+		const serialized = vectorBcs.serialize(parsed).toBytes();
+		if (
+			serialized.length !== bytes.length ||
+			serialized.some((byte, index) => byte !== bytes[index])
+		) {
+			throw new TypeError(`Invalid BCS ${valueType} game detail value.`);
+		}
+		return parsed.map((item) =>
+			normalizeBcsGameDetailValue({ valueType: elementType, value: item }),
+		);
 	}
-
-	const scalarValueType = valueType as GameDetailValueType;
-	const parsed = GAME_DETAIL_BCS[scalarValueType].parse(Uint8Array.from(value));
-	return normalizeBcsGameDetailValue({
-		valueType: scalarValueType,
-		value: parsed,
-	}) as GameDetail<TValueType>;
+	if (isGameDetailValueType(valueType)) {
+		return normalizeBcsGameDetailValue({
+			valueType,
+			value: GAME_DETAIL_BCS[valueType].parse(Uint8Array.from(value)),
+		});
+	}
+	throw new TypeError(`Unsupported game detail type: ${valueType}`);
 }
 
 /**
@@ -241,24 +232,34 @@ function parseGameDetail<TValueType extends GameDetailSchemaValueType>({
  * @returns An object with a null prototype containing decoded detail values. Use `Object.hasOwn` to
  *   check keys; unknown keys are decoded as strings, including names such as `__proto__`.
  */
-export function parseGameDetails<TGame extends Game>({
+export function parseGameDetails<TGame extends Game>(
+	options: WithGame<
+		{
+			gameDetails: BetResultGameDetails;
+		},
+		TGame
+	>,
+): GameDetails<TGame>;
+export function parseGameDetails({
 	game,
 	gameDetails,
-}: WithGame<
-	{
-		gameDetails: BetResultGameDetails;
-	},
-	TGame
->): GameDetails<TGame> {
+}: WithGame<{ gameDetails: BetResultGameDetails }>): Record<
+	string,
+	ReturnType<typeof parseGameDetail>
+> {
 	const schema: Record<string, GameDetailSchemaValueType> = GAME_DETAILS_SCHEMAS[game];
-	const details = gameDetails.contents.reduce<Record<string, unknown>>((parsedDetails, entry) => {
-		const valueType = Object.hasOwn(schema, entry.key) ? (schema[entry.key] ?? 'string') : 'string';
-		parsedDetails[entry.key] = parseGameDetail({
-			valueType,
-			value: entry.value,
-		});
-		return parsedDetails;
-	}, Object.create(null));
-
-	return details as GameDetails<TGame>;
+	return gameDetails.contents.reduce<Record<string, ReturnType<typeof parseGameDetail>>>(
+		(parsedDetails, entry) => {
+			const valueType = Object.hasOwn(schema, entry.key)
+				? (schema[entry.key] ?? 'string')
+				: 'string';
+			parsedDetails[entry.key] = parseGameDetail({
+				valueType,
+				value: entry.value,
+			});
+			return parsedDetails;
+		},
+		// oxlint-disable-next-line typescript/no-unsafe-argument -- Object.create(null) is the intentional reduce seed.
+		Object.create(null),
+	);
 }

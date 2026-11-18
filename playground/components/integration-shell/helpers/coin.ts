@@ -1,4 +1,5 @@
 import { normalizeStructTag, parseStructTag } from '@mysten/sui/utils';
+import { SUGAR_COINS } from '@sugar/sdk';
 import type { SupportedCoinKey } from '@/lib/sugar-types';
 
 export type CoinBalanceState = {
@@ -12,7 +13,7 @@ export function formatBalance(balance: bigint, decimals: number) {
 	const whole = balance / divisor;
 	const fraction = balance % divisor;
 	const paddedFraction = fraction.toString().padStart(decimals, '0');
-	const formattedWhole = whole.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+	const formattedWhole = whole.toString().replaceAll(/\B(?=(\d{3})+(?!\d))/gu, ' ');
 	const fractionDigits = paddedFraction.slice(0, 2).padEnd(2, '0');
 
 	return `${formattedWhole},${fractionDigits}`;
@@ -25,9 +26,7 @@ export function resolveCoinKeyForType(
 	const normalizedCoinType = normalizeStructTag(coinType);
 
 	return (
-		(Object.entries(coinTypes) as Array<[SupportedCoinKey, string]>).find(
-			([, configuredCoinType]) => normalizeStructTag(configuredCoinType) === normalizedCoinType,
-		)?.[0] ?? null
+		SUGAR_COINS.find((key) => normalizeStructTag(coinTypes[key]) === normalizedCoinType) ?? null
 	);
 }
 
@@ -54,14 +53,14 @@ export function getCoinDisplayAmount({
 	balanceOwner: string | null;
 	balanceState: CoinBalanceState;
 }) {
-	if (!currentAccountAddress) {
+	if (currentAccountAddress == null || currentAccountAddress === '') {
 		return '--,--';
 	}
 
 	if (
-		(balanceOwner !== currentAccountAddress && !balanceState.error) ||
+		balanceOwner !== currentAccountAddress ||
 		balanceState.isLoading ||
-		balanceState.error
+		(balanceState.error != null && balanceState.error !== '')
 	) {
 		return '--,--';
 	}

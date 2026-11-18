@@ -1,7 +1,6 @@
+import { Client } from '@modelcontextprotocol/client';
 // Copyright (c) Sugar
 // SPDX-License-Identifier: Apache-2.0
-
-import { Client } from '@modelcontextprotocol/client';
 import {
 	InMemoryTransport,
 	type JSONRPCMessage,
@@ -9,6 +8,7 @@ import {
 	ProtocolErrorCode,
 } from '@modelcontextprotocol/server';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { z } from 'zod/v4';
 import {
 	NFT_IMAGE_RESOURCE_DOMAINS,
 	SUGAR_MCP_APP_RESOURCE_URI,
@@ -48,14 +48,16 @@ const publicToolNames = [
 	'list_nfts',
 ];
 
-const sorted = (values: Array<string>) => [...values].sort();
+const sorted = (values: Array<string>) => values.toSorted();
 
 describe('MCP server registration', () => {
 	it('wires the root config tool, inspector tools, and app resource', () => {
-		const server = createSugarMcpServer() as unknown as {
-			_registeredTools: Record<string, unknown>;
-			_registeredResources: Record<string, unknown>;
-		};
+		const server = z
+			.object({
+				_registeredTools: z.record(z.string(), z.unknown()),
+				_registeredResources: z.record(z.string(), z.unknown()),
+			})
+			.parse(createSugarMcpServer());
 
 		expect(sorted(Object.keys(server._registeredTools))).toEqual(sorted(publicToolNames));
 		expect(Object.keys(server._registeredResources)).toContain(SUGAR_MCP_APP_RESOURCE_URI);
@@ -125,68 +127,68 @@ describe('MCP server registration', () => {
 		}
 	});
 
-	it.each(['legacy', 'modern'] as const)(
-		'serves valid calls and distinguishes errors for %s clients',
-		async (era) => {
-			const client = new Client(
-				{ name: 'sugar-test', version: '0.0.0' },
-				{
-					versionNegotiation: { mode: era === 'modern' ? { pin: '2026-07-28' } : 'legacy' },
-				},
+	it.each([
+		['legacy', 'legacy'],
+		['modern', { pin: '2026-07-28' }],
+	] as const)('serves valid calls and distinguishes errors for %s clients', async (_era, mode) => {
+		const client = new Client(
+			{ name: 'sugar-test', version: '0.0.0' },
+			{
+				versionNegotiation: { mode: mode },
+			},
+		);
+		const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+		const handle = serveSugarMcpStdio(serverTransport);
+		try {
+			await client.connect(clientTransport);
+			const config = await client.callTool({
+				name: 'read_config',
+				arguments: { network: 'testnet' },
+			});
+			expect(config.isError).not.toBe(true);
+			expect(config.structuredContent).toMatchObject({ network: 'testnet' });
+			expect(config.content).toEqual(
+				expect.arrayContaining([expect.objectContaining({ type: 'text' })]),
 			);
-			const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
-			const handle = serveSugarMcpStdio(serverTransport);
-			try {
-				await client.connect(clientTransport);
-				const config = await client.callTool({
-					name: 'read_config',
-					arguments: { network: 'testnet' },
-				});
-				expect(config.isError).not.toBe(true);
-				expect(config.structuredContent).toMatchObject({ network: 'testnet' });
-				expect(config.content).toEqual(
-					expect.arrayContaining([expect.objectContaining({ type: 'text' })]),
-				);
 
-				const failure = await client.callTool({
-					name: 'read_config',
-					arguments: { config: { coins: { sui: { coinType: 'invalid' } } } },
-				});
-				expect(failure.isError).toBe(true);
-				expect(failure.structuredContent).toMatchObject({ errors: expect.any(Array) });
+			const failure = await client.callTool({
+				name: 'read_config',
+				arguments: { config: { coins: { sui: { coinType: 'invalid' } } } },
+			});
+			expect(failure.isError).toBe(true);
+			expect(failure.structuredContent).toMatchObject({ errors: expect.any(Array) as unknown });
 
-				const missingTool = client.callTool({ name: 'missing_tool', arguments: {} });
-				await expect(missingTool).rejects.toBeInstanceOf(ProtocolError);
-				await expect(missingTool).rejects.toMatchObject({ code: ProtocolErrorCode.InvalidParams });
-				const invalidInput = await client.callTool({
-					name: 'read_config',
-					arguments: { network: 'invalid' },
-				});
-				expect(invalidInput).toMatchObject({
-					isError: true,
-					content: [{ type: 'text', text: expect.stringContaining('network') }],
-				});
+			const missingTool = client.callTool({ name: 'missing_tool', arguments: {} });
+			await expect(missingTool).rejects.toBeInstanceOf(ProtocolError);
+			await expect(missingTool).rejects.toMatchObject({ code: ProtocolErrorCode.InvalidParams });
+			const invalidInput = await client.callTool({
+				name: 'read_config',
+				arguments: { network: 'invalid' },
+			});
+			expect(invalidInput).toMatchObject({
+				isError: true,
+				content: [{ type: 'text', text: expect.stringContaining('network') as unknown }],
+			});
 
-				// A failed call must not poison the connection or mix inputs across concurrent calls.
-				const networks = ['mainnet', 'testnet', 'mainnet', 'testnet'] as const;
-				const results = await Promise.all(
-					networks.map((network) =>
-						client.callTool({
-							name: 'read_config',
-							arguments: { network },
-						}),
-					),
-				);
-				for (const [index, result] of results.entries()) {
-					expect(result.isError).not.toBe(true);
-					expect(result.structuredContent).toMatchObject({ network: networks[index] });
-				}
-			} finally {
-				await client.close();
-				await handle.close();
+			// A failed call must not poison the connection or mix inputs across concurrent calls.
+			const networks = ['mainnet', 'testnet', 'mainnet', 'testnet'] as const;
+			const results = await Promise.all(
+				networks.map((network) =>
+					client.callTool({
+						name: 'read_config',
+						arguments: { network },
+					}),
+				),
+			);
+			for (const [index, result] of results.entries()) {
+				expect(result.isError).not.toBe(true);
+				expect(result.structuredContent).toMatchObject({ network: networks[index] });
 			}
-		},
-	);
+		} finally {
+			await client.close();
+			await handle.close();
+		}
+	});
 
 	it('preserves app resource metadata for legacy clients', async () => {
 		const server = createSugarMcpServer();
@@ -251,6 +253,8 @@ describe('MCP 2026-07-28 stdio protocol', () => {
 	) {
 		const id = ++requestId;
 		const response = new Promise<JSONRPCMessage>((resolve) => {
+			// MCP Transport exposes onmessage callbacks, not an EventTarget API.
+			// oxlint-disable-next-line unicorn/prefer-add-event-listener
 			clientTransport.onmessage = (message) => {
 				if ('id' in message && message.id === id) {
 					resolve(message);
@@ -276,6 +280,7 @@ describe('MCP 2026-07-28 stdio protocol', () => {
 			},
 		});
 		for (const method of ['tools/list', 'resources/list', 'resources/templates/list']) {
+			// oxlint-disable-next-line no-await-in-loop -- The request helper replaces the transport response callback for each request.
 			expect(await request(method)).toMatchObject({
 				result: {
 					resultType: 'complete',
@@ -316,7 +321,7 @@ describe('MCP 2026-07-28 stdio protocol', () => {
 				code: -32022,
 				data: {
 					requested: '2099-01-01',
-					supported: expect.arrayContaining(['2026-07-28']),
+					supported: expect.arrayContaining(['2026-07-28']) as unknown,
 				},
 			},
 		});

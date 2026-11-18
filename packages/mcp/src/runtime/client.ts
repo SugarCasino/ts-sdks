@@ -13,14 +13,15 @@ import {
 	normalizeSuiNSName,
 	SUI_DECIMALS,
 } from '@mysten/sui/utils';
-import { sugar, type SugarClient, type SugarNetwork } from '@sugar/sdk';
+import { sugar, type SugarClient, type SugarNetwork, SUPPORTED_SUI_NETWORKS } from '@sugar/sdk';
 import { formatBaseUnitAmount } from '../utils/index.js';
+import { isNonArrayRecord } from '../utils/record.js';
+import { requireChoice } from '../utils/validation.js';
 import { readPersistedDefaultNetwork } from '../wallet/credentials.js';
 import { extractDryRunErrors, summarizeDryRun, toJsonValue } from './dry-run.js';
 import type {
 	BuilderMode,
 	BuildTransactionResult,
-	DryRunResult,
 	McpConfig,
 	RawDryRunResult,
 	SugarMcpConfigInput,
@@ -37,11 +38,15 @@ export const DEFAULT_NETWORK: SugarNetwork = 'testnet';
 
 export function normalizeNetwork(network?: string): SugarNetwork {
 	const resolvedNetwork = network ?? readPersistedDefaultNetwork();
-	if (resolvedNetwork === 'mainnet' || resolvedNetwork === 'testnet') {
-		return resolvedNetwork;
-	}
-
-	throw new RangeError(`Unsupported network: ${resolvedNetwork}. Use "mainnet" or "testnet".`);
+	return requireChoice({
+		value: resolvedNetwork,
+		choices: SUPPORTED_SUI_NETWORKS,
+		fieldName: 'network',
+		createError: () =>
+			new RangeError(
+				`Unsupported network: ${resolvedNetwork}. Use one of: ${SUPPORTED_SUI_NETWORKS.join(', ')}.`,
+			),
+	});
 }
 
 export function getProviderUrl({
@@ -124,7 +129,7 @@ export async function resolveOwnerAddress({
 	const { address } = await bundle.client.core.resolveNameServiceAddress({
 		name: normalizedName,
 	});
-	if (!address) {
+	if (address == null || address === '') {
 		throw new Error(`SuiNS name ${normalizedName} did not resolve to an address.`);
 	}
 
@@ -174,24 +179,31 @@ function summarizeTransaction({
 			objectInputs: [],
 			...(context.game ? { game: context.game } : {}),
 			...(context.action ? { action: context.action } : {}),
-			...(context.coinType ? { coinType: normalizeStructTag(context.coinType) } : {}),
+			...(context.coinType != null && context.coinType !== ''
+				? { coinType: normalizeStructTag(context.coinType) }
+				: {}),
 			...(context.stake == null ? {} : { stake: String(context.stake) }),
-			...(context.stakeDisplay ? { stakeDisplay: context.stakeDisplay } : {}),
+			...(context.stakeDisplay != null && context.stakeDisplay !== ''
+				? { stakeDisplay: context.stakeDisplay }
+				: {}),
 			...(context.coinDecimals == null ? {} : { coinDecimals: context.coinDecimals }),
 			...(context.gameInputs ? { gameInputs: context.gameInputs } : {}),
 		};
 	}
 
 	const commands = (data.commands ?? []).map((command) => {
-		const kind = String(command.$kind ?? Object.keys(command)[0] ?? 'Unknown');
+		const kind = command.$kind ?? Object.keys(command)[0] ?? 'Unknown';
 		const moveCall = command.MoveCall;
 		const target =
-			moveCall?.package && moveCall?.module && moveCall?.function
+			moveCall?.package != null &&
+			moveCall?.package !== '' &&
+			moveCall?.module &&
+			moveCall?.function
 				? `${moveCall.package}::${moveCall.module}::${moveCall.function}`
 				: undefined;
 		return {
 			kind,
-			...(target ? { target } : {}),
+			...(target != null && target !== '' ? { target } : {}),
 			...(moveCall?.typeArguments ? { typeArguments: moveCall.typeArguments } : {}),
 		};
 	});
@@ -217,9 +229,13 @@ function summarizeTransaction({
 		objectInputs,
 		...(context.game ? { game: context.game } : {}),
 		...(context.action ? { action: context.action } : {}),
-		...(context.coinType ? { coinType: normalizeStructTag(context.coinType) } : {}),
+		...(context.coinType != null && context.coinType !== ''
+			? { coinType: normalizeStructTag(context.coinType) }
+			: {}),
 		...(context.stake == null ? {} : { stake: String(context.stake) }),
-		...(context.stakeDisplay ? { stakeDisplay: context.stakeDisplay } : {}),
+		...(context.stakeDisplay != null && context.stakeDisplay !== ''
+			? { stakeDisplay: context.stakeDisplay }
+			: {}),
 		...(context.coinDecimals == null ? {} : { coinDecimals: context.coinDecimals }),
 		...(context.gameInputs ? { gameInputs: context.gameInputs } : {}),
 	};
@@ -241,7 +257,10 @@ export async function buildTransactionResult({
 	const summary = summarizeTransaction({ transaction, context });
 	if (mode === 'dry-run') {
 		const rawDryRun = await dryRunTransaction({ transaction, client });
-		const dryRun = toJsonValue(rawDryRun) as DryRunResult;
+		const dryRun = toJsonValue(rawDryRun);
+		if (!isNonArrayRecord(dryRun)) {
+			throw new TypeError('Expected a dry-run result object.');
+		}
 		const dryRunSummary = summarizeDryRun({ dryRun: rawDryRun, context });
 		const errors = extractDryRunErrors(rawDryRun);
 		return {
@@ -292,6 +311,6 @@ export async function executeSessionTransaction({
 		address: signer.toSuiAddress(),
 		digest: executed.digest,
 		status: executed.status.success ? ('success' as const) : ('failed' as const),
-		...(error ? { error } : {}),
+		...(error != null && error !== '' ? { error } : {}),
 	};
 }

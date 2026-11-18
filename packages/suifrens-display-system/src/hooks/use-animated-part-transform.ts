@@ -32,11 +32,12 @@ export function useAnimatedPartTransform(
 		}
 		const registration = {
 			getBaseTransform: () => baseRef.current,
-			setTransform: (value: string) => setTransform(value),
+			setTransform: (value: string) => {
+				setTransform(value);
+			},
 			pivotOverride: options?.pivotOverride,
 		};
-		const unregister = store.register(part, registration);
-		return unregister;
+		return store.register(part, registration);
 	}, [directDomTransforms, store, part, options?.pivotOverride]);
 
 	return !store || directDomTransforms ? baseTransform : transform;

@@ -14,7 +14,7 @@ export function runSugarCommand(...args: Array<string>): {
 		stdio: 'ignore',
 		env: process.env,
 	});
-	child.on('error', () => undefined);
+	child.on('error', () => {});
 	child.unref();
 	return {
 		command: ['npx', ...npxArgs].join(' '),
