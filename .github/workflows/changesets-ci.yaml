@@ -21,6 +21,8 @@ jobs:
 
       - name: Determine changed public packages
         id: public-packages
+        # The release PR consumes the changesets already merged into its base branch.
+        if: github.event.pull_request.head.repo.full_name != github.repository || github.head_ref != format('changeset-release/{0}', github.base_ref)
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
@@ -36,6 +38,7 @@ jobs:
 
       - name: Check for changesets
         id: changeset-files
+        if: steps.public-packages.outputs.has_changes == 'true'
         uses: tj-actions/changed-files@9426d40962ed5378910ee2e21d5f8c6fcbf2dd96 # v47.0.6
         with:
           files: |
