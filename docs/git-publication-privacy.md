@@ -6,7 +6,7 @@ Personal email addresses produce an error for recognized SugarCasino member iden
 
 Use the Node version from `.node-version`, then install the local hooks with `pnpm install --frozen-lockfile`. The hooks check the effective identity, commit messages and incoming commits in a push. Refresh remote refs before pushing a new branch.
 
-The `Publication privacy` workflow checks incoming PR commits, PR title/body, push ranges and annotated tags. It runs on `pull_request`, including contributions from forks, with read-only repository permissions. The workflow uses the full history provided by checkout (`fetch-depth: 0`); if a referenced commit is unavailable, the check fails. Manual dispatch checks the selected branch delta against main. Existing history common to the base is not rechecked; `--all` is an explicit historical audit.
+The `Publication privacy` workflow checks incoming PR commits, PR title/body, push ranges and annotated tags. It runs on `pull_request`, including contributions from forks, with read-only repository permissions. Normal pushes inspect `before..after`. New refs and non-fast-forward pushes inspect the delta from the merge base of `origin/main` and the new tip. GitHub's `forced` push flag identifies rewritten history even when the old tip is no longer available after checkout; otherwise the checker tests commit ancestry before selecting the range. The workflow uses the full history provided by checkout (`fetch-depth: 0`); missing history needed for the selected comparison or an unavailable merge base fails the check. Manual dispatch checks the selected branch delta against main. Existing history common to the base is not rechecked; `--all` is an explicit historical audit.
 
 ## Member identification
 
@@ -25,7 +25,7 @@ Passing these checks does not grant write access or approve a PR. SugarCasino ma
 Tests use synthetic identities and local Git fixtures:
 
 ```sh
-node --test scripts/validate-git-identities.test.mjs scripts/dispatch-version-publication-check.test.mjs
+node --test scripts/validate-git-identities.test.mjs scripts/check-publication-event.test.mjs scripts/dispatch-version-publication-check.test.mjs
 node scripts/validate-git-identities.mjs --config
 ```
 

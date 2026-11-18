@@ -25,7 +25,7 @@ jobs:
       - name: Setup pnpm
         uses: ./.github/actions/setup-pnpm
       - name: Test publication identity guard
-        run: node --test scripts/validate-git-identities.test.mjs scripts/dispatch-version-publication-check.test.mjs
+        run: node --test scripts/validate-git-identities.test.mjs scripts/check-publication-event.test.mjs scripts/dispatch-version-publication-check.test.mjs
       - name: Check incoming commits and squash metadata
         env:
           GITHUB_TOKEN: ${{ github.token }}
