@@ -171,39 +171,7 @@ function eventFields({
 	return formattedFields;
 }
 
-function parseDryRunEvent({
-	event,
-	eventType,
-}: {
-	event: Record<string, unknown>;
-	eventType: string;
-}): ReturnType<typeof parseGameEvent> {
-	const module =
-		typeof event['module'] === 'string'
-			? event['module']
-			: eventType.includes('::core::')
-				? 'core'
-				: eventType.includes('::pvp_coinflip::')
-					? 'pvp_coinflip'
-					: '';
-
-	if (!module) {
-		return null;
-	}
-
-	try {
-		const gameEvent = parseGameEvent({
-			...event,
-			eventType,
-			module,
-		});
-		if (gameEvent) {
-			return gameEvent;
-		}
-	} catch {
-		// Fall back to string matching below for JSON-only simulated events.
-	}
-
+function matchBetResult(eventType: string): ReturnType<typeof parseGameEvent> {
 	const standardBetResult = /::BetResultEvent<[^>]+::([^:<>,]+)::Game>/u.exec(eventType);
 	const gameName = standardBetResult?.[1]?.replaceAll('_', '-');
 	const game = GAMES.find((known) => known === gameName);
@@ -243,35 +211,29 @@ function summarizeDryRunEvent({
 				: eventType.includes('::pvp_coinflip::')
 					? 'pvp_coinflip'
 					: '';
-	let gameEvent: ReturnType<typeof parseDryRunEvent> = null;
-
-	try {
-		gameEvent = parseDryRunEvent({ event, eventType });
-		if (gameEvent && event['bcs'] instanceof Uint8Array) {
-			const sugarEvent = parseSugarEvent({
-				...event,
-				eventType,
-				module,
-
-				bcs: event['bcs'],
-			});
-			if (!sugarEvent) {
+	const envelope = { eventType, module };
+	if (module && event['bcs'] instanceof Uint8Array) {
+		try {
+			const sugarEvent = parseSugarEvent({ ...envelope, bcs: event['bcs'] });
+			if (sugarEvent) {
+				const data = sugarEvent.event.data;
+				const details = 'gameDetails' in sugarEvent ? sugarEvent.gameDetails : undefined;
+				return {
+					...baseSummary,
+					game: sugarEvent.game,
+					event: sugarEvent.event.type,
+					fields: eventFields({
+						fields: { ...data, ...(details ? { game_details: details, ...details } : {}) },
+						decimals,
+					}),
+				};
+			}
+			if (matchBetResult(eventType)) {
 				return null;
 			}
-			const data = sugarEvent.event.data;
-			const details = 'gameDetails' in sugarEvent ? sugarEvent.gameDetails : undefined;
-			return {
-				...baseSummary,
-				game: sugarEvent.game,
-				event: sugarEvent.event.type,
-				fields: eventFields({
-					fields: { ...data, ...(details ? { game_details: details, ...details } : {}) },
-					decimals,
-				}),
-			};
+		} catch {
+			// Fall back to API-provided JSON when the BCS payload cannot be decoded.
 		}
-	} catch {
-		// Fall back to API-provided JSON below.
 	}
 
 	const json = isRecord(event['json'])
@@ -279,18 +241,24 @@ function summarizeDryRunEvent({
 		: isRecord(event['parsedJson'])
 			? event['parsedJson']
 			: null;
-	return json
-		? {
-				...baseSummary,
-				...(gameEvent
-					? {
-							game: gameEvent.game,
-							event: gameEvent.event,
-						}
-					: {}),
-				fields: eventFields({ fields: json, decimals }),
-			}
-		: null;
+	if (!json) {
+		return null;
+	}
+
+	let gameEvent: ReturnType<typeof parseGameEvent> = null;
+	if (module) {
+		try {
+			gameEvent = parseGameEvent(envelope);
+		} catch {
+			// Some JSON-only events expose the game only in the Move type string.
+		}
+		gameEvent ??= matchBetResult(eventType);
+	}
+	return {
+		...baseSummary,
+		...(gameEvent ? { game: gameEvent.game, event: gameEvent.event } : {}),
+		fields: eventFields({ fields: json, decimals }),
+	};
 }
 
 export function summarizeDryRun({

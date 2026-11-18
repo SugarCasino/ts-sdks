@@ -5,6 +5,21 @@ import { ClientCache } from '@mysten/sui/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { readCache } from '../../../src/helpers/index.js';
 
+function startOverlappingReads() {
+	const cache = new ClientCache().scope('test');
+	const pending = Promise.withResolvers<string>();
+	const load = vi
+		.fn<() => Promise<string>>()
+		.mockReturnValueOnce(pending.promise)
+		.mockResolvedValueOnce('fresh');
+	const key: [string] = ['key'];
+	const read = (ignoreCache = false) =>
+		readCache({ cache, key, load, options: { ttlMs: 1000, ignoreCache } });
+	const older = read();
+	const refresh = read(true);
+	return { pending, older, refresh, read, load };
+}
+
 describe('readCache', () => {
 	beforeEach(() => {
 		vi.useFakeTimers();
@@ -41,6 +56,24 @@ describe('readCache', () => {
 		pending.resolve('value');
 		await expect(first).resolves.toBe('value');
 		expect(readCache(options)).toBe('value');
+	});
+
+	it('keeps the refreshed value when an older load resolves', async () => {
+		const { pending, older, refresh, read, load } = startOverlappingReads();
+		await expect(refresh).resolves.toBe('fresh');
+		pending.resolve('older');
+		await expect(older).resolves.toBe('older');
+		expect(read()).toBe('fresh');
+		expect(load).toHaveBeenCalledTimes(2);
+	});
+
+	it('keeps the refreshed value when an older load rejects', async () => {
+		const { pending, older, refresh, read, load } = startOverlappingReads();
+		await expect(refresh).resolves.toBe('fresh');
+		pending.reject(new Error('older load failed'));
+		await expect(older).rejects.toThrow('older load failed');
+		expect(read()).toBe('fresh');
+		expect(load).toHaveBeenCalledTimes(2);
 	});
 
 	it('reads sync values through the client cache', () => {
