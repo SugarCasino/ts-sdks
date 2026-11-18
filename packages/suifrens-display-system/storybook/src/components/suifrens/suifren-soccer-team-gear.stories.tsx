@@ -59,7 +59,7 @@ function buildTeamGear(country: SoccerTeamCountryCode, side: SoccerTeamSide = 'h
 const meta = {
 	title: 'Suifrens/Accessories/Kits/Soccer Team Kit',
 	parameters: { controls: { disable: true } },
-	tags: [],
+	tags: ['0.0.1'],
 } satisfies Meta;
 
 export default meta;

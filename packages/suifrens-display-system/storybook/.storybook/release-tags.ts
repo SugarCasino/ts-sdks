@@ -1,7 +1,12 @@
 // Copyright (c) Sugar
 // SPDX-License-Identifier: Apache-2.0
 
-const versionPattern = /^\d+\.\d+\.\d+$/u;
+export const versionPattern = /^\d+\.\d+\.\d+$/u;
+
+export function getReleaseVersions(changelog: string): Array<string> {
+	const headings = changelog.matchAll(/^## (\d+\.\d+\.\d+)(?:-[0-9A-Za-z.-]+)?\r?$/gmu);
+	return [...new Set(Array.from(headings, (match) => match[1]!).toReversed())];
+}
 
 export function withReleaseFilters(tags: Array<string>, releases: Array<string>): Array<string> {
 	// CSF lists component tags before story tags. A later "!tag" removes that tag.

@@ -41,7 +41,7 @@ const baseAttributes = {
 const meta = {
 	title: 'Suifrens/Playground/Sandbox',
 	parameters: { controls: { disable: true } },
-	tags: [],
+	tags: ['0.0.1'],
 } satisfies Meta;
 
 export default meta;

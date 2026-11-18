@@ -4,14 +4,10 @@
 
 import { readFileSync } from 'node:fs';
 import type { StorybookConfig } from '@storybook/react-vite';
-import { withReleaseFilters } from './release-tags.js';
+import { getReleaseVersions, withReleaseFilters } from './release-tags.js';
 
-// Sugar starts with an empty release history; future releases come from the changelog.
 const changelog = readFileSync(new URL('../../CHANGELOG.md', import.meta.url), 'utf8');
-const releases = Array.from(
-	changelog.matchAll(/^## (\d+\.\d+\.\d+)$/gmu),
-	([, version]) => version!,
-).toReversed();
+const releases = getReleaseVersions(changelog);
 
 const config: StorybookConfig = {
 	staticDirs: ['../public'],

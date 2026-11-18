@@ -12,7 +12,7 @@ const meta = {
 	title: 'Suifrens/Accessories/Kits/Runner Kit',
 	component: RunnerKitPreview,
 	argTypes: imageControls,
-	tags: [],
+	tags: ['0.0.1'],
 } satisfies Meta<typeof RunnerKitPreview>;
 export default meta;
 type Story = StoryObj<typeof meta>;

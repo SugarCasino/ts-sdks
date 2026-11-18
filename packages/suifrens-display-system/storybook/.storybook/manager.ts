@@ -4,6 +4,7 @@
 import { defaultConfig, type TagBadgeParameters } from 'storybook-addon-tag-badges/manager-helpers';
 import { addons } from 'storybook/manager-api';
 import { themes } from 'storybook/theming';
+import { versionPattern } from './release-tags.js';
 
 addons.setConfig({
 	theme: {
@@ -19,15 +20,20 @@ addons.setConfig({
 			display: { sidebar: true },
 			badge: { text: 'Unreleased', style: 'orange', tooltip: 'Not yet available in a release' },
 		},
-		...defaultConfig,
 		{
-			display: { sidebar: true, toolbar: false, mdx: false },
-			tags: /^\d+\.\d+\.\d+$/u,
-			badge: ({ tag }) => {
-				const version = `v${tag}`;
-				return { text: version, style: 'blue', tooltip: `Available since ${version}` };
+			display: {
+				sidebar: [
+					{ type: 'component', skipInherited: false },
+					{ type: 'docs', skipInherited: false },
+					{ type: 'story', skipInherited: false },
+				],
+				toolbar: false,
+				mdx: false,
 			},
+			tags: versionPattern,
+			badge: ({ tag }) => ({ text: `v${tag}`, style: 'blue', tooltip: `Available since v${tag}` }),
 		},
+		...defaultConfig,
 	] satisfies TagBadgeParameters,
 });
 

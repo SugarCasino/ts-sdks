@@ -10,7 +10,7 @@ const meta = {
 	component: CataloguePreview,
 	argTypes: { expression: expressionControl, title: { table: { disable: true } } },
 	render: (args) => <CataloguePreview {...args} title={args.expression ?? args.title} />,
-	tags: ['!autodocs'],
+	tags: ['0.0.1', '!autodocs'],
 } satisfies Meta<typeof CataloguePreview>;
 export default meta;
 
