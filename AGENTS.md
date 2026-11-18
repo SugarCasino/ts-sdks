@@ -117,6 +117,10 @@ Use these Sugar skills when building a product with this SDK:
 
 ## Pull requests
 
+Every PR title must use `type(scope): summary`. Choose the type that best describes the change, such as `feat`, `fix`, `refactor`, `chore`, or `docs`. Use the affected package, workspace, or other relevant area as the scope. State what the PR does in the summary.
+
+Add `!` immediately before the colon only for breaking changes. For example, use `fix(playground): restore wallet selection` for a bug fix or `refactor(sdk)!: remove the legacy client constructor` for a breaking change.
+
 Describe the package behavior change and include the required branch changesets. PRs with publishable-package source changes but no changeset are expected to fail merge checks and receive a PR comment.
 
 Use this format for PR descriptions:
