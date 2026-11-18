@@ -2,16 +2,80 @@
 // Copyright (c) Sugar (modifications)
 // SPDX-License-Identifier: Apache-2.0
 
-import { type ReactNode, useMemo } from 'react';
-import { AnimationProvider } from '../animation/AnimationContext.js';
+import { useEffect, useMemo, useRef } from 'react';
+import { AnimatedAccessory } from '../animation/AnimatedAccessory.js';
+import {
+	AnimationProvider,
+	useAnimationShadow,
+	useAnimationStore,
+} from '../animation/AnimationContext.js';
 import { shouldRenderMicrophoneArmInForeground } from '../helpers/accessories/foreground-layering.js';
-import type { AccessoryRenderer } from '../types/accessory.type.js';
+import type { AccessoryRenderer, AccessorySlots } from '../types/accessory.type.js';
 import type { SuiFrenImageProps } from '../types/suifren.type.js';
 import { getAccessoriesByType } from '../utils/accessories.js';
 import { assertUnreachable } from '../utils/assert-unreachable.js';
 import { AccessoryRendererProvider } from './accessories/AccessorySlot.js';
 import { BullsharkImage } from './bullshark/BullsharkImage.js';
 import { CapyImage } from './capy/CapyImage.js';
+
+type SpeciesImageProps = Pick<
+	SuiFrenImageProps,
+	'attributes' | 'detail' | 'gesture' | 'incognito'
+> & {
+	accessoriesByType?: AccessorySlots;
+	renderMicrophoneArmInForeground: boolean;
+};
+
+function SpeciesImage({ attributes, ...props }: SpeciesImageProps) {
+	if ('finStyle' in attributes) {
+		return <BullsharkImage attributes={attributes} {...props} />;
+	}
+	if ('earShape' in attributes) {
+		return <CapyImage attributes={attributes} {...props} />;
+	}
+	return assertUnreachable(attributes);
+}
+
+const standingShadow = <ellipse opacity={0.3} cx="1400.4" cy="2615.2" rx="472.8" ry="130.6" />;
+
+function AirborneGroundShadow({ visible }: { visible: boolean }) {
+	const store = useAnimationStore();
+	const ref = useRef<SVGGElement>(null);
+	useEffect(() => {
+		if (!ref.current || !store) {
+			return;
+		}
+		return store.registerAirborneShadow(ref.current);
+	}, [store]);
+
+	return (
+		<g transform="translate(1400.4 2615.2)">
+			<g ref={ref}>{visible && <ellipse opacity={0.3} rx="472.8" ry="130.6" />}</g>
+		</g>
+	);
+}
+
+function AnimatedGroundShadow({ visible }: { visible: boolean }) {
+	const shadow = useAnimationShadow();
+	if (shadow === 'airborne') {
+		return <AirborneGroundShadow visible={visible} />;
+	}
+	if (shadow === 'static') {
+		return visible ? standingShadow : null;
+	}
+
+	// Project the rotating silhouette's footprint onto the ground plane.
+	// At rest this has the same center and radii as the standing shadow.
+	return (
+		<g transform="translate(0 2435.2) scale(1 0.12)">
+			<AnimatedAccessory fallbackPart="body">
+				<g>
+					{visible && <ellipse opacity={0.3} cx="1400.4" cy="1500" rx="472.8" ry={130.6 / 0.12} />}
+				</g>
+			</AnimatedAccessory>
+		</g>
+	);
+}
 
 export function SuiFrenImageView({
 	accessoryRenderer,
@@ -37,38 +101,18 @@ export function SuiFrenImageView({
 		accessoriesByType,
 	);
 
-	let suiFrenImageContent: ReactNode | undefined;
-	if ('finStyle' in attributes) {
-		suiFrenImageContent = (
-			<BullsharkImage
-				gesture={gesture}
-				{...(accessoriesByType && { accessoriesByType })}
-				attributes={attributes}
-				detail={detail}
-				incognito={incognito}
-				renderMicrophoneArmInForeground={renderMicrophoneArmInForeground}
-			/>
-		);
-	} else if ('earShape' in attributes) {
-		suiFrenImageContent = (
-			<CapyImage
-				gesture={gesture}
-				{...(accessoriesByType && { accessoriesByType })}
-				attributes={attributes}
-				detail={detail}
-				incognito={incognito}
-				renderMicrophoneArmInForeground={renderMicrophoneArmInForeground}
-			/>
-		);
-	} else {
-		assertUnreachable(attributes);
-	}
-
 	const resolvedSize =
 		typeof renderSize === 'number' ? { width: renderSize, height: renderSize } : renderSize;
 	const renderedContent = (
 		<AccessoryRendererProvider renderer={accessoryRenderer}>
-			{suiFrenImageContent}
+			<SpeciesImage
+				attributes={attributes}
+				detail={detail}
+				gesture={gesture}
+				incognito={incognito}
+				{...(accessoriesByType && { accessoriesByType })}
+				renderMicrophoneArmInForeground={renderMicrophoneArmInForeground}
+			/>
 		</AccessoryRendererProvider>
 	);
 
@@ -86,12 +130,13 @@ export function SuiFrenImageView({
 			className={['suifren-image', className].filter(Boolean).join(' ')}
 			style={style}
 		>
-			{shadow ? <ellipse opacity={0.3} cx="1400.4" cy="2615.2" rx="472.8" ry="130.6" /> : null}
+			{shadow && !animation && standingShadow}
 			{animation ? (
 				<AnimationProvider
 					key={'finStyle' in attributes ? 'bullshark' : 'capy'}
 					animation={animation}
 				>
+					<AnimatedGroundShadow visible={shadow} />
 					{renderedContent}
 				</AnimationProvider>
 			) : (

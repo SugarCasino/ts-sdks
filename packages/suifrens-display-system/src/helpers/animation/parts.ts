@@ -1,18 +1,14 @@
 // Copyright (c) Sugar
 // SPDX-License-Identifier: Apache-2.0
 
-import { WHITESPACE_PATTERN } from '../constants/svg-patterns.js';
-import type { AnimationPart } from '../types/animation.type.js';
-
-const TRAILING_DECIMAL_ZEROS_PATTERN: RegExp = /\.?0+$/u;
+import { WHITESPACE_PATTERN } from '../../constants/svg-patterns.js';
+import type { AnimationPart } from '../../types/animation.type.js';
 
 type PartDefinition = {
 	pivot: { x: number; y: number };
 	autoDetectTransforms: Array<string>;
 	parent?: AnimationPart;
 };
-
-const PRECISION = 6;
 
 function normalizeTransform(transform: string): string {
 	return transform.replace(WHITESPACE_PATTERN, '').toLowerCase();
@@ -76,7 +72,8 @@ const PART_DEFINITIONS: Record<AnimationPart, PartDefinition> = {
 		autoDetectTransforms: ['matrix(2.9166107177734375,0,0,2.9166107177734375,1463.45,1961.9)'],
 	},
 	tail: {
-		pivot: { x: 468.15, y: 1761.65 },
+		// Native tail root (240, 150) overlaps the torso on the right edge of the tail.
+		pivot: { x: 1168.13657, y: 2199.14161 },
 		parent: 'body',
 		autoDetectTransforms: ['matrix(2.9166107177734375,0,0,2.9166107177734375,468.15,1761.65)'],
 	},
@@ -99,9 +96,4 @@ export function matchPartByTransform(transform: string | null): AnimationPart | 
 	}
 	const normalized = normalizeTransform(transform);
 	return TRANSFORM_LOOKUP.get(normalized) ?? null;
-}
-
-export function formatNumber(value: number): string {
-	const fixed = value.toFixed(PRECISION);
-	return fixed.replace(TRAILING_DECIMAL_ZEROS_PATTERN, '');
 }

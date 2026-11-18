@@ -1,8 +1,10 @@
 // Copyright (c) Sugar
 // SPDX-License-Identifier: Apache-2.0
 
-import { formatNumber } from '../animation/parts.js';
 import type { Matrix } from '../types/animation.type.js';
+
+const TRAILING_DECIMAL_ZEROS_PATTERN: RegExp = /\.?0+$/u;
+const PRECISION = 6;
 
 const MATRIX_COEFFICIENT_PATTERN: RegExp = /\s*(-?\d*\.?\d+(?:e[-+]?\d+)?)\s*/u;
 const MATRIX_TRANSFORM_PATTERN: RegExp = new RegExp(
@@ -33,6 +35,11 @@ export function parseMatrix(transform: string | undefined | null): Matrix | null
 	}
 	const [, a, b, c, d, e, f] = match;
 	return [Number(a), Number(b), Number(c), Number(d), Number(e), Number(f)];
+}
+
+function formatNumber(value: number): string {
+	const fixed = value.toFixed(PRECISION);
+	return fixed.replace(TRAILING_DECIMAL_ZEROS_PATTERN, '');
 }
 
 export function matrixToString(matrix: Matrix): string {

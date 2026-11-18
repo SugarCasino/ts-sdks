@@ -9,9 +9,9 @@ import {
 	useImperativeHandle,
 	useRef,
 } from 'react';
+import { matchPartByTransform } from '../helpers/animation/parts.js';
 import type { AnimationPart } from '../types/animation.type.js';
 import { useAnimationStore } from './AnimationContext.js';
-import { matchPartByTransform } from './parts.js';
 
 type AnimatedAccessoryProps = {
 	children: ReactElement;

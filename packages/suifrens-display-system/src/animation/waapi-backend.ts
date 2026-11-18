@@ -1,7 +1,13 @@
 // Copyright (c) Sugar
 // SPDX-License-Identifier: Apache-2.0
 
+import { airborneShadowStyle } from '../helpers/animation/airborne-shadow.js';
 import { composePartTransform } from '../helpers/animation/compose-part-transform.js';
+import {
+	interpolatePose,
+	interpolateSequencePoses,
+} from '../helpers/animation/interpolate-sequence-poses.js';
+import { normalizePlayback } from '../helpers/animation/normalize-playback.js';
 import type {
 	AnimationConfig,
 	AnimationSequence,
@@ -9,7 +15,6 @@ import type {
 } from '../types/animation.type.js';
 import { matrixToAnimationTransform, parseMatrix } from '../utils/matrix.js';
 import type { AnimationStore } from './animation-store.js';
-import { interpolateSequencePoses, normalizePlayback } from './sequence-player.js';
 
 type BackendPreference = 'auto' | 'waapi' | 'fallback';
 
@@ -195,8 +200,24 @@ export function startWaapiAnimation(
 	const { speed, iterations, alternate } = normalizePlayback(config.playback);
 	const duration = sequence.duration / speed;
 	const direction = playbackDirection(config.direction, alternate);
-	const animations = targets.map((target) => {
-		const animation = target.element.animate(getTargetKeyframes(target, sequence, offsets), {
+	const effects = targets.map((target) => ({
+		element: target.element,
+		frames: getTargetKeyframes(target, sequence, offsets),
+	}));
+	const shadows = store.getAirborneShadows();
+	const bodyTrack = sequence.tracks.findLast((track) => track.part === 'body');
+	if (shadows.size > 0 && bodyTrack) {
+		const frames = offsets.map((time) => ({
+			offset: time / sequence.duration,
+			...airborneShadowStyle(interpolatePose(bodyTrack, time)),
+		}));
+		for (const element of shadows) {
+			effects.push({ element, frames });
+		}
+	}
+
+	const animations = effects.map(({ element, frames }) => {
+		const animation = element.animate(frames, {
 			duration,
 			iterations,
 			direction,

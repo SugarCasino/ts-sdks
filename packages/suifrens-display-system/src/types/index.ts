@@ -17,6 +17,7 @@ export type {
 	AnimationPart,
 	AnimationPresetName,
 	AnimationSequence,
+	AnimationShadow,
 	AnimationTrack,
 	EasingName,
 	PartPose,

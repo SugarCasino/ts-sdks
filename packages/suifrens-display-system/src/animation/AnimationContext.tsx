@@ -10,16 +10,17 @@ import {
 	useRef,
 	useState,
 } from 'react';
-import type { AnimationConfig } from '../types/animation.type.js';
+import { matchPartByTransform } from '../helpers/animation/parts.js';
+import { observePlaybackVisibility } from '../helpers/animation/playback-visibility.js';
+import type { AnimationConfig, AnimationShadow } from '../types/animation.type.js';
 import { AnimationController } from './animation-controller.js';
 import { AnimationStore } from './animation-store.js';
-import { matchPartByTransform } from './parts.js';
-import { observePlaybackVisibility } from './playback-visibility.js';
 import { getCorePresetSequence } from './presets/core.js';
 import { isDeferredPreset, loadDeferredPresetSequence } from './presets/resolver.js';
 import { startWaapiAnimation } from './waapi-backend.js';
 
 type AnimationContextValue = {
+	shadow: AnimationShadow;
 	store: AnimationStore;
 	controller: AnimationController;
 };
@@ -167,7 +168,11 @@ export function AnimationProvider({ animation = null, children }: AnimationProvi
 		};
 	}, [controller, resolvedAnimation, store]);
 
-	const value = useMemo<AnimationContextValue>(() => ({ store, controller }), [store, controller]);
+	const shadow = resolvedAnimation?.sequence?.shadow ?? 'static';
+	const value = useMemo<AnimationContextValue>(
+		() => ({ store, controller, shadow }),
+		[store, controller, shadow],
+	);
 
 	return (
 		<AnimationContext.Provider value={value}>
@@ -183,4 +188,8 @@ export function useAnimationStore(): AnimationStore | null {
 export function useAnimationController(): AnimationController | null {
 	const context = useContext(AnimationContext);
 	return context?.controller ?? null;
+}
+
+export function useAnimationShadow(): AnimationShadow {
+	return useContext(AnimationContext)?.shadow ?? 'static';
 }

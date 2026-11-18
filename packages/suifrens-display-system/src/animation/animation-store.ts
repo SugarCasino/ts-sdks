@@ -1,14 +1,15 @@
 // Copyright (c) Sugar
 // SPDX-License-Identifier: Apache-2.0
 
+import { airborneShadowStyle } from '../helpers/animation/airborne-shadow.js';
 import { composePartTransform } from '../helpers/animation/compose-part-transform.js';
+import { getPartDefinition } from '../helpers/animation/parts.js';
 import type {
 	AnimationPart,
 	AnimationRegistration,
 	AnimationTarget,
 	PartPose,
 } from '../types/animation.type.js';
-import { getPartDefinition } from './parts.js';
 
 type ElementRegistration = {
 	references: number;
@@ -25,6 +26,31 @@ export class AnimationStore {
 		SVGGraphicsElement,
 		Map<AnimationPart, ElementRegistration>
 	>();
+
+	private airborneShadows = new Set<SVGGElement>();
+
+	registerAirborneShadow(element: SVGGElement): () => void {
+		this.airborneShadows.add(element);
+		this.updateAirborneShadows();
+		return () => {
+			this.airborneShadows.delete(element);
+		};
+	}
+
+	getAirborneShadows(): ReadonlySet<SVGGElement> {
+		return this.airborneShadows;
+	}
+
+	private updateAirborneShadows(): void {
+		if (this.airborneShadows.size === 0) {
+			return;
+		}
+		const { transform, opacity } = airborneShadowStyle(this.poses.get('body'));
+		for (const element of this.airborneShadows) {
+			element.setAttribute('transform', transform);
+			element.setAttribute('opacity', String(opacity));
+		}
+	}
 
 	registerElement(
 		part: AnimationPart,
@@ -95,11 +121,15 @@ export class AnimationStore {
 		} else {
 			this.poses.set(part, pose);
 		}
+		if (part === 'body') {
+			this.updateAirborneShadows();
+		}
 		this.notifyWithDependents(part);
 	}
 
 	setPoses(poses: Map<AnimationPart, PartPose>): void {
 		this.poses = new Map(poses);
+		this.updateAirborneShadows();
 		for (const part of this.registrations.keys()) {
 			this.notify(part);
 		}
@@ -110,6 +140,7 @@ export class AnimationStore {
 			return;
 		}
 		this.poses.clear();
+		this.updateAirborneShadows();
 		for (const part of this.registrations.keys()) {
 			this.notify(part);
 		}

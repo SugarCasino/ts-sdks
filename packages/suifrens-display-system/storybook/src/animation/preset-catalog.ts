@@ -123,19 +123,19 @@ export const PRESET_CATALOG: Array<PresetCatalogGroup> = [
 				config: { preset: 'revive', playback: { ...LOOP, alternate: true } },
 			},
 			{
-				label: 'Death (Alt 1)',
+				label: 'Death (Alt 1) (Loop)',
 				name: 'death',
-				config: { preset: 'death', playback: { iterations: 1 }, holdOnComplete: true },
+				config: { preset: 'death', playback: LOOP },
 			},
 			{
-				label: 'Death (Alt 2)',
+				label: 'Death (Alt 2) (Loop)',
 				name: 'death2',
-				config: { preset: 'death2', playback: { iterations: 1 }, holdOnComplete: true },
+				config: { preset: 'death2', playback: LOOP },
 			},
 			{
-				label: 'Death (Alt 3)',
+				label: 'Death (Alt 3) (Loop)',
 				name: 'death3',
-				config: { preset: 'death3', playback: { iterations: 1 }, holdOnComplete: true },
+				config: { preset: 'death3', playback: LOOP },
 			},
 			{
 				label: 'Victory',

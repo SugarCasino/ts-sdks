@@ -1,7 +1,7 @@
 // Copyright (c) Sugar
 // SPDX-License-Identifier: Apache-2.0
 
-import type { PartPose } from '../types/animation.type.js';
+import type { PartPose } from '../../types/animation.type.js';
 
 function blendScaleAxis(start: number, end: number, eased: number): number {
 	if (start * end < 0) {
