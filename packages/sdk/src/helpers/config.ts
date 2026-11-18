@@ -18,6 +18,7 @@ import type {
 	WithCoinType,
 	WithConfig,
 } from '../types/index.js';
+import { SUGAR_COINS } from '../types/sugar-config.type.js';
 
 export const DEFAULT_CACHE_TTL_MS: number = 30 * 60 * 1000;
 
@@ -50,14 +51,18 @@ export function resolveSugarConfig({
 	const objectIds = OBJECT_IDS[network];
 	const coins = COINS[network];
 
-	const resolvedCoins = getSupportedCoins(coins).reduce<SugarConfig['coins']>((result, coin) => {
-		result[coin] = resolveCoinMetadata({
-			coin,
-			coinMetadata: coins[coin],
-			configCoinMetadata: config.coins?.[coin],
-		});
-		return result;
-	}, Object.create(null));
+	const resolvedCoins = SUGAR_COINS.reduce<SugarConfig['coins']>(
+		(result, coin) => {
+			result[coin] = resolveCoinMetadata({
+				coin,
+				coinMetadata: coins[coin],
+				configCoinMetadata: config.coins?.[coin],
+			});
+			return result;
+		},
+		// oxlint-disable-next-line typescript/no-unsafe-argument -- Object.create(null) is the intentional reduce seed.
+		Object.create(null),
+	);
 	const resolvedPackageIds = { ...packageIds, ...config.packageIds };
 	const resolvedObjectIds = { ...objectIds, ...config.objectIds };
 
@@ -83,10 +88,6 @@ export function resolvePriceInfoObjectId({ config, coinType }: WithConfig<WithCo
 	}
 
 	return objectId;
-}
-
-function getSupportedCoins(coins: SugarConfig['coins']): Array<SugarCoin> {
-	return Object.keys(coins) as Array<SugarCoin>;
 }
 
 function assertSuiObjectIds<T extends Record<string, string | undefined>>(
@@ -126,14 +127,14 @@ function resolveCoinMetadata({
 
 function resolveSupportedCoin({ config, coinType }: WithConfig<WithCoinType>): SugarCoin {
 	const normalizedCoinType = normalizeStructTag(coinType);
-	const supportedCoin = getSupportedCoins(config.coins).find(
+	const supportedCoin = SUGAR_COINS.find(
 		(coin) => config.coins[coin].coinType === normalizedCoinType,
 	);
 
 	if (!supportedCoin) {
 		throw new RangeError(
 			`Unsupported coin type ${coinType}. Supported coin types: ${Object.values(config.coins)
-				.map(({ coinType }) => coinType)
+				.map(({ coinType: supportedType }) => supportedType)
 				.join(', ')}`,
 		);
 	}

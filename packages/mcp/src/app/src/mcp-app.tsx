@@ -5,6 +5,7 @@ import { type McpUiHostContext, useApp, useHostStyles } from '@modelcontextproto
 import type { CallToolResult } from '@modelcontextprotocol/server';
 import { type JSX, StrictMode, useEffect, useReducer, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
+import { asRecord } from '../../utils/record.js';
 import {
 	ExecutionApproval,
 	Header,
@@ -12,7 +13,6 @@ import {
 	Panel,
 	RawPayload,
 } from './components/inspector-components.js';
-import { asRecord } from './lib/format.js';
 import { getToolResultPayload } from './lib/tool-result.js';
 import type { InspectorState } from './lib/types.js';
 import { resolveAppView } from './views/index.js';
@@ -85,6 +85,10 @@ function reducer(state: AppViewState, action: AppViewAction): AppViewState {
 					errors: action.errors,
 				},
 			};
+		default:
+			throw new Error('Unable to update the inspector. Refresh the page and try again.', {
+				cause: action satisfies never,
+			});
 	}
 }
 
@@ -103,6 +107,39 @@ export function SugarInspectorApp(): JSX.Element | null {
 		[],
 	);
 
+	const onToolInput = () => {
+		dispatch({ type: 'tool-input' });
+	};
+
+	const onToolResult = (result: CallToolResult) => {
+		if (result.isError === true) {
+			const errors = textErrors(result);
+			dispatch({
+				type: 'tool-error',
+				payload: result,
+				errors: errors.length > 0 ? errors : ['Tool call failed.'],
+			});
+			return;
+		}
+
+		const payload = getToolResultPayload(result);
+		const execution = asRecord(payload['execution']);
+		dispatch({
+			type: 'tool-result',
+			status:
+				typeof payload['mode'] === 'string'
+					? payload['mode']
+					: typeof execution['status'] === 'string'
+						? execution['status']
+						: 'read',
+			payload,
+		});
+	};
+
+	const onHostContextChanged = (context: McpUiHostContext) => {
+		dispatch({ type: 'host-context', context });
+	};
+
 	const { app, error, isConnected } = useApp({
 		appInfo: {
 			name: 'sugar-mcp-app',
@@ -111,38 +148,6 @@ export function SugarInspectorApp(): JSX.Element | null {
 		capabilities: {},
 		onAppCreated: (createdApp) => {
 			removeAppListeners.current?.();
-			const onToolInput = () => {
-				dispatch({ type: 'tool-input' });
-			};
-
-			const onToolResult = (result: CallToolResult) => {
-				if (result.isError) {
-					const errors = textErrors(result);
-					dispatch({
-						type: 'tool-error',
-						payload: result,
-						errors: errors.length > 0 ? errors : ['Tool call failed.'],
-					});
-					return;
-				}
-
-				const payload = getToolResultPayload(result);
-				const execution = asRecord(payload['execution']);
-				dispatch({
-					type: 'tool-result',
-					status:
-						typeof payload['mode'] === 'string'
-							? payload['mode']
-							: typeof execution['status'] === 'string'
-								? execution['status']
-								: 'read',
-					payload,
-				});
-			};
-
-			const onHostContextChanged = (context: McpUiHostContext) => {
-				dispatch({ type: 'host-context', context });
-			};
 
 			createdApp.addEventListener('toolinput', onToolInput);
 			createdApp.addEventListener('toolresult', onToolResult);
@@ -201,19 +206,17 @@ export function SugarInspectorApp(): JSX.Element | null {
 		);
 	}
 
-	if (Object.keys(asRecord(inspector.payload)).length === 0) {
-		if (inspector.errors.length === 0) {
-			return (
-				<main className={shellClassName} style={safeAreaStyle}>
-					<Header status="Waiting for tool result" title="Sugar MCP" />
-					<Panel title="Tool result">
-						<p className="text-muted-foreground text-xs leading-5 font-semibold">
-							The app is connected, but the host has not delivered a readable tool result.
-						</p>
-					</Panel>
-				</main>
-			);
-		}
+	if (Object.keys(asRecord(inspector.payload)).length === 0 && inspector.errors.length === 0) {
+		return (
+			<main className={shellClassName} style={safeAreaStyle}>
+				<Header status="Waiting for tool result" title="Sugar MCP" />
+				<Panel title="Tool result">
+					<p className="text-muted-foreground text-xs leading-5 font-semibold">
+						The app is connected, but the host has not delivered a readable tool result.
+					</p>
+				</Panel>
+			</main>
+		);
 	}
 
 	if (inspector.errors.length > 0) {

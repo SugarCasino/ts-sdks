@@ -15,10 +15,10 @@
 		"changeset:version": "changeset version && pnpm run codegen:version",
 		"codegen:version": "pnpm --filter './packages/*' --if-present run codegen:version",
 		"release": "turbo run build:ci --filter='./packages/*' && changeset publish",
-		"oxlint": "oxlint .",
-		"oxlint:fix": "oxlint . --fix",
-		"oxfmt": "oxfmt . --check",
-		"oxfmt:fix": "oxfmt .",
+		"oxlint": "oxlint",
+		"oxlint:fix": "oxlint --fix",
+		"oxfmt": "oxfmt --check",
+		"oxfmt:fix": "oxfmt",
 		"lint": "pnpm run oxlint && pnpm run oxfmt",
 		"lint:fix": "pnpm run oxlint:fix && pnpm run oxfmt:fix"
 	},
@@ -28,12 +28,12 @@
 		"@changesets/config": "^4.0.1",
 		"@manypkg/cli": "^0.25.1",
 		"husky": "^9.1.7",
-		"lint-staged": "^17.6.0",
-		"oxfmt": "^0.77.0",
-		"oxlint": "^1.92.0",
-		"oxlint-tsgolint": "^7.0.2006",
+		"lint-staged": "^17.6.1",
+		"oxfmt": "^0.79.0",
+		"oxlint": "^1.94.0",
+		"oxlint-tsgolint": "^7.0.2007",
 		"rimraf": "^6.1.4",
-		"turbo": "^2.11.10"
+		"turbo": "^2.11.11"
 	},
 	"devEngines": {
 		"packageManager": {

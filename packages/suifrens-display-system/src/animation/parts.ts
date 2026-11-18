@@ -4,7 +4,7 @@
 import { WHITESPACE_PATTERN } from '../constants/svg-patterns.js';
 import type { AnimationPart } from '../types/animation.type.js';
 
-const TRAILING_DECIMAL_ZEROS_PATTERN: RegExp = /\.?0+$/;
+const TRAILING_DECIMAL_ZEROS_PATTERN: RegExp = /\.?0+$/u;
 
 type PartDefinition = {
 	pivot: { x: number; y: number };
@@ -16,6 +16,21 @@ const PRECISION = 6;
 
 function normalizeTransform(transform: string): string {
 	return transform.replace(WHITESPACE_PATTERN, '').toLowerCase();
+}
+
+function createTransformLookup<TPart extends AnimationPart>(
+	definitions: Record<TPart, PartDefinition>,
+): Map<string, TPart> {
+	const lookup = new Map<string, TPart>();
+	for (const part in definitions) {
+		if (!Object.hasOwn(definitions, part)) {
+			continue;
+		}
+		for (const transform of definitions[part].autoDetectTransforms) {
+			lookup.set(normalizeTransform(transform), part);
+		}
+	}
+	return lookup;
 }
 
 const PART_DEFINITIONS: Record<AnimationPart, PartDefinition> = {
@@ -72,19 +87,14 @@ const PART_DEFINITIONS: Record<AnimationPart, PartDefinition> = {
 	},
 };
 
-const TRANSFORM_LOOKUP = new Map<string, AnimationPart>();
-for (const [part, definition] of Object.entries(PART_DEFINITIONS)) {
-	for (const entry of definition.autoDetectTransforms) {
-		TRANSFORM_LOOKUP.set(normalizeTransform(entry), part as AnimationPart);
-	}
-}
+const TRANSFORM_LOOKUP = createTransformLookup(PART_DEFINITIONS);
 
 export function getPartDefinition(part: AnimationPart): PartDefinition {
 	return PART_DEFINITIONS[part];
 }
 
 export function matchPartByTransform(transform: string | null): AnimationPart | null {
-	if (!transform) {
+	if (transform == null || transform === '') {
 		return null;
 	}
 	const normalized = normalizeTransform(transform);

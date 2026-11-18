@@ -6,6 +6,7 @@ import { chmod, readFile, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { isValidSuiAddress } from '@mysten/sui/utils';
 import { type SugarNetwork, SUPPORTED_SUI_NETWORKS } from '@sugar/sdk';
+import { isNonArrayRecord } from '../utils/record.js';
 import { ensureSugarMcpDataDirectory, SUGAR_MCP_DATA_DIRECTORY } from './storage.js';
 
 const CREDENTIALS_FILE: string = join(SUGAR_MCP_DATA_DIRECTORY, 'credentials.json');
@@ -33,16 +34,12 @@ function empty(): Credentials {
 	};
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return value !== null && typeof value === 'object' && !Array.isArray(value);
-}
-
 function isValidSugarNetwork(value: unknown): value is SugarNetwork {
-	return typeof value === 'string' && SUPPORTED_SUI_NETWORKS.includes(value as SugarNetwork);
+	return SUPPORTED_SUI_NETWORKS.some((network) => network === value);
 }
 
 function isValidWalletProfile(value: unknown): value is WalletProfile {
-	if (!isRecord(value)) {
+	if (!isNonArrayRecord(value)) {
 		return false;
 	}
 	return (
@@ -55,13 +52,13 @@ function isValidWalletProfile(value: unknown): value is WalletProfile {
 }
 
 function isValidCredentials(value: unknown): value is Credentials {
-	if (!isRecord(value)) {
+	if (!isNonArrayRecord(value)) {
 		return false;
 	}
 	if (
 		value['version'] !== 1 ||
 		!isValidSugarNetwork(value['defaultNetwork']) ||
-		!isRecord(value['profiles'])
+		!isNonArrayRecord(value['profiles'])
 	) {
 		return false;
 	}
@@ -82,7 +79,7 @@ export function credentialsPath(): string {
 export function readPersistedDefaultNetwork(): SugarNetwork {
 	try {
 		const value: unknown = JSON.parse(readFileSync(CREDENTIALS_FILE, 'utf8'));
-		const network = isRecord(value) ? value['defaultNetwork'] : undefined;
+		const network = isNonArrayRecord(value) ? value['defaultNetwork'] : undefined;
 		return isValidSugarNetwork(network) ? network : 'testnet';
 	} catch {
 		return 'testnet';
@@ -94,7 +91,7 @@ export async function loadCredentials(): Promise<Credentials> {
 		const parsed: unknown = JSON.parse(await readFile(CREDENTIALS_FILE, 'utf8'));
 		return isValidCredentials(parsed) ? parsed : empty();
 	} catch (error) {
-		if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+		if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
 			return empty();
 		}
 		throw error;

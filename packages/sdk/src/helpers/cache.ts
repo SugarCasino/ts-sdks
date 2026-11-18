@@ -38,7 +38,7 @@ export function readCache<T>({
 	load,
 	options,
 }: ReadCacheParams<T> | ReadCacheSyncParams<T>): T | Promise<T> {
-	if (options.ignoreCache) {
+	if (options.ignoreCache === true) {
 		cache.clear(key);
 	}
 
@@ -75,24 +75,20 @@ export function readCache<T>({
 		return entry;
 	};
 
+	// The cache entry is synchronous; only its value may be a promise.
 	const readEntry = () =>
-		sync
-			? cache.readSync<CacheEntry<T>>(key, () => createEntry() as CacheEntry<T>)
-			: cache.read<CacheEntry<T | Promise<T>>>(key, () => createEntry({ cache, key }));
-
-	let cached = readEntry() as CacheEntry<T | Promise<T>>;
-
+		cache.readSync(key, () => createEntry(sync === true ? undefined : { cache, key }));
+	let cached = readEntry();
 	if (cached.expiresAt > Date.now()) {
 		return cached.value;
 	}
-
 	cache.clear(key);
-	cached = readEntry() as CacheEntry<T | Promise<T>>;
+	cached = readEntry();
 	return cached.value;
 }
 
 function isPromiseLike<T>(value: T | Promise<T>): value is Promise<T> {
 	return (
-		(typeof value === 'object' || typeof value === 'function') && value !== null && 'then' in value
+		(typeof value === 'object' || typeof value === 'function') && value != null && 'then' in value
 	);
 }

@@ -6,17 +6,17 @@ import { AnimatedAccessory } from '../../animation/AnimatedAccessory.js';
 import { BETWEEN_TAGS_WHITESPACE_PATTERN } from '../../constants/svg-patterns.js';
 import type { AnimationPart } from '../../types/animation.type.js';
 
-const SVG_ATTRIBUTE_PATTERN: RegExp = / ([\w:-]+)="([^"]*)"/g;
+const SVG_ATTRIBUTE_PATTERN: RegExp = / ([\w:-]+)="([^"]*)"/gu;
 
 // Only package-owned SVG files reach this renderer. Keep the original viewport and
 // expose the groups to the animation store, including during server-side rendering.
 function ArtworkElement({ source }: { source: string }) {
-	const { attributes, content } = useMemo(() => {
+	const { attributes: svgAttributes, content } = useMemo(() => {
 		const svg = source.trim().replace(BETWEEN_TAGS_WHITESPACE_PATTERN, '><');
 		const end = svg.indexOf('>');
 		const attributes: Record<string, string> = {};
 		for (const [, name, value] of svg.slice(0, end).matchAll(SVG_ATTRIBUTE_PATTERN)) {
-			if (!name || value === undefined) {
+			if (name == null || name === '' || value == null) {
 				continue;
 			}
 			attributes[name === 'xml:space' ? 'xmlSpace' : name === 'xmlns:xlink' ? 'xmlnsXlink' : name] =
@@ -24,7 +24,7 @@ function ArtworkElement({ source }: { source: string }) {
 		}
 		return { attributes, content: { __html: svg.slice(end + 1, -'</svg>'.length) } };
 	}, [source]);
-	return <svg {...attributes} dangerouslySetInnerHTML={content} />;
+	return <svg {...svgAttributes} dangerouslySetInnerHTML={content} />;
 }
 
 // A new SVG subtree needs fresh limb registrations when the outfit or its colors change.

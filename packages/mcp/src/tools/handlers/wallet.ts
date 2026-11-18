@@ -28,13 +28,13 @@ import {
 
 function connectionBridgeArgs(input: ConnectionInput): Array<string> {
 	const args: Array<string> = [];
-	if (input.webUrl) {
+	if (input.webUrl != null && input.webUrl !== '') {
 		args.push('--web-url', input.webUrl);
 	}
-	if (input.timeoutMs !== undefined) {
+	if (input.timeoutMs != null) {
 		args.push('--timeout-ms', String(input.timeoutMs));
 	}
-	if (input.maxBodyBytes !== undefined) {
+	if (input.maxBodyBytes != null) {
 		args.push('--max-body-bytes', String(input.maxBodyBytes));
 	}
 	if (input.noOpen === true || input.open === false) {
@@ -52,11 +52,12 @@ export async function getWalletBalancesTool(
 	let cursor: string | null = null;
 	let hasNextPage = false;
 	do {
+		// oxlint-disable-next-line no-await-in-loop -- Each page needs the cursor returned by the previous page.
 		const result = await bundle.client.core.listBalances({ owner, cursor });
 		balances.push(...result.balances);
 		cursor = result.cursor;
 		hasNextPage = result.hasNextPage;
-	} while (hasNextPage && cursor);
+	} while (hasNextPage && cursor != null && cursor !== '');
 
 	const metadata = new Map(
 		await Promise.all(
@@ -120,15 +121,17 @@ export async function listWalletCoinsTool(input: ListWalletCoinsInput): Promise<
 	});
 }
 
-export async function getExecutionStatusTool(
-	input: GetExecutionStatusInput,
-): Promise<ToolTextResult> {
-	const execution = getExecutionStatus(input.requestId);
-	if (!execution) {
-		throw new Error('Unknown execution request. It may have expired or this MCP server restarted.');
-	}
-	const { config } = createSugarClient(getConfigInput(input));
-	return asTextResponse({ network: config.network, config, execution });
+export function getExecutionStatusTool(input: GetExecutionStatusInput): Promise<ToolTextResult> {
+	return Promise.try(() => {
+		const execution = getExecutionStatus(input.requestId);
+		if (!execution) {
+			throw new Error(
+				'Unknown execution request. It may have expired or this MCP server restarted.',
+			);
+		}
+		const { config } = createSugarClient(getConfigInput(input));
+		return asTextResponse({ network: config.network, config, execution });
+	});
 }
 
 export async function getConnectionStatusTool(input: ConnectionInput): Promise<ToolTextResult> {
@@ -150,43 +153,47 @@ export async function getConnectionStatusTool(input: ConnectionInput): Promise<T
 	});
 }
 
-export async function sugarLoginTool(input: ConnectionInput): Promise<ToolTextResult> {
-	const { config } = createSugarClient(getConfigInput(input));
-	const command = runSugarCommand(
-		'login',
-		'--network',
-		config.network,
-		...connectionBridgeArgs(input),
-	);
-	return asTextResponse({
-		network: config.network,
-		config,
-		connection: {
-			connected: false,
-			status: 'pending',
-			...command,
-			note: 'Started the local Sugar MCP CLI login flow. It opens the correct network in the default browser and writes the paired wallet credentials locally.',
-		},
+export function sugarLoginTool(input: ConnectionInput): Promise<ToolTextResult> {
+	return Promise.try(() => {
+		const { config } = createSugarClient(getConfigInput(input));
+		const command = runSugarCommand(
+			'login',
+			'--network',
+			config.network,
+			...connectionBridgeArgs(input),
+		);
+		return asTextResponse({
+			network: config.network,
+			config,
+			connection: {
+				connected: false,
+				status: 'pending',
+				...command,
+				note: 'Started the local Sugar MCP CLI login flow. It opens the correct network in the default browser and writes the paired wallet credentials locally.',
+			},
+		});
 	});
 }
 
-export async function sugarLogoutTool(input: ConnectionInput): Promise<ToolTextResult> {
-	const { config } = createSugarClient(getConfigInput(input));
-	const command = runSugarCommand(
-		'logout',
-		'--network',
-		config.network,
-		...connectionBridgeArgs(input),
-	);
-	return asTextResponse({
-		network: config.network,
-		config,
-		connection: {
-			connected: false,
-			status: 'pending',
-			...command,
-			note: 'Started the local Sugar MCP CLI logout flow. It opens the correct network in the default browser and updates local wallet credentials after confirmation.',
-		},
+export function sugarLogoutTool(input: ConnectionInput): Promise<ToolTextResult> {
+	return Promise.try(() => {
+		const { config } = createSugarClient(getConfigInput(input));
+		const command = runSugarCommand(
+			'logout',
+			'--network',
+			config.network,
+			...connectionBridgeArgs(input),
+		);
+		return asTextResponse({
+			network: config.network,
+			config,
+			connection: {
+				connected: false,
+				status: 'pending',
+				...command,
+				note: 'Started the local Sugar MCP CLI logout flow. It opens the correct network in the default browser and updates local wallet credentials after confirmation.',
+			},
+		});
 	});
 }
 
@@ -227,9 +234,10 @@ export async function getSessionWalletTool(input: SessionWalletInput): Promise<T
 				status: 'setup-required',
 				setupUrl: setup.setupUrl,
 				wallets,
-				note: input.sessionWalletId
-					? 'No local session wallet exists with that ID. Create or recover a named session wallet, or call get_session_wallet without sessionWalletId to use the first wallet.'
-					: 'Create or recover a named session wallet shared by mainnet and testnet. Its recovery phrase is shown only on the local setup page.',
+				note:
+					input.sessionWalletId != null && input.sessionWalletId !== ''
+						? 'No local session wallet exists with that ID. Create or recover a named session wallet, or call get_session_wallet without sessionWalletId to use the first wallet.'
+						: 'Create or recover a named session wallet shared by mainnet and testnet. Its recovery phrase is shown only on the local setup page.',
 			},
 		});
 	}
@@ -238,6 +246,7 @@ export async function getSessionWalletTool(input: SessionWalletInput): Promise<T
 	let cursor: string | null = null;
 	let hasNextPage = false;
 	do {
+		// oxlint-disable-next-line no-await-in-loop -- Each page needs the cursor returned by the previous page.
 		const result = await bundle.client.core.listBalances({
 			owner: wallet.address,
 			cursor,
@@ -245,7 +254,7 @@ export async function getSessionWalletTool(input: SessionWalletInput): Promise<T
 		balances.push(...result.balances);
 		cursor = result.cursor;
 		hasNextPage = result.hasNextPage;
-	} while (hasNextPage && cursor);
+	} while (hasNextPage && cursor != null && cursor !== '');
 
 	const metadata = new Map(
 		await Promise.all(
@@ -291,10 +300,11 @@ export async function getSessionWalletTool(input: SessionWalletInput): Promise<T
 			funding: {
 				address: wallet.address,
 				addressQrCodeDataUrl,
-				...(fundingUrl ? { fundingUrl } : {}),
-				note: fundingUrl
-					? 'Open the funding URL to select a coin and amount from the paired wallet, then approve the transfer in the browser.'
-					: `Pair a wallet on ${bundle.config.network} with "sugar_login" before opening the funding flow.`,
+				...(fundingUrl != null && fundingUrl !== '' ? { fundingUrl } : {}),
+				note:
+					fundingUrl != null && fundingUrl !== ''
+						? 'Open the funding URL to select a coin and amount from the paired wallet, then approve the transfer in the browser.'
+						: `Pair a wallet on ${bundle.config.network} with "sugar_login" before opening the funding flow.`,
 			},
 		},
 	});

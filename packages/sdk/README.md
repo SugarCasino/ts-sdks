@@ -43,11 +43,14 @@ Import the extension factory, client class, and core types from the package root
 import {
 	sugar,
 	SugarClient,
+	SUGAR_COINS,
 	SUPPORTED_SUI_NETWORKS,
 	type SugarCoin,
 	type SugarNetwork,
 } from '@sugar/sdk';
 ```
+
+`SUGAR_COINS` is the readonly list `['sui', 'usdc']`. `SugarCoin` is derived from its elements; use the list to iterate supported coin keys without duplicating them.
 
 After registering the extension, access individual transaction builders through `client.sugar.tx`.
 
@@ -91,7 +94,7 @@ Numeric helper behavior:
 Import game-specific types from the `games` subpath:
 
 ```ts
-import { GAMES } from '@sugar/sdk/games';
+import { COIN_SIDES, GAMES, PVP_COINFLIP_ACTIONS } from '@sugar/sdk/games';
 import type {
 	CoinflipTransactionOptions,
 	CoinSide,
@@ -103,7 +106,9 @@ import type {
 } from '@sugar/sdk/games';
 ```
 
-The `@sugar/sdk/games` subpath exports `GAMES`, `Game`, `StandardGame`, `PvPGame`, `CoinSide`, `PvPCoinflipAction`, `CreateGameBetOptions`, `CoinflipTransactionOptions`, `KenoTransactionOptions`, `LimboTransactionOptions`, `PlinkoTransactionOptions`, `RangeTransactionOptions`, `SoccerTransactionOptions`, `WheelTransactionOptions`, `CreatePvPCoinflipTransactionOptions`, `JoinPvPCoinflipTransactionOptions`, `CancelPvPCoinflipTransactionOptions`.
+The `@sugar/sdk/games` subpath exports `COIN_SIDES`, `GAMES`, `PVP_COINFLIP_ACTIONS`, `Game`, `StandardGame`, `PvPGame`, `CoinSide`, `PvPCoinflipAction`, `CreateGameBetOptions`, `CoinflipTransactionOptions`, `KenoTransactionOptions`, `LimboTransactionOptions`, `PlinkoTransactionOptions`, `RangeTransactionOptions`, `SoccerTransactionOptions`, `WheelTransactionOptions`, `CreatePvPCoinflipTransactionOptions`, `JoinPvPCoinflipTransactionOptions`, `CancelPvPCoinflipTransactionOptions`.
+
+`COIN_SIDES` is the readonly list `['heads', 'tails']`; `CoinSide` is its element type. `PVP_COINFLIP_ACTIONS` lists `['create', 'join', 'cancel']` and defines `PvPCoinflipAction`. Reuse these lists for validation and selectors.
 
 ```ts
 const client = new SuiGrpcClient({ baseUrl, network }).$extend(sugar());
@@ -680,15 +685,17 @@ const sugarEvent = parseSugarEvent(event);
 
 if (sugarEvent?.event.type === 'BetResultEvent') {
 	console.log(sugarEvent.event.data.outcome_amount);
-	console.log(sugarEvent.gameDetails.payout_amount);
+	if ('payout_amount' in sugarEvent.gameDetails) {
+		console.log(sugarEvent.gameDetails.payout_amount);
+	}
 }
 ```
 
 `parseGameDetails` preserves the on-chain keys and only changes the value representation. For example, coinflip details keep keys such as `player_bet` and `coin_outcome`; range details keep keys such as `roll_value`, `win`, and `payout_multiplier`.
 
-`sugarEvent.gameDetails` narrows based on the event game. For example, when `sugarEvent.game === 'coinflip'` it narrows to:
+`GameDetails<Game>` is a union of the supported games' detail shapes. Check a detail key with `in` before accessing a field that is not shared by every game. Calling `parseGameDetails` with a literal game such as `'coinflip'` returns that game's precise shape: `{ player_bet: string; coin_outcome: string }`.
 
-- `{ player_bet: string; coin_outcome: string }`
+`parseGameEvent` needs only `eventType` and `module`. `parseSugarEvent` accepts the same minimal envelope, with optional `bcs` bytes; it returns `null` when those bytes are missing.
 
 `parseGameEvent(event)` remains available when only the normalized game and raw Move event name are needed. It returns:
 

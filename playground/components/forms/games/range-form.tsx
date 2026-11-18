@@ -6,7 +6,7 @@ import { StandardGameFields } from '@/components/forms/shared-game-fields';
 import { Field, FieldCode, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import { getRangePointMax, parseOptionalNumber } from '@/lib/sugar-app';
+import { getRangePointMax, parseOptionalNumber, resolveGameScale } from '@/lib/sugar-app';
 import type { RangeFormValues } from '@/lib/sugar-types';
 
 export function RangeForm({
@@ -22,12 +22,8 @@ export function RangeForm({
 	stakeDescription?: React.ReactNode | undefined;
 	rangeBoundsDescription?: React.ReactNode | undefined;
 }) {
-	const configuredScale = parseOptionalNumber(value.scale);
-	const effectiveScale =
-		configuredScale && Number.isFinite(configuredScale) && configuredScale > 0
-			? configuredScale
-			: DEFAULT_RANGE_SCALE;
-	const maxPoint = getRangePointMax(configuredScale);
+	const effectiveScale = resolveGameScale(parseOptionalNumber(value.scale), DEFAULT_RANGE_SCALE);
+	const maxPoint = getRangePointMax(effectiveScale);
 
 	return (
 		<div className="space-y-6">
@@ -43,7 +39,9 @@ export function RangeForm({
 						max={maxPoint}
 						className="bg-background/55 h-11 rounded-2xl px-4"
 						value={value.leftPoint}
-						onChange={(event) => onChange({ leftPoint: event.target.value })}
+						onChange={(event) => {
+							onChange({ leftPoint: event.target.value });
+						}}
 					/>
 					<FieldDescription size="sm">
 						Allowed range: <FieldCode>0</FieldCode> to <FieldCode>{String(maxPoint)}</FieldCode>{' '}
@@ -60,7 +58,9 @@ export function RangeForm({
 						max={maxPoint}
 						className="bg-background/55 h-11 rounded-2xl px-4"
 						value={value.rightPoint}
-						onChange={(event) => onChange({ rightPoint: event.target.value })}
+						onChange={(event) => {
+							onChange({ rightPoint: event.target.value });
+						}}
 					/>
 					<FieldDescription size="sm">
 						The SDK sends <FieldCode>Math.round(point * scale)</FieldCode>, so larger scales reduce
@@ -78,7 +78,9 @@ export function RangeForm({
 						min="1"
 						className="bg-background/55 h-11 rounded-2xl px-4"
 						value={value.scale}
-						onChange={(event) => onChange({ scale: event.target.value })}
+						onChange={(event) => {
+							onChange({ scale: event.target.value });
+						}}
 						placeholder="defaults to SDK scale"
 					/>
 					<FieldDescription size="sm">
@@ -95,7 +97,9 @@ export function RangeForm({
 								id="range-out-of-range"
 								size="default"
 								checked={value.outOfRange}
-								onCheckedChange={(checked: boolean) => onChange({ outOfRange: checked })}
+								onCheckedChange={(checked: boolean) => {
+									onChange({ outOfRange: checked });
+								}}
 							/>
 						</div>
 						<FieldDescription size="sm">

@@ -4,11 +4,7 @@
 import { Transaction } from '@mysten/sui/transactions';
 import type * as SuiTransactions from '@mysten/sui/transactions';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type {
-	BuildTransactionResult,
-	McpConfig,
-	ReadOnlyPlan,
-} from '../../../src/runtime/types.js';
+import { createSugarClient } from '../../../src/runtime/client.js';
 import { assertSessionGameTransaction } from '../../../src/tools/handlers/games.js';
 import {
 	buildCoinflipTransactionTool,
@@ -23,9 +19,10 @@ import {
 	buildWheelTransactionTool,
 } from '../../../src/tools/handlers/index.js';
 import { getSugarPackageId } from '../../../src/tools/handlers/shared.js';
+import { getBuildResult, getReadOnlyPlan } from '../../result-assertions.js';
 
 const mocks = vi.hoisted(() => ({
-	buildTransactionBytes: vi.fn<(...args: Array<unknown>) => Promise<Uint8Array>>(),
+	buildTransactionBytes: vi.fn<SuiTransactions.Transaction['build']>(),
 }));
 
 vi.mock('@mysten/sui/transactions', async (importOriginal) => {
@@ -34,7 +31,7 @@ vi.mock('@mysten/sui/transactions', async (importOriginal) => {
 	return {
 		...actual,
 		Transaction: class MockTransaction extends actual.Transaction {
-			override build = mocks.buildTransactionBytes as Transaction['build'];
+			override build = mocks.buildTransactionBytes;
 		},
 	};
 });
@@ -42,11 +39,10 @@ vi.mock('@mysten/sui/transactions', async (importOriginal) => {
 const testAddress = (fill: string) => `0x${fill.repeat(64)}`;
 const owner = testAddress('a');
 const gameId = testAddress('b');
-const testConfig = {
+const { config: testConfig } = createSugarClient({
 	network: 'testnet',
-	providerUrl: 'https://sui.test',
-	sdk: { packageIds: { coinflip: testAddress('d'), pvpCoinflip: testAddress('e') } },
-} as McpConfig;
+	config: { packageIds: { coinflip: testAddress('d'), pvpCoinflip: testAddress('e') } },
+});
 
 function createMoveCallTransaction(packageId: string, module: string): Transaction {
 	const transaction = new Transaction();
@@ -66,13 +62,13 @@ describe('game transaction tools', () => {
 	it('accepts one MoveCall to the selected game package and module', () => {
 		const packageId = getSugarPackageId({ config: testConfig, pkg: 'coinflip' });
 
-		expect(() =>
+		expect(() => {
 			assertSessionGameTransaction({
 				transaction: createMoveCallTransaction(packageId, 'coinflip'),
 				config: testConfig,
 				game: 'coinflip',
-			}),
-		).not.toThrow();
+			});
+		}).not.toThrow();
 	});
 
 	it('rejects transactions without exactly one MoveCall', () => {
@@ -83,27 +79,27 @@ describe('game transaction tools', () => {
 			target: `${packageId}::coinflip::another_action`,
 		});
 
-		expect(() =>
-			assertSessionGameTransaction({ transaction: noCalls, config: testConfig, game: 'coinflip' }),
-		).toThrow(/one verified Sugar game action/u);
-		expect(() =>
+		expect(() => {
+			assertSessionGameTransaction({ transaction: noCalls, config: testConfig, game: 'coinflip' });
+		}).toThrow(/one verified Sugar game action/u);
+		expect(() => {
 			assertSessionGameTransaction({
 				transaction: multipleCalls,
 				config: testConfig,
 				game: 'coinflip',
-			}),
-		).toThrow(/one verified Sugar game action/u);
+			});
+		}).toThrow(/one verified Sugar game action/u);
 	});
 
 	it('rejects a MoveCall to another package or module', () => {
-		expect(() =>
+		expect(() => {
 			assertSessionGameTransaction({
 				transaction: createMoveCallTransaction(testAddress('c'), 'coinflip'),
 				config: testConfig,
 				game: 'coinflip',
-			}),
-		).toThrow(/outside the trusted Sugar game package/u);
-		expect(() =>
+			});
+		}).toThrow(/outside the trusted Sugar game package/u);
+		expect(() => {
 			assertSessionGameTransaction({
 				transaction: createMoveCallTransaction(
 					getSugarPackageId({ config: testConfig, pkg: 'coinflip' }),
@@ -111,12 +107,12 @@ describe('game transaction tools', () => {
 				),
 				config: testConfig,
 				game: 'coinflip',
-			}),
-		).toThrow(/outside the trusted Sugar game package/u);
+			});
+		}).toThrow(/outside the trusted Sugar game package/u);
 	});
 
 	it('derives the PvP Coinflip module name from the game id', () => {
-		expect(() =>
+		expect(() => {
 			assertSessionGameTransaction({
 				transaction: createMoveCallTransaction(
 					getSugarPackageId({ config: testConfig, pkg: 'pvp-coinflip' }),
@@ -124,8 +120,8 @@ describe('game transaction tools', () => {
 				),
 				config: testConfig,
 				game: 'pvp-coinflip',
-			}),
-		).not.toThrow();
+			});
+		}).not.toThrow();
 	});
 
 	it.each([
@@ -179,7 +175,7 @@ describe('game transaction tools', () => {
 		],
 	])('returns a read-only plan for %s', async (_name, run) => {
 		const result = await run();
-		const content = result.structuredContent as ReadOnlyPlan;
+		const content = getReadOnlyPlan(result.structuredContent);
 
 		expect(content.mode).toBe('read-only');
 		expect(content.network).toBe('testnet');
@@ -196,7 +192,7 @@ describe('game transaction tools', () => {
 			stake: 1_000,
 			side: 'heads',
 		});
-		const content = result.structuredContent as BuildTransactionResult;
+		const content = getBuildResult(result.structuredContent);
 
 		expect(content.mode).toBe('build');
 		expect(content.network).toBe('testnet');
@@ -217,7 +213,7 @@ describe('game transaction tools', () => {
 			stake: 1,
 			side: 'heads',
 		});
-		const content = result.structuredContent as BuildTransactionResult;
+		const content = getBuildResult(result.structuredContent);
 
 		expect(content.summary.stake).toBe('1000000000');
 		expect(content.summary.stakeDisplay).toBe('1');
@@ -233,7 +229,7 @@ describe('game transaction tools', () => {
 				'0x47c67b9594069c32caa7a6e875ddf31d7fa52602dd22ccb9ebd8d3482aed76dc::test_usdc::TEST_USDC',
 			gasBudget: 50_000_000,
 		});
-		const content = result.structuredContent as BuildTransactionResult;
+		const content = getBuildResult(result.structuredContent);
 
 		expect(content.summary.coinDecimals).toBe(6);
 		expect(content.summary.gasBudget).toBe('50000000');
@@ -285,25 +281,25 @@ describe('game transaction tools', () => {
 			}),
 		]);
 
-		expect((keno.structuredContent as BuildTransactionResult).summary.gameInputs).toEqual({
+		expect(getBuildResult(keno.structuredContent).summary.gameInputs).toEqual({
 			configId: 2,
 			picks: [1, 7, 20],
 		});
-		expect((limbo.structuredContent as BuildTransactionResult).summary.gameInputs).toEqual({
+		expect(getBuildResult(limbo.structuredContent).summary.gameInputs).toEqual({
 			targetMultiplier: 2.5,
 		});
-		expect((plinko.structuredContent as BuildTransactionResult).summary.gameInputs).toEqual({
+		expect(getBuildResult(plinko.structuredContent).summary.gameInputs).toEqual({
 			configId: 3,
 		});
-		expect((wheel.structuredContent as BuildTransactionResult).summary.gameInputs).toEqual({
+		expect(getBuildResult(wheel.structuredContent).summary.gameInputs).toEqual({
 			configId: 4,
 		});
-		expect((range.structuredContent as BuildTransactionResult).summary.gameInputs).toEqual({
+		expect(getBuildResult(range.structuredContent).summary.gameInputs).toEqual({
 			leftPoint: 25,
 			rightPoint: 75,
 			outOfRange: true,
 		});
-		expect((soccer.structuredContent as BuildTransactionResult).summary.gameInputs).toEqual({
+		expect(getBuildResult(soccer.structuredContent).summary.gameInputs).toEqual({
 			configId: 1,
 			countryId: 2,
 			shotZoneId: 3,

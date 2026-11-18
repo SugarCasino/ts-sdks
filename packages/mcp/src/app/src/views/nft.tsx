@@ -3,8 +3,8 @@
 
 import { formatAddress } from '@mysten/sui/utils';
 import { type JSX, useState } from 'react';
+import { asRecord } from '../../../utils/record.js';
 import { DefinitionList, InspectorTable, Panel } from '../components/inspector-components.js';
-import { asRecord } from '../lib/format.js';
 
 function isHttpUrl(value: string): boolean {
 	try {
@@ -33,7 +33,9 @@ function NftImage({ name, url }: { name: string; url: unknown }): JSX.Element {
 			className="border-border/70 bg-background size-14 rounded-md border object-cover"
 			height={56}
 			loading="lazy"
-			onError={() => setFailed(true)}
+			onError={() => {
+				setFailed(true);
+			}}
 			src={imageUrl}
 			width={56}
 		/>

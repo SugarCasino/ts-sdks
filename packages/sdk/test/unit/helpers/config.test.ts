@@ -167,7 +167,7 @@ describe('resolveSugarConfig', () => {
 	])('rejects invalid %s overrides', (_kind, config) => {
 		expect(() => resolveSugarConfig({ network: 'testnet', config })).toThrow(TypeError);
 		expect(() => resolveSugarConfig({ network: 'testnet', config })).toThrow(
-			/Invalid (package|object) id configuration/,
+			/Invalid (package|object) id configuration/u,
 		);
 	});
 

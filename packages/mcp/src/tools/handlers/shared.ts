@@ -13,7 +13,7 @@ import {
 	type SugarMcpConfigInput,
 	type ToolTextResult,
 } from '../../runtime/index.js';
-import { formatBaseUnitAmount, isAmountFieldName } from '../../utils/index.js';
+import { formatBaseUnitAmount, isAmountFieldName, isRecord } from '../../utils/index.js';
 import { optionalOptions } from '../../utils/options.js';
 import { loadCredentials, loadSessionWallet } from '../../wallet/index.js';
 import type { ReadConfigInput } from '../schemas/index.js';
@@ -77,13 +77,13 @@ const GAME_TO_TOOLS = {
 function json(value: unknown): string {
 	return JSON.stringify(
 		value,
-		(_key, item) => (typeof item === 'bigint' ? item.toString() : item),
+		(_key, item: unknown) => (typeof item === 'bigint' ? item.toString() : item),
 		2,
 	);
 }
 
-export function asTextResponse<T extends ToolTextResult['structuredContent']>(
-	structuredContent: T,
+export function asTextResponse(
+	structuredContent: ToolTextResult['structuredContent'],
 ): ToolTextResult {
 	return {
 		content: [{ type: 'text', text: json(structuredContent) }],
@@ -116,21 +116,6 @@ export function coinMetadataForAmount({
 	};
 }
 
-export function requireString({ value, fieldName }: { value: unknown; fieldName: string }): string {
-	if (typeof value === 'string' && value.trim()) {
-		return value.trim();
-	}
-	throw new TypeError(`Missing required field: ${fieldName}.`);
-}
-
-export function requireGame(value: unknown): Game {
-	const game = requireString({ value, fieldName: 'game' });
-	if (GAMES.includes(game as Game)) {
-		return game as Game;
-	}
-	throw new RangeError(`Unsupported game: ${game}. Use one of: ${GAMES.join(', ')}.`);
-}
-
 function formatGameParameterValue({
 	key,
 	value,
@@ -143,8 +128,11 @@ function formatGameParameterValue({
 	if (Array.isArray(value)) {
 		return value.map((item) => formatGameParameterValue({ key, value: item, decimals }));
 	}
-	if (value && typeof value === 'object') {
-		return formatGameParameters({ parameters: value as Record<string, unknown>, decimals });
+	if (isRecord(value)) {
+		return formatGameParameters({
+			parameters: value,
+			decimals,
+		});
 	}
 	return isAmountFieldName(key) &&
 		(typeof value === 'string' || typeof value === 'number' || typeof value === 'bigint')
@@ -247,10 +235,10 @@ export async function resolveWalletOwner({
 	};
 	bundle: SugarClientBundle;
 }): Promise<string> {
-	if (input.owner) {
-		return await resolveOwnerAddress({ owner: input.owner, bundle });
+	if (input.owner != null && input.owner !== '') {
+		return resolveOwnerAddress({ owner: input.owner, bundle });
 	}
-	if (input.sessionWalletId) {
+	if (input.sessionWalletId != null && input.sessionWalletId !== '') {
 		const sessionWallet = await loadSessionWallet(input.sessionWalletId);
 		if (!sessionWallet) {
 			throw new Error('No local session wallet exists with that ID.');
@@ -312,7 +300,7 @@ export function getSugarPackageId({
 	pkg: ResolvablePackage;
 }): string {
 	const packageId = config.sdk.packageIds[SUGAR_PACKAGE_KEYS[pkg]] ?? SUGAR_PACKAGE_FALLBACKS[pkg];
-	if (!packageId) {
+	if (packageId == null || packageId === '') {
 		throw new RangeError(`Missing Sugar package id for ${pkg}.`);
 	}
 	return packageId;

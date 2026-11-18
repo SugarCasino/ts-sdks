@@ -69,9 +69,12 @@ export function parseOptionalNumber(value?: string) {
 	return trimmed ? Number(trimmed) : undefined;
 }
 
+export function resolveGameScale(scale: number | undefined, fallback: number) {
+	return scale != null && Number.isFinite(scale) && scale > 0 ? scale : fallback;
+}
+
 export function getRangePointMax(scale?: number) {
-	const effectiveScale = scale && Number.isFinite(scale) && scale > 0 ? scale : DEFAULT_RANGE_SCALE;
-	return RANGE_POINT_LIMIT / effectiveScale;
+	return RANGE_POINT_LIMIT / resolveGameScale(scale, DEFAULT_RANGE_SCALE);
 }
 
 export function toAtomicAmount(value: string | undefined, decimals: number) {
@@ -95,7 +98,7 @@ export function toAtomicAmount(value: string | undefined, decimals: number) {
 }
 
 export function compactAddress(value?: string) {
-	if (!value) {
+	if (value == null || value === '') {
 		return 'N/A';
 	}
 

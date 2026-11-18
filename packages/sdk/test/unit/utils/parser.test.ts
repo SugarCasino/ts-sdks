@@ -55,6 +55,19 @@ describe('parseGameEvent', () => {
 		>();
 	});
 
+	it('accepts a minimal event envelope and rejects an unsupported game identifier', () => {
+		expect(parseGameEvent({ module: 'coinflip', eventType: '0x1::core::BetResultEvent' })).toEqual({
+			game: 'coinflip',
+			event: 'BetResultEvent',
+		});
+		expect(
+			parseGameEvent({ module: 'core', eventType: '0x1::core::BetResultEvent<unsupported>' }),
+		).toBeNull();
+		expect(
+			parseSugarEvent({ module: 'coinflip', eventType: '0x1::core::BetResultEvent' }),
+		).toBeNull();
+	});
+
 	it('parses standard bet result events', () => {
 		expect(
 			parseGameEvent(
@@ -71,7 +84,7 @@ describe('parseGameEvent', () => {
 	});
 
 	it('parses every supported pvp game event from GAME_EVENTS', () => {
-		for (const eventName of GAME_EVENTS.filter((eventName) => eventName !== 'BetResultEvent')) {
+		for (const eventName of GAME_EVENTS.filter((name) => name !== 'BetResultEvent')) {
 			expect(
 				parseGameEvent(
 					createEvent({
@@ -190,6 +203,9 @@ describe('parseSugarEvent', () => {
 		expectTypeOf<BetResultSugarEvent['game']>().toEqualTypeOf<Game>();
 		expectTypeOf<BetResultSugarEvent['event']['type']>().toEqualTypeOf<'BetResultEvent'>();
 		expectTypeOf<BetResultSugarEvent['gameDetails']>().toEqualTypeOf<GameDetails<Game>>();
+		expectTypeOf<GameDetails<'coinflip' | 'range'>>().toEqualTypeOf<
+			GameDetails<'coinflip'> | GameDetails<'range'>
+		>();
 	});
 
 	it('decodes a PvP event in one step', () => {
@@ -211,7 +227,7 @@ describe('parseSugarEvent', () => {
 
 		expect(sugarEvent?.game).toBe('pvp-coinflip');
 		expect(sugarEvent?.event.type).toBe('GameCancelledEvent');
-		expect(sugarEvent && 'gameDetails' in sugarEvent).toBe(false);
+		expect(sugarEvent).not.toHaveProperty('gameDetails');
 		expect(sugarEvent?.event.data).toMatchObject({
 			game_id: gameId,
 			stake_per_player: '1',
@@ -240,11 +256,9 @@ describe('parseCoinType', () => {
 
 describe('parseGameDetails', () => {
 	it('supports address scalar and vector detail types', () => {
-		const address = eventSender;
-
 		expect(
-			GAME_DETAIL_BCS.address.parse(GAME_DETAIL_BCS.address.serialize(address).toBytes()),
-		).toBe(address);
+			GAME_DETAIL_BCS.address.parse(GAME_DETAIL_BCS.address.serialize(eventSender).toBytes()),
+		).toBe(eventSender);
 		expectTypeOf<GameDetail<'address'>>().toEqualTypeOf<string>();
 		expectTypeOf<GameDetail<'vector<address>'>>().toEqualTypeOf<Array<string>>();
 	});
@@ -289,7 +303,8 @@ describe('parseGameDetails', () => {
 			expect(Object.getPrototypeOf(details)).toBeNull();
 			expect(Object.hasOwn(details, key)).toBe(true);
 			expect(details[key]).toBe('custom value');
-			expect(JSON.parse(JSON.stringify(details))[key]).toBe('custom value');
+			const serialized: unknown = JSON.parse(JSON.stringify(details));
+			expect(serialized).toHaveProperty(key, 'custom value');
 		},
 	);
 
@@ -311,7 +326,7 @@ describe('parseGameDetails', () => {
 			range_mode: 2,
 			payout_multiplier: 2.5,
 		});
-		expect(Number(rangeDetails.actual_rtp)).toBeCloseTo(0.97);
+		expect(rangeDetails.actual_rtp).toBeCloseTo(0.97);
 		expect(
 			parseGameDetails({
 				game: 'pvp-coinflip',

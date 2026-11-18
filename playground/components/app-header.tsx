@@ -7,6 +7,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import * as React from 'react';
+import { SUGAR_COINS } from '@sugar/sdk';
 import { CoinSelectLabel } from '@/components/integration-shell/components/coin-select-label';
 import {
 	type CoinBalanceState,
@@ -67,18 +68,9 @@ export function AppHeader({
 	const pathname = usePathname();
 	const client = useCurrentClient();
 	const account = useCurrentAccount();
-	const activePathname = pathname.replace(/\/+$/, '');
+	const activePathname = pathname.replace(/\/+$/u, '');
 	const coinEntries = React.useMemo(
-		() =>
-			Object.entries(client.sugar.getConfig().coins) as Array<
-				[
-					SupportedCoinKey,
-					{
-						coinType: string;
-						decimals: number;
-					},
-				]
-			>,
+		() => SUGAR_COINS.map((coin) => [coin, client.sugar.getConfig().coins[coin]] as const),
 		[client],
 	);
 	const [localSelectedCoin, setLocalSelectedCoin] = React.useState<SupportedCoinKey>(
@@ -125,7 +117,7 @@ export function AppHeader({
 			}),
 		).then((entries) => {
 			if (!cancelled) {
-				setLocalBalances(Object.fromEntries(entries));
+				setLocalBalances(Object.fromEntries<CoinBalanceState>(entries));
 			}
 		});
 

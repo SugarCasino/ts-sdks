@@ -2,11 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { registerAppTool } from '@modelcontextprotocol/ext-apps/server';
-import type {
-	McpServer,
-	StandardSchemaWithJSON,
-	ToolAnnotations,
-} from '@modelcontextprotocol/server';
+import type { McpServer, ToolAnnotations } from '@modelcontextprotocol/server';
+import type { z } from 'zod/v4';
 import type { ToolTextResult } from '../runtime/index.js';
 import {
 	buildCoinflipTransactionTool,
@@ -121,13 +118,13 @@ const transactionToolAnnotations = {
 
 type ToolHandler<TInput> = Parameters<typeof withToolErrors<TInput>>[0];
 
-type ToolDefinition = {
+type ToolDefinition<TInput> = {
 	name: string;
 	title: string;
 	description: string;
-	inputSchema: StandardSchemaWithJSON;
+	inputSchema: z.ZodType<TInput>;
 	annotations: ToolAnnotations;
-	handler: ToolHandler<never>;
+	handler: ToolHandler<TInput>;
 	isAppTool: boolean;
 };
 
@@ -137,8 +134,30 @@ type AppToolMeta = {
 	};
 };
 
+/** Keep each schema paired with its handler when registering heterogeneous tools. */
+function defineTool<TInput>(definition: ToolDefinition<TInput>) {
+	return {
+		...definition,
+		register(server: McpServer, appToolMeta: AppToolMeta): void {
+			const config = {
+				title: definition.title,
+				description: definition.description,
+				inputSchema: definition.inputSchema,
+				annotations: definition.annotations,
+				outputSchema: toolOutputSchema,
+			};
+			const handler = withToolErrors(definition.handler);
+			if (definition.isAppTool) {
+				registerAppTool(server, definition.name, { ...config, _meta: appToolMeta }, handler);
+			} else {
+				server.registerTool(definition.name, config, handler);
+			}
+		},
+	};
+}
+
 const toolDefinitions = [
-	{
+	defineTool({
 		name: 'setup_session_wallet',
 		title: 'Set Up Session Wallet',
 		description:
@@ -147,8 +166,8 @@ const toolDefinitions = [
 		annotations: transactionToolAnnotations,
 		handler: setupSessionWalletTool,
 		isAppTool: false,
-	},
-	{
+	}),
+	defineTool({
 		name: 'fund_session_wallet',
 		title: 'Fund Session Wallet',
 		description:
@@ -157,8 +176,8 @@ const toolDefinitions = [
 		annotations: transactionToolAnnotations,
 		handler: fundSessionWalletTool,
 		isAppTool: false,
-	},
-	{
+	}),
+	defineTool({
 		name: 'get_session_wallet',
 		title: 'Get Session Wallet',
 		description:
@@ -167,8 +186,8 @@ const toolDefinitions = [
 		annotations: readOnlyToolAnnotations,
 		handler: getSessionWalletTool,
 		isAppTool: true,
-	},
-	{
+	}),
+	defineTool({
 		name: 'sugar_login',
 		title: 'Login to Sugar',
 		description: 'Open a secure browser wallet pairing flow.',
@@ -176,8 +195,8 @@ const toolDefinitions = [
 		annotations: readOnlyToolAnnotations,
 		handler: sugarLoginTool,
 		isAppTool: false,
-	},
-	{
+	}),
+	defineTool({
 		name: 'sugar_logout',
 		title: 'Logout of Sugar',
 		description: 'Forget the paired wallet for the selected network.',
@@ -185,8 +204,8 @@ const toolDefinitions = [
 		annotations: readOnlyToolAnnotations,
 		handler: sugarLogoutTool,
 		isAppTool: false,
-	},
-	{
+	}),
+	defineTool({
 		name: 'get_connection_status',
 		title: 'Get Sugar Connection Status',
 		description: 'Read wallet connection status without exposing secrets.',
@@ -194,8 +213,8 @@ const toolDefinitions = [
 		annotations: readOnlyToolAnnotations,
 		handler: getConnectionStatusTool,
 		isAppTool: false,
-	},
-	{
+	}),
+	defineTool({
 		name: 'get_execution_status',
 		title: 'Get Execution Status',
 		description: 'Check the browser approval status for an execute-mode transaction.',
@@ -203,8 +222,8 @@ const toolDefinitions = [
 		annotations: readOnlyToolAnnotations,
 		handler: getExecutionStatusTool,
 		isAppTool: true,
-	},
-	{
+	}),
+	defineTool({
 		name: 'get_wallet_balances',
 		title: 'Get Wallet Balances',
 		description: 'List aggregate balances for the connected wallet or an explicit address.',
@@ -212,8 +231,8 @@ const toolDefinitions = [
 		annotations: readOnlyToolAnnotations,
 		handler: getWalletBalancesTool,
 		isAppTool: true,
-	},
-	{
+	}),
+	defineTool({
 		name: 'list_wallet_coins',
 		title: 'List Wallet Coins',
 		description:
@@ -222,8 +241,8 @@ const toolDefinitions = [
 		annotations: readOnlyToolAnnotations,
 		handler: listWalletCoinsTool,
 		isAppTool: true,
-	},
-	{
+	}),
+	defineTool({
 		name: 'read_config',
 		title: 'Read Sugar Config',
 		description: 'Resolve Sugar SDK config for mainnet or testnet. Defaults to testnet.',
@@ -231,8 +250,8 @@ const toolDefinitions = [
 		annotations: readOnlyToolAnnotations,
 		handler: readConfigTool,
 		isAppTool: true,
-	},
-	{
+	}),
+	defineTool({
 		name: 'read_game_metadata',
 		title: 'Read Sugar Game Metadata',
 		description: 'Read live on-chain parameters for one selected Sugar game and coin type.',
@@ -240,8 +259,8 @@ const toolDefinitions = [
 		annotations: readOnlyToolAnnotations,
 		handler: readGameMetadataTool,
 		isAppTool: true,
-	},
-	{
+	}),
+	defineTool({
 		name: 'list_nfts',
 		title: 'List Sugar NFTs',
 		description: 'List the Sugar NFT catalog and the matching NFTs owned by one address.',
@@ -249,8 +268,8 @@ const toolDefinitions = [
 		annotations: readOnlyToolAnnotations,
 		handler: listNftsTool,
 		isAppTool: true,
-	},
-	{
+	}),
+	defineTool({
 		name: 'get_referral_commission',
 		title: 'Get Referral Commission',
 		description: 'Simulate the commission a referrer can claim for one configured coin type.',
@@ -258,8 +277,8 @@ const toolDefinitions = [
 		annotations: readOnlyToolAnnotations,
 		handler: getReferralCommissionTool,
 		isAppTool: true,
-	},
-	{
+	}),
+	defineTool({
 		name: 'get_referral_level_up_usd_rewards',
 		title: 'Get Referral Level-up USD Rewards',
 		description: 'Simulate the USD level-up rewards a referrer can claim.',
@@ -267,8 +286,8 @@ const toolDefinitions = [
 		annotations: readOnlyToolAnnotations,
 		handler: getReferralLevelUpUsdRewardsTool,
 		isAppTool: true,
-	},
-	{
+	}),
+	defineTool({
 		name: 'build_referral_commission_claim_transaction',
 		title: 'Build Referral Commission Claim',
 		description: 'Build, dry-run, or inspect an unsigned referral commission claim transaction.',
@@ -276,8 +295,8 @@ const toolDefinitions = [
 		annotations: transactionToolAnnotations,
 		handler: buildReferralCommissionClaimTransactionTool,
 		isAppTool: true,
-	},
-	{
+	}),
+	defineTool({
 		name: 'build_referral_level_up_usd_rewards_claim_transaction',
 		title: 'Build Referral Level-up USD Rewards Claim',
 		description:
@@ -286,8 +305,8 @@ const toolDefinitions = [
 		annotations: transactionToolAnnotations,
 		handler: buildReferralLevelUpUsdRewardsClaimTransactionTool,
 		isAppTool: true,
-	},
-	{
+	}),
+	defineTool({
 		name: 'build_nft_v1_mint_transaction',
 		title: 'Build NFT V1 Mint Transaction',
 		description: 'Build, dry-run, or inspect an unsigned NFT V1 mint transaction.',
@@ -295,8 +314,8 @@ const toolDefinitions = [
 		annotations: transactionToolAnnotations,
 		handler: buildNftV1MintTransactionTool,
 		isAppTool: true,
-	},
-	{
+	}),
+	defineTool({
 		name: 'build_sweethouse_deposit_transaction',
 		title: 'Build SweetHouse Deposit',
 		description: 'Build, dry-run, or inspect an unsigned SweetHouse public pool deposit.',
@@ -304,8 +323,8 @@ const toolDefinitions = [
 		annotations: transactionToolAnnotations,
 		handler: buildSweetHouseDepositTransactionTool,
 		isAppTool: true,
-	},
-	{
+	}),
+	defineTool({
 		name: 'build_sweethouse_redeem_request_transaction',
 		title: 'Build SweetHouse Redeem Request',
 		description: 'Build, dry-run, or inspect an unsigned SweetHouse redeem request.',
@@ -313,8 +332,8 @@ const toolDefinitions = [
 		annotations: transactionToolAnnotations,
 		handler: buildSweetHouseRedeemRequestTransactionTool,
 		isAppTool: true,
-	},
-	{
+	}),
+	defineTool({
 		name: 'build_sweethouse_claim_own_redeem_request_after_delay_transaction',
 		title: 'Build SweetHouse Delayed Redeem Claim',
 		description:
@@ -323,8 +342,8 @@ const toolDefinitions = [
 		annotations: transactionToolAnnotations,
 		handler: buildSweetHouseClaimOwnRedeemRequestAfterDelayTransactionTool,
 		isAppTool: true,
-	},
-	{
+	}),
+	defineTool({
 		name: 'build_coinflip_transaction',
 		title: 'Build Coinflip Transaction',
 		description: 'Build, dry-run, or inspect an unsigned Sugar coinflip transaction.',
@@ -332,8 +351,8 @@ const toolDefinitions = [
 		annotations: transactionToolAnnotations,
 		handler: buildCoinflipTransactionTool,
 		isAppTool: true,
-	},
-	{
+	}),
+	defineTool({
 		name: 'build_limbo_transaction',
 		title: 'Build Limbo Transaction',
 		description: 'Build, dry-run, or inspect an unsigned Sugar limbo transaction.',
@@ -341,8 +360,8 @@ const toolDefinitions = [
 		annotations: transactionToolAnnotations,
 		handler: buildLimboTransactionTool,
 		isAppTool: true,
-	},
-	{
+	}),
+	defineTool({
 		name: 'build_keno_transaction',
 		title: 'Build Keno Transaction',
 		description: 'Build, dry-run, or inspect an unsigned Sugar Keno transaction.',
@@ -350,8 +369,8 @@ const toolDefinitions = [
 		annotations: transactionToolAnnotations,
 		handler: buildKenoTransactionTool,
 		isAppTool: true,
-	},
-	{
+	}),
+	defineTool({
 		name: 'build_plinko_transaction',
 		title: 'Build Plinko Transaction',
 		description: 'Build, dry-run, or inspect an unsigned Sugar plinko transaction.',
@@ -359,8 +378,8 @@ const toolDefinitions = [
 		annotations: transactionToolAnnotations,
 		handler: buildPlinkoTransactionTool,
 		isAppTool: true,
-	},
-	{
+	}),
+	defineTool({
 		name: 'build_wheel_transaction',
 		title: 'Build Wheel Transaction',
 		description: 'Build, dry-run, or inspect an unsigned Sugar wheel transaction.',
@@ -368,8 +387,8 @@ const toolDefinitions = [
 		annotations: transactionToolAnnotations,
 		handler: buildWheelTransactionTool,
 		isAppTool: true,
-	},
-	{
+	}),
+	defineTool({
 		name: 'build_range_transaction',
 		title: 'Build Range Transaction',
 		description: 'Build, dry-run, or inspect an unsigned Sugar range transaction.',
@@ -377,8 +396,8 @@ const toolDefinitions = [
 		annotations: transactionToolAnnotations,
 		handler: buildRangeTransactionTool,
 		isAppTool: true,
-	},
-	{
+	}),
+	defineTool({
 		name: 'build_soccer_transaction',
 		title: 'Build Soccer Transaction',
 		description: 'Build, dry-run, or inspect an unsigned Sugar Soccer transaction.',
@@ -386,8 +405,8 @@ const toolDefinitions = [
 		annotations: transactionToolAnnotations,
 		handler: buildSoccerTransactionTool,
 		isAppTool: true,
-	},
-	{
+	}),
+	defineTool({
 		name: 'build_pvp_coinflip_create_transaction',
 		title: 'Build PvP Coinflip Create',
 		description:
@@ -396,8 +415,8 @@ const toolDefinitions = [
 		annotations: transactionToolAnnotations,
 		handler: buildPvpCoinflipCreateTransactionTool,
 		isAppTool: true,
-	},
-	{
+	}),
+	defineTool({
 		name: 'build_pvp_coinflip_join_transaction',
 		title: 'Build PvP Coinflip Join',
 		description: 'Build, dry-run, or inspect an unsigned Sugar PvP Coinflip join transaction.',
@@ -405,8 +424,8 @@ const toolDefinitions = [
 		annotations: transactionToolAnnotations,
 		handler: buildPvpCoinflipJoinTransactionTool,
 		isAppTool: true,
-	},
-	{
+	}),
+	defineTool({
 		name: 'build_pvp_coinflip_cancel_transaction',
 		title: 'Build PvP Coinflip Cancel',
 		description: 'Build, dry-run, or inspect an unsigned Sugar PvP Coinflip cancel transaction.',
@@ -414,8 +433,8 @@ const toolDefinitions = [
 		annotations: transactionToolAnnotations,
 		handler: buildPvpCoinflipCancelTransactionTool,
 		isAppTool: true,
-	},
-] satisfies Array<ToolDefinition>;
+	}),
+];
 
 export function registerSugarTools({
 	server,
@@ -425,18 +444,6 @@ export function registerSugarTools({
 	appToolMeta: AppToolMeta;
 }): void {
 	for (const tool of toolDefinitions) {
-		const config = {
-			title: tool.title,
-			description: tool.description,
-			inputSchema: tool.inputSchema,
-			annotations: tool.annotations,
-			outputSchema: toolOutputSchema,
-		};
-		const handler = withToolErrors((input: unknown) => tool.handler(input as never));
-		if (tool.isAppTool) {
-			registerAppTool(server, tool.name, { ...config, _meta: appToolMeta }, handler);
-		} else {
-			server.registerTool(tool.name, config, handler);
-		}
+		tool.register(server, appToolMeta);
 	}
 }

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { Transaction } from '@mysten/sui/transactions';
-import type { CoinSide, Game, PvPCoinflipAction, StandardGame } from '@sugar/sdk/games';
+import { COIN_SIDES, type Game, type PvPCoinflipAction, type StandardGame } from '@sugar/sdk/games';
 import {
 	buildTransactionResult,
 	createSugarClient,
@@ -21,6 +21,7 @@ import {
 	toBaseUnits,
 	toCurrencyAmountText,
 } from '../../utils/index.js';
+import { requireChoice, requireString } from '../../utils/validation.js';
 import {
 	createExecutionBridge,
 	loadSessionSigner,
@@ -47,7 +48,6 @@ import {
 	getConfigInput,
 	getMode,
 	getSugarPackageId,
-	requireString,
 } from './shared.js';
 
 type BetTransactionToolInput =
@@ -71,7 +71,7 @@ export async function buildCoinflipTransactionTool(
 		);
 	}
 
-	const side = requireString({ value: input.side, fieldName: 'side' }) as CoinSide;
+	const side = requireChoice({ value: input.side, choices: COIN_SIDES, fieldName: 'side' });
 	return buildTransactionTool({
 		input,
 		game: 'coinflip',
@@ -267,10 +267,11 @@ export async function buildPvpCoinflipCreateTransactionTool(
 		);
 	}
 
-	const creatorSide = requireString({
+	const creatorSide = requireChoice({
 		value: input.creatorSide,
+		choices: COIN_SIDES,
 		fieldName: 'creatorSide',
-	}) as CoinSide;
+	});
 	return buildTransactionTool({
 		input,
 		game: 'pvp-coinflip',
@@ -396,7 +397,9 @@ function requireNumberArray({
 	if (
 		Array.isArray(value) &&
 		value.length > 0 &&
-		value.every((item) => typeof item === 'number' && Number.isFinite(item))
+		value.every(
+			(item: unknown): item is number => typeof item === 'number' && Number.isFinite(item),
+		)
 	) {
 		return value;
 	}
@@ -492,7 +495,7 @@ async function resolveTransactionOwner({
 				'The saved session wallet address does not match its keychain signer. Recover the intended wallet with "setup_session_wallet" before executing games.',
 			);
 		}
-		if (input.owner) {
+		if (input.owner != null && input.owner !== '') {
 			const requestedOwner = await resolveOwnerAddress({ owner: input.owner, bundle });
 			if (requestedOwner !== sessionAddress) {
 				throw new RangeError(

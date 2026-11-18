@@ -1,7 +1,8 @@
 // Copyright (c) Sugar
 // SPDX-License-Identifier: Apache-2.0
 
-import type { AnyRecord, DefinitionEntry } from './types.js';
+import { type AnyRecord, asRecord, isRecord } from '../../../utils/record.js';
+import type { DefinitionEntry } from './types.js';
 
 const HIDDEN_DYNAMIC_ENTRY_KEYS = new Set<string>([
 	'game_details',
@@ -12,18 +13,10 @@ const HIDDEN_DYNAMIC_ENTRY_KEYS = new Set<string>([
 	'adjusted_oracle_usd_coin_price',
 ]);
 
-export function asRecord(value: unknown): AnyRecord {
-	return value && typeof value === 'object' ? (value as AnyRecord) : {};
-}
-
-export function isRecord(value: unknown): value is AnyRecord {
-	return value !== null && typeof value === 'object';
-}
-
 export function stringify(value: unknown): string {
 	return JSON.stringify(
 		value,
-		(_key, item) => (typeof item === 'bigint' ? item.toString() : item),
+		(_key, item: unknown) => (typeof item === 'bigint' ? item.toString() : item),
 		2,
 	);
 }
@@ -32,13 +25,12 @@ export function formatValue(value: unknown): unknown {
 	if (Array.isArray(value)) {
 		return value.length > 0 ? value.join(', ') : null;
 	}
-	if (value && typeof value === 'object') {
-		const record = asRecord(value);
-		if (typeof record['label'] === 'string' && typeof record['id'] === 'string') {
-			return `${record['label']} (${record['id']})`;
+	if (isRecord(value)) {
+		if (typeof value['label'] === 'string' && typeof value['id'] === 'string') {
+			return `${value['label']} (${value['id']})`;
 		}
-		if (typeof record['id'] === 'string') {
-			return record['id'];
+		if (typeof value['id'] === 'string') {
+			return value['id'];
 		}
 		return stringify(value);
 	}
@@ -47,9 +39,9 @@ export function formatValue(value: unknown): unknown {
 
 export function labelFor(key: string): string {
 	return key
-		.replace(/([a-z0-9])([A-Z])/gu, '$1 $2')
-		.replace(/_/gu, ' ')
-		.replace(/\b\w/gu, (character) => character.toUpperCase());
+		.replaceAll(/([a-z0-9])([A-Z])/gu, '$1 $2')
+		.replaceAll('_', ' ')
+		.replaceAll(/\b\w/gu, (character) => character.toUpperCase());
 }
 
 export function dynamicEntries(record: AnyRecord): Array<DefinitionEntry> {

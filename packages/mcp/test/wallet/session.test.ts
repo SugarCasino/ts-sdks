@@ -1,7 +1,7 @@
 // Copyright (c) Sugar
 // SPDX-License-Identifier: Apache-2.0
 
-import { rm } from 'node:fs/promises';
+import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
 import { afterEach, assert, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -48,6 +48,31 @@ afterEach(async () => {
 	await rm(testHome, { force: true, recursive: true });
 });
 
+describe('stored session wallets', () => {
+	it('ignores malformed metadata entries without dropping valid wallets', async () => {
+		const directory = `${testHome}/.sugar-mcp`;
+		await mkdir(directory, { recursive: true });
+		const wallet = {
+			id: 'saved-wallet',
+			name: 'Daily bets',
+			address: '0xabc',
+			createdAt: '2026-11-11T00:00:00Z',
+			source: 'created',
+		};
+		await writeFile(
+			`${directory}/session-wallets.json`,
+			JSON.stringify([
+				null,
+				{},
+				{ ...wallet, source: 'invalid' },
+				{ ...wallet, address: 7 },
+				wallet,
+			]),
+		);
+		expect(await session.listSessionWallets()).toEqual([wallet]);
+	});
+});
+
 describe('session wallet setup', () => {
 	it('stores a newly created wallet in the OS keychain after local confirmation', async () => {
 		const { setupUrl } = await session.createSessionWalletSetup();
@@ -84,8 +109,8 @@ describe('session wallet setup', () => {
 			expect.objectContaining({
 				source: 'created',
 				name: 'Daily bets',
-				id: expect.stringMatching(/^[0-9a-f-]{36}$/u),
-				address: expect.stringMatching(/^0x/u),
+				id: expect.stringMatching(/^[0-9a-f-]{36}$/u) as unknown,
+				address: expect.stringMatching(/^0x/u) as unknown,
 			}),
 		);
 		expect((await session.loadSessionSigner()).toSuiAddress()).toBe(wallet!.address);

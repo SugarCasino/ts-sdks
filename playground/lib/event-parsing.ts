@@ -16,15 +16,24 @@ type EventWithBcsPayload = {
 
 const textDecoder = new TextDecoder();
 
+function formatCoinType(value: unknown): string {
+	return value != null &&
+		typeof value === 'object' &&
+		'name' in value &&
+		typeof value.name === 'string'
+		? value.name
+		: 'unknown';
+}
+
 function bytesFromEvent(event: unknown) {
-	if (typeof event !== 'object' || event === null) {
-		return undefined;
+	if (typeof event !== 'object' || event == null) {
+		return;
 	}
 
 	const eventWithBcsPayload = event as EventWithBcsPayload;
 	const value = eventWithBcsPayload.bcs ?? eventWithBcsPayload.contents?.value;
-	if (!value) {
-		return undefined;
+	if (value == null || value === '') {
+		return;
 	}
 
 	if (typeof value === 'string') {
@@ -40,7 +49,9 @@ function decodeByteArray(value: unknown) {
 	}
 
 	try {
-		return textDecoder.decode(new Uint8Array(value as Array<number>));
+		return textDecoder.decode(
+			new Uint8Array(value.filter((item): item is number => typeof item === 'number')),
+		);
 	} catch {
 		return JSON.stringify(value);
 	}
@@ -49,7 +60,7 @@ function decodeByteArray(value: unknown) {
 function formatVecMap(value: unknown) {
 	if (
 		typeof value !== 'object' ||
-		value === null ||
+		value == null ||
 		!('contents' in value) ||
 		!Array.isArray(value.contents)
 	) {
@@ -116,11 +127,12 @@ function createEventRow(digest: string, event: SuiClientTypes.Event): EventLogRo
 	const payload = sugarEvent.event.data as Record<string, unknown>;
 	const gameDetails = 'gameDetails' in sugarEvent ? sugarEvent.gameDetails : undefined;
 	const eventType = sugarEvent.event.type;
+	const creatorIsTails = Boolean(payload['creator_is_tails']);
 	const details = [
 		`game: ${sugarEvent.game}`,
 		...(eventType === 'BetResultEvent'
 			? [
-					`coin: ${String((payload['coin_type'] as { name?: string | undefined })?.name ?? 'unknown')}`,
+					`coin: ${formatCoinType(payload['coin_type'])}`,
 					`stake: ${bigintToString(payload['stake_amount'])}`,
 					`outcome: ${bigintToString(payload['outcome_amount'])}`,
 					`unsafe oracle price: ${formatOraclePrice(payload['unsafe_oracle_usd_coin_price'])}`,
@@ -130,7 +142,7 @@ function createEventRow(digest: string, event: SuiClientTypes.Event): EventLogRo
 				]
 			: eventType === 'GameCreatedEvent'
 				? [
-						`creator side: ${payload['creator_is_tails'] ? 'tails' : 'heads'}`,
+						`creator side: ${creatorIsTails ? 'tails' : 'heads'}`,
 						`stake: ${bigintToString(payload['stake_per_player'])}`,
 						`private: ${String(payload['is_private'])}`,
 					]
@@ -160,9 +172,7 @@ export function parseSugarEvents(
 	digest: string,
 	events: Array<SuiClientTypes.Event> | undefined,
 ) {
-	const rows = (events ?? [])
+	return (events ?? [])
 		.map((event) => createEventRow(digest, event))
-		.filter((row): row is EventLogRow => row !== null);
-
-	return rows;
+		.filter((row): row is EventLogRow => row != null);
 }

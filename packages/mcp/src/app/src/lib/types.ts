@@ -1,8 +1,6 @@
 // Copyright (c) Sugar
 // SPDX-License-Identifier: Apache-2.0
 
-export type AnyRecord = Record<string, unknown>;
-
 export type InspectorState = {
 	status: string;
 	payload: unknown;

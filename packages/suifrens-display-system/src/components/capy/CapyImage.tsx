@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { AnimatedAccessory } from '../../animation/AnimatedAccessory.js';
+import { EMPTY_ACCESSORY_SLOTS } from '../../constants/accessory-slots.js';
 import { getAccessoryLayers } from '../../helpers/accessories/accessory-layers.js';
 import { getThemeFromSkin } from '../../helpers/appearance/capy-theme.js';
 import type { CapyImageProps } from '../../types/capy.type.js';
@@ -27,7 +28,7 @@ import { Nostrils } from './Nostrils.js';
 
 function CapyHead({
 	attributes,
-	accessoriesByType = {},
+	accessoriesByType = EMPTY_ACCESSORY_SLOTS,
 	incognito = false,
 	colorTheme,
 }: Pick<CapyImageProps, 'attributes' | 'accessoriesByType' | 'incognito'> & {
@@ -38,7 +39,7 @@ function CapyHead({
 	const runnerHeadband = headAccessory?.name === 'runner headband';
 	const showEars = !headAccessory || headAccessory.renderOptions.showEars;
 
-	const rightEar = showEars && (
+	const rightEar = showEars === true && (
 		<RightEar
 			earShape={earShape}
 			outerEarProps={{ fill: colorTheme.outerEars }}
@@ -57,7 +58,7 @@ function CapyHead({
 
 			{runnerHeadband && rightEar}
 
-			{showEars && (
+			{showEars === true && (
 				<LeftEar
 					earShape={earShape}
 					outerEarProps={{ fill: colorTheme.outerEars }}
@@ -66,9 +67,7 @@ function CapyHead({
 				/>
 			)}
 
-			{runnerHeadband && headAccessory && (
-				<AccessorySlot accessory={headAccessory} species="capy" />
-			)}
+			{runnerHeadband && <AccessorySlot accessory={headAccessory} species="capy" />}
 
 			{!incognito && <Expression expression={expression} />}
 			{accessoriesByType['head'] && !runnerHeadband && (
@@ -82,7 +81,7 @@ function CapyHead({
 export function CapyImage({
 	attributes,
 	gesture,
-	accessoriesByType = {},
+	accessoriesByType = EMPTY_ACCESSORY_SLOTS,
 	detail = 'full',
 	incognito = false,
 	renderMicrophoneArmInForeground = false,

@@ -1,20 +1,20 @@
 // Copyright (c) Sugar
 // SPDX-License-Identifier: Apache-2.0
 
+import { asRecord } from '../../../utils/record.js';
 import { ActionLink, DefinitionList, Panel } from '../components/inspector-components.js';
-import { asRecord } from '../lib/format.js';
 
 export function SessionWalletView({ payload }: { payload: unknown }) {
 	const result = asRecord(payload);
 	const sessionWallet = asRecord(result['sessionWallet']);
 	const funding = asRecord(sessionWallet['funding']);
 	const qrCode =
-		typeof funding['addressQrCodeDataUrl'] === 'string' ? funding['addressQrCodeDataUrl'] : null;
+		typeof funding['addressQrCodeDataUrl'] === 'string' ? funding['addressQrCodeDataUrl'] : '';
 	const balances = Array.isArray(sessionWallet['balances']) ? sessionWallet['balances'] : [];
-	const fundingUrl = typeof funding['fundingUrl'] === 'string' ? funding['fundingUrl'] : null;
-	const setupUrl = typeof sessionWallet['setupUrl'] === 'string' ? sessionWallet['setupUrl'] : null;
+	const fundingUrl = typeof funding['fundingUrl'] === 'string' ? funding['fundingUrl'] : '';
+	const setupUrl = typeof sessionWallet['setupUrl'] === 'string' ? sessionWallet['setupUrl'] : '';
 
-	if (setupUrl) {
+	if (setupUrl.length > 0) {
 		return (
 			<section className="grid grid-cols-1 gap-3.5">
 				<Panel title="Set up your session wallet">
@@ -74,7 +74,7 @@ export function SessionWalletView({ payload }: { payload: unknown }) {
 				)}
 			</Panel>
 			<Panel title="Fund this wallet">
-				{qrCode ? (
+				{qrCode.length > 0 ? (
 					<div className="grid justify-items-center gap-3">
 						<img
 							alt="QR code for the session wallet address"
@@ -88,7 +88,9 @@ export function SessionWalletView({ payload }: { payload: unknown }) {
 								? funding['note']
 								: 'Scan this code in a Sui wallet to fund the session wallet.'}
 						</p>
-						{fundingUrl ? <ActionLink href={fundingUrl}>Fund from paired wallet</ActionLink> : null}
+						{fundingUrl.length > 0 ? (
+							<ActionLink href={fundingUrl}>Fund from paired wallet</ActionLink>
+						) : null}
 					</div>
 				) : (
 					<p className="text-muted-foreground text-xs font-semibold">
