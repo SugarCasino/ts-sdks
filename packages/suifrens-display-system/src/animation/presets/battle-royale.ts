@@ -2271,7 +2271,7 @@ const KNOCKDOWN_SEQUENCE: AnimationSequence = {
 				},
 				{
 					at: KNOCKDOWN_DURATION * 0.6,
-					pose: { rotate: 22, translate: { x: 0, y: 42 } },
+					pose: { rotate: 22, translate: { x: 0, y: -8 } },
 					ease: 'easeInOut',
 				},
 				{
