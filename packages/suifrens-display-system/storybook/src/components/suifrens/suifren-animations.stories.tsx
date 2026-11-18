@@ -101,8 +101,8 @@ export const Knockdown: Story = {
 	name: 'Knockdown / Get Up · knockdown',
 };
 export const Revive: Story = presetStory('revive');
-export const Death: Story = { ...presetStory('death'), name: 'Death (Alt 1) · death' };
-export const Death2: Story = { ...presetStory('death2'), name: 'Death (Alt 2) · death2' };
-export const Death3: Story = { ...presetStory('death3'), name: 'Death (Alt 3) · death3' };
+export const Death: Story = { ...presetStory('death'), name: 'Death (Alt 1) (Loop) · death' };
+export const Death2: Story = { ...presetStory('death2'), name: 'Death (Alt 2) (Loop) · death2' };
+export const Death3: Story = { ...presetStory('death3'), name: 'Death (Alt 3) (Loop) · death3' };
 export const Victory: Story = presetStory('victory');
 export const Floss: Story = { ...presetStory('floss'), name: 'Floss (Victory Alt) · floss' };
