@@ -9,7 +9,7 @@ Run these commands from the repository root with the Node.js version in `.node-v
 ```bash
 pnpm install
 pnpm --dir packages/suifrens-display-system run build
-pnpm --filter @sugar/suifrens-fastify dev
+pnpm --filter @sugarcasino/suifrens-fastify dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000). The server listens on `0.0.0.0:3000`; if another server is using port 3000, stop it first.
@@ -23,8 +23,8 @@ The dev command rebuilds and restarts the server after source edits. If you chan
 The server uses mainnet by default. Pass `--network` to choose:
 
 ```bash
-pnpm --filter @sugar/suifrens-fastify dev --network mainnet
-pnpm --filter @sugar/suifrens-fastify dev --network testnet
+pnpm --filter @sugarcasino/suifrens-fastify dev --network mainnet
+pnpm --filter @sugarcasino/suifrens-fastify dev --network testnet
 ```
 
 Choose `mainnet` or `testnet`. The choice sets the package IDs and gRPC endpoint (`https://fullnode.<network>.sui.io:443`) and survives restarts after source edits. Use a Suifren object ID from that network.
@@ -92,8 +92,8 @@ The server serves images only and has no game or transaction endpoints.
 ## Checks
 
 ```bash
-pnpm --filter @sugar/suifrens-fastify typecheck
-pnpm --filter @sugar/suifrens-fastify test
+pnpm --filter @sugarcasino/suifrens-fastify typecheck
+pnpm --filter @sugarcasino/suifrens-fastify test
 ```
 
 See the [package README](../../README.md) for the rendering API and public exports.

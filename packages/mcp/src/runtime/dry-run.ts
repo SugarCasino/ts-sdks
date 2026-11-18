@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { SUI_DECIMALS } from '@mysten/sui/utils';
-import { GAMES } from '@sugar/sdk/games';
-import { parseGameEvent, parseSugarEvent } from '@sugar/sdk/utils';
+import { GAMES } from '@sugarcasino/sdk/games';
+import { parseGameEvent, parseSugarEvent } from '@sugarcasino/sdk/utils';
 import { formatAmount, isAmountFieldName, isRecord } from '../utils/index.js';
 import type {
 	DryRunEventSummary,

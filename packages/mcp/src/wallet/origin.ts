@@ -1,7 +1,7 @@
 // Copyright (c) Sugar
 // SPDX-License-Identifier: Apache-2.0
 
-import type { SugarNetwork } from '@sugar/sdk';
+import type { SugarNetwork } from '@sugarcasino/sdk';
 
 export const BRIDGE_WEB_URL_ENV: string = 'SUGAR_MCP_BRIDGE_WEB_URL';
 

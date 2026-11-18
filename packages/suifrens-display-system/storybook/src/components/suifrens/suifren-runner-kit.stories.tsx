@@ -3,8 +3,8 @@
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import type { ComponentProps } from 'react';
-import { SuiFrenImageInline } from '@sugar/suifrens-display-system/image-inline';
-import { buildRunnerAccessories } from '@sugar/suifrens-display-system/kits';
+import { SuiFrenImageInline } from '@sugarcasino/suifrens-display-system/image-inline';
+import { buildRunnerAccessories } from '@sugarcasino/suifrens-display-system/kits';
 import { imageControls } from './character-controls.js';
 import { KitRendererComparison } from './KitRendererComparison.js';
 

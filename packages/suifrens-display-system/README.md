@@ -1,4 +1,4 @@
-# `@sugar/suifrens-display-system`
+# `@sugarcasino/suifrens-display-system`
 
 React components for rendering and animating Suifrens capys and bullsharks with accessories and outfits.
 
@@ -7,7 +7,7 @@ The capy and bullshark renderers and their accessory artwork come from Mysten La
 ## Installation
 
 ```bash
-pnpm add @sugar/suifrens-display-system
+pnpm add @sugarcasino/suifrens-display-system
 ```
 
 Use ESM imports and install React and React DOM `^18.2.0 || ^19.0.0` as peer dependencies.
@@ -17,8 +17,8 @@ Use ESM imports and install React and React DOM `^18.2.0 || ^19.0.0` as peer dep
 Pass the character's appearance to `SuiFrenImage`. A capy has `earShape`; a bullshark has `finStyle`.
 
 ```tsx
-import { SuiFrenImage } from '@sugar/suifrens-display-system';
-import type { CapyAttributes } from '@sugar/suifrens-display-system/types';
+import { SuiFrenImage } from '@sugarcasino/suifrens-display-system';
+import type { CapyAttributes } from '@sugarcasino/suifrens-display-system/types';
 
 const attributes = {
 	mainColor: '6fbbee',
@@ -40,7 +40,7 @@ Colors are lowercase palette keys without a leading `#`. For a bullshark, use `B
 `SuiFrenImage` uses cacheable external SVG accessories. For standalone SVG exports, use the inline renderer, which embeds built-in VIP crowns:
 
 ```tsx
-import { SuiFrenImageInline } from '@sugar/suifrens-display-system/image-inline';
+import { SuiFrenImageInline } from '@sugarcasino/suifrens-display-system/image-inline';
 
 <SuiFrenImageInline attributes={attributes} renderSize={240} />;
 ```
@@ -69,16 +69,16 @@ The root exports `SuiFrenImage`, `CapyImage` and `BullsharkImage`. Import other 
 
 | Entry point | Exports |
 | --- | --- |
-| `@sugar/suifrens-display-system` | External SVG image renderer and species components |
-| `@sugar/suifrens-display-system/image-inline` | `SuiFrenImageInline` for inline SVG accessories |
-| `@sugar/suifrens-display-system/accessories` | Accessory catalogue, slot lookup and VIP crowns |
-| `@sugar/suifrens-display-system/animation` | Animation provider, hooks and preset helpers |
-| `@sugar/suifrens-display-system/battle` | Battle sprite, health bar and duel script hook |
-| `@sugar/suifrens-display-system/kits` | Runner and football outfit helpers |
-| `@sugar/suifrens-display-system/colors` | Color palette |
-| `@sugar/suifrens-display-system/attributes` | Ear gene mappings and skin values |
-| `@sugar/suifrens-display-system/expressions` | Shared expression lists |
-| `@sugar/suifrens-display-system/types` | Public props, attributes and configuration types |
+| `@sugarcasino/suifrens-display-system` | External SVG image renderer and species components |
+| `@sugarcasino/suifrens-display-system/image-inline` | `SuiFrenImageInline` for inline SVG accessories |
+| `@sugarcasino/suifrens-display-system/accessories` | Accessory catalogue, slot lookup and VIP crowns |
+| `@sugarcasino/suifrens-display-system/animation` | Animation provider, hooks and preset helpers |
+| `@sugarcasino/suifrens-display-system/battle` | Battle sprite, health bar and duel script hook |
+| `@sugarcasino/suifrens-display-system/kits` | Runner and football outfit helpers |
+| `@sugarcasino/suifrens-display-system/colors` | Color palette |
+| `@sugarcasino/suifrens-display-system/attributes` | Ear gene mappings and skin values |
+| `@sugarcasino/suifrens-display-system/expressions` | Shared expression lists |
+| `@sugarcasino/suifrens-display-system/types` | Public props, attributes and configuration types |
 
 ## Documentation and agent skills
 

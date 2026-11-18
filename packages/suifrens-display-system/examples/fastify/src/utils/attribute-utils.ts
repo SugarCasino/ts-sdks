@@ -2,10 +2,13 @@
 // Copyright (c) Sugar (modifications)
 // SPDX-License-Identifier: Apache-2.0
 
-import { EAR_GENE_TO_EAR_SHAPE, SUIFREN_SKINS } from '@sugar/suifrens-display-system/attributes';
-import { COLORS } from '@sugar/suifrens-display-system/colors';
-import { ALL_EXPRESSIONS } from '@sugar/suifrens-display-system/expressions';
-import type { SuiFrenAttributes, SuiFrenSpecies } from '@sugar/suifrens-display-system/types';
+import {
+	EAR_GENE_TO_EAR_SHAPE,
+	SUIFREN_SKINS,
+} from '@sugarcasino/suifrens-display-system/attributes';
+import { COLORS } from '@sugarcasino/suifrens-display-system/colors';
+import { ALL_EXPRESSIONS } from '@sugarcasino/suifrens-display-system/expressions';
+import type { SuiFrenAttributes, SuiFrenSpecies } from '@sugarcasino/suifrens-display-system/types';
 
 function isColor(value: string | undefined): value is keyof typeof COLORS {
 	return value != null && Object.hasOwn(COLORS, value);

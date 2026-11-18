@@ -4,7 +4,7 @@ Applies to `packages/mcp/` and its descendants, in addition to the [workspace in
 
 ## Package structure and commands
 
-`@sugar/mcp` is an ESM-only stdio MCP server with a bundled inspector App. `tsdown` builds the package, and Vite produces the single-file App in `packages/mcp/dist/`.
+`@sugarcasino/mcp` is an ESM-only stdio MCP server with a bundled inspector App. `tsdown` builds the package, and Vite produces the single-file App in `packages/mcp/dist/`.
 
 - `packages/mcp/src/server/`: server construction, tool registration, and App resource registration.
 - `packages/mcp/src/tools/handlers/`: SDK-backed tool handlers.
@@ -15,7 +15,7 @@ Applies to `packages/mcp/` and its descendants, in addition to the [workspace in
 
 ```bash
 # Build the SDK dependency, server, and bundled App
-pnpm turbo run build --filter=@sugar/mcp
+pnpm turbo run build --filter=@sugarcasino/mcp
 # Run the built stdio server for manual testing
 node packages/mcp/dist/bin.mjs
 # Validation
@@ -26,7 +26,7 @@ pnpm --dir packages/mcp run lint
 
 ## Architecture and protocol
 
-`packages/mcp` exposes a local stdio MCP server plus a bundled MCP App resource. Keep SDK and chain behavior in `@sugar/sdk` and `@mysten/sui`.
+`packages/mcp` exposes a local stdio MCP server plus a bundled MCP App resource. Keep SDK and chain behavior in `@sugarcasino/sdk` and `@mysten/sui`.
 
 - Use ext-apps 2 with MCP SDK 2: `@modelcontextprotocol/server`, `@modelcontextprotocol/server/stdio`, and `@modelcontextprotocol/client`. Prefer shared types, errors, and transports exported by `@modelcontextprotocol/server`; reserve `@modelcontextprotocol/client` for client-specific APIs. The client package is a development dependency for tests and the bundled App build; the SDK packages supply core transitively. Use the published ext-apps React types. Register tools with complete Standard JSON Schema schemas (such as Zod objects) and preserve schema/handler type inference.
 - Target MCP 2026-07-28 and use SDK 2 `serveStdio` for stdio version negotiation, and keep compatibility with legacy initialization. Let the SDK validate request metadata and supply discovery, result discriminators, server identity, and cache hints. Keep tool listings deterministic. Pass application state explicitly in tool arguments. Test modern wire responses as well as legacy clients.
@@ -39,7 +39,7 @@ pnpm --dir packages/mcp run lint
 - Import shared validators from `src/utils/validation.ts` and browser-safe object guards from `src/utils/record.ts`. `isRecord` accepts arrays; use `isNonArrayRecord` when arrays are invalid.
 - The MCP App is an inspector UI only. It must not sign or execute transactions, and it should include restrictive `_meta.ui.csp` metadata.
 - Do not reintroduce explicit coin object sourcing or copied transaction builders unless the SDK adds a public API for that behavior.
-- If a new MCP behavior requires an SDK change, add the SDK change, tests, docs, and an `@sugar/sdk` changeset entry in the same task.
+- If a new MCP behavior requires an SDK change, add the SDK change, tests, docs, and an `@sugarcasino/sdk` changeset entry in the same task.
 - Build transactions through `client.sugar.tx`, inspect configuration through `client.sugar.getConfig()`, and avoid imports from private Sugar workspace packages.
 
 ## Tests and cross-package changes

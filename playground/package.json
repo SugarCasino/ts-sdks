@@ -1,5 +1,5 @@
 {
-	"name": "@sugar/sdk-playground",
+	"name": "@sugarcasino/sdk-playground",
 	"private": true,
 	"license": "Apache-2.0",
 	"author": "Sugar <contact@sugar.win>",
@@ -29,7 +29,7 @@
 		"@radix-ui/react-separator": "^1.2.0",
 		"@radix-ui/react-slot": "^1.5.0",
 		"@radix-ui/react-switch": "^1.4.1",
-		"@sugar/sdk": "workspace:^",
+		"@sugarcasino/sdk": "workspace:^",
 		"class-variance-authority": "^0.7.1",
 		"clsx": "catalog:frontend",
 		"lucide-react": "^1.73.0",

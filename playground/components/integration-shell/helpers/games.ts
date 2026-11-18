@@ -1,4 +1,4 @@
-import { PVP_COINFLIP_ACTIONS } from '@sugar/sdk/games';
+import { PVP_COINFLIP_ACTIONS } from '@sugarcasino/sdk/games';
 import { PVP_GAME_OPTIONS, STANDARD_GAME_OPTIONS } from '@/components/integration-shell/options';
 import type { PvPAction, PvPGameId, StandardGameId } from '@/lib/sugar-types';
 

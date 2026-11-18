@@ -3,7 +3,7 @@
 
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import open from 'open';
-import type { SugarNetwork } from '@sugar/sdk';
+import type { SugarNetwork } from '@sugarcasino/sdk';
 import { randomHex, sameState } from '../utils/crypto.js';
 import { isNonArrayRecord } from '../utils/record.js';
 import {

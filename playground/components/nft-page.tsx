@@ -5,7 +5,7 @@ import type { SuiClientTypes } from '@mysten/sui/client';
 import { Check, FileCode2 } from 'lucide-react';
 import Image from 'next/image';
 import * as React from 'react';
-import type { SugarClient } from '@sugar/sdk';
+import type { SugarClient } from '@sugarcasino/sdk';
 import { AppHeader } from '@/components/app-header';
 import { CodeBlock } from '@/components/code-block';
 import { Badge } from '@/components/ui/badge';

@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { chmod, readFile, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { isValidSuiAddress } from '@mysten/sui/utils';
-import { type SugarNetwork, SUPPORTED_SUI_NETWORKS } from '@sugar/sdk';
+import { type SugarNetwork, SUPPORTED_SUI_NETWORKS } from '@sugarcasino/sdk';
 import { isNonArrayRecord } from '../utils/record.js';
 import { ensureSugarMcpDataDirectory, SUGAR_MCP_DATA_DIRECTORY } from './storage.js';
 

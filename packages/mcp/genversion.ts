@@ -24,9 +24,9 @@ if (
 	throw new TypeError('Missing package version.');
 }
 const versionPattern = /^(\s*"version"\s*:\s*")[^"]+(")/mu;
-const mcpPackagePattern = /("@sugar\/mcp)(?:@[^"]+)?(")/u;
+const mcpPackagePattern = /("@sugarcasino\/mcp)(?:@[^"]+)?(")/u;
 const serverPackageVersionPattern =
-	/("identifier"\s*:\s*"@sugar\/mcp"\s*,\s*"version"\s*:\s*")[^"]+(")/u;
+	/("identifier"\s*:\s*"@sugarcasino\/mcp"\s*,\s*"version"\s*:\s*")[^"]+(")/u;
 
 async function replaceInFile(
 	filePath: URL,
@@ -58,7 +58,7 @@ await replaceInFile(
 	mcpConfigPath,
 	mcpPackagePattern,
 	`$1@${packageJson.version}$2`,
-	'Missing @sugar/mcp package specifier',
+	'Missing @sugarcasino/mcp package specifier',
 );
 
 await replaceInFile(
@@ -72,7 +72,7 @@ await replaceInFile(
 	serverManifestPath,
 	serverPackageVersionPattern,
 	`$1${packageJson.version}$2`,
-	'Missing @sugar/mcp package version',
+	'Missing @sugarcasino/mcp package version',
 );
 
 await replaceInFile(

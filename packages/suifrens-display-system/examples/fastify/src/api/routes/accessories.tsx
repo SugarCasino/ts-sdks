@@ -6,8 +6,8 @@ import type { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
 import type { FastifyPluginCallback } from 'fastify';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { Type } from 'typebox';
-import { ACCESSORIES as suiFrensAccessories } from '@sugar/suifrens-display-system/accessories';
-import { SuiFrenImageInline } from '@sugar/suifrens-display-system/image-inline';
+import { ACCESSORIES as suiFrensAccessories } from '@sugarcasino/suifrens-display-system/accessories';
+import { SuiFrenImageInline } from '@sugarcasino/suifrens-display-system/image-inline';
 import { IMAGE_LOGO_SCHEMA, renderImageLogo } from '../lib/image-logo.js';
 import { renderImage } from '../lib/render-image.js';
 

@@ -1,7 +1,7 @@
 // Copyright (c) Sugar
 // SPDX-License-Identifier: Apache-2.0
 
-import { type Game, GAMES } from '@sugar/sdk/games';
+import { type Game, GAMES } from '@sugarcasino/sdk/games';
 
 export function requireChoice<T extends string>({
 	value,

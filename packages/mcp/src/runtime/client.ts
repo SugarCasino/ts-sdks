@@ -13,7 +13,12 @@ import {
 	normalizeSuiNSName,
 	SUI_DECIMALS,
 } from '@mysten/sui/utils';
-import { sugar, type SugarClient, type SugarNetwork, SUPPORTED_SUI_NETWORKS } from '@sugar/sdk';
+import {
+	sugar,
+	type SugarClient,
+	type SugarNetwork,
+	SUPPORTED_SUI_NETWORKS,
+} from '@sugarcasino/sdk';
 import { formatBaseUnitAmount } from '../utils/index.js';
 import { isNonArrayRecord } from '../utils/record.js';
 import { requireChoice } from '../utils/validation.js';

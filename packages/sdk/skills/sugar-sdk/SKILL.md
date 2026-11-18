@@ -1,9 +1,9 @@
 ---
 name: sugar-sdk
-description: Integrate @sugar/sdk in TypeScript applications. Use for client setup, configuration, game transactions, event parsing, SweetHouse pools, NFTs, or referrals.
+description: Integrate @sugarcasino/sdk in TypeScript applications. Use for client setup, configuration, game transactions, event parsing, SweetHouse pools, NFTs, or referrals.
 ---
 
-# @sugar/sdk
+# @sugarcasino/sdk
 
 This package ships only a pointer to the full Sugar skills, which live on GitHub to keep the npm package small.
 

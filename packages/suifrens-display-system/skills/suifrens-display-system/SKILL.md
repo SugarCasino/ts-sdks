@@ -1,9 +1,9 @@
 ---
 name: suifrens-display-system
-description: Render and animate Suifrens with @sugar/suifrens-display-system. Use for React portraits, SVG exports, attributes, accessories, kits, playback or scripted duels.
+description: Render and animate Suifrens with @sugarcasino/suifrens-display-system. Use for React portraits, SVG exports, attributes, accessories, kits, playback or scripted duels.
 ---
 
-# @sugar/suifrens-display-system
+# @sugarcasino/suifrens-display-system
 
 This package ships only a pointer to the full Sugar skills, which live on GitHub to keep the npm package small.
 

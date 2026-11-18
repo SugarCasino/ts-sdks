@@ -1,4 +1,4 @@
-# `@sugar/mcp`
+# `@sugarcasino/mcp`
 
 MCP server for agents working with Sugar's provably fair casino games on Sui, SweetHouse pools, NFTs, and referral claims.
 
@@ -26,7 +26,7 @@ Requires Node.js `^24.0.0 || ^26.0.0`.
 Install for all detected coding agents with [add-mcp](https://www.npmjs.com/package/add-mcp):
 
 ```bash
-npx add-mcp @sugar/mcp@latest --name sugar
+npx add-mcp @sugarcasino/mcp@latest --name sugar
 ```
 
 Add `-y` to skip the installer prompts. Restart or reload your MCP client after installation.
@@ -40,7 +40,7 @@ Add the stdio server to your MCP client:
 	"mcpServers": {
 		"sugar": {
 			"command": "npx",
-			"args": ["-y", "@sugar/mcp@latest"]
+			"args": ["-y", "@sugarcasino/mcp@latest"]
 		}
 	}
 }
@@ -51,7 +51,7 @@ Add the stdio server to your MCP client:
 Install the package directly when you need to import its programmatic API or run a local copy:
 
 ```bash
-npm install @sugar/mcp
+npm install @sugarcasino/mcp
 ```
 
 The server registers tools and resources through the MCP server and MCP Apps APIs. It targets MCP [`2026-07-28`](https://modelcontextprotocol.io/specification/2026-07-28). The server and bundled App use MCP SDK 2 and ext-apps 2 and support MCP Apps 1.x hosts.
@@ -67,7 +67,7 @@ The package also ships `plugin/` manifests for plugin-capable hosts:
 - `plugin/.cursor-plugin/plugin.json` for Cursor
 - `plugin/plugin.json` for Antigravity-style plugin discovery
 
-The Codex, Claude, and Cursor manifests use the bundled `.mcp.json` MCP config, which registers the `npx -y @sugar/mcp@<package-version>` stdio server. `packages/mcp/package.json` supplies the version for plugin manifests, the MCP config package specifier. Run `pnpm run codegen:version` to sync them; `pnpm run changeset:version` also runs it.
+The Codex, Claude, and Cursor manifests use the bundled `.mcp.json` MCP config, which registers the `npx -y @sugarcasino/mcp@<package-version>` stdio server. `packages/mcp/package.json` supplies the version for plugin manifests, the MCP config package specifier. Run `pnpm run codegen:version` to sync them; `pnpm run changeset:version` also runs it.
 
 Repository marketplace catalogs support GitHub installation and local plugin testing:
 
@@ -91,14 +91,14 @@ claude plugin install sugar-mcp@sugar
 
 Inside an interactive Claude Code session, use `/plugin marketplace add SugarCasino/ts-sdks` and `/plugin install sugar-mcp@sugar` instead. For local development, replace `SugarCasino/ts-sdks` with `.` in either marketplace-add command. ChatGPT desktop local testing works by opening the repository, restarting the app, opening the Plugins directory in Work mode or Codex, then installing `sugar-mcp` from the `Sugar` source.
 
-For Cursor, the repository includes both the plugin manifest and a root `.cursor-plugin/marketplace.json` for multi-plugin repository flows. During local development, you can also copy or symlink `packages/mcp/plugin` into Cursor's local plugin directory and reload Cursor. If you only need MCP tools, configure `npx -y @sugar/mcp` directly. You do not need a plugin wrapper.
+For Cursor, the repository includes both the plugin manifest and a root `.cursor-plugin/marketplace.json` for multi-plugin repository flows. During local development, you can also copy or symlink `packages/mcp/plugin` into Cursor's local plugin directory and reload Cursor. If you only need MCP tools, configure `npx -y @sugarcasino/mcp` directly. You do not need a plugin wrapper.
 
 ### Local development
 
 The package uses the shared strict TypeScript checks with `isolatedDeclarations` disabled so Zod can infer schema and handler types. Run these commands from the repository root.
 
 ```bash
-pnpm turbo run build --filter=@sugar/mcp
+pnpm turbo run build --filter=@sugarcasino/mcp
 node packages/mcp/dist/bin.mjs
 ```
 
@@ -145,7 +145,7 @@ Hosts that support MCP Apps can display config, live game parameters, the NFT ca
 
 - Paired browser wallet
   - `sugar_login`, `sugar_logout`, and `get_connection_status` manage the paired browser wallet.
-  - `sugar_login` and `sugar_logout` start the same local `npx -y @sugar/mcp ...` CLI flows used for command-line wallet management, so the pairing page for mainnet or testnet opens in the default browser without copying and pasting a URL.
+  - `sugar_login` and `sugar_logout` start the same local `npx -y @sugarcasino/mcp ...` CLI flows used for command-line wallet management, so the pairing page for mainnet or testnet opens in the default browser without copying and pasting a URL.
   - `sugar_login` and `sugar_logout` accept `webUrl`, `timeoutMs`, `maxBodyBytes`, `open`, and `noOpen` inputs matching the CLI bridge options.
   - `get_wallet_balances` and `list_wallet_coins` read aggregate balances or paginated coin objects. Both also accept an explicit address.
   - `get_execution_status` checks an `execute`-mode transaction's browser approval result.
@@ -162,7 +162,7 @@ Hosts that support MCP Apps can display config, live game parameters, the NFT ca
   - Fund only the amount the user is willing to delegate to the local MCP process.
   - For game tools, use `mode: "execute", executionWallet: "session"` to make the session wallet the sender and submit immediately. `owner` is optional in this mode; if supplied, it must match the session-wallet address. Fund it for both the wager and gas. You can set a custom provider URL and partner; custom SDK config overrides are rejected. Before signing, the server verifies that the built transaction calls only the selected Sugar game package.
 - Command-line wallet management
-  - Run `npx -y @sugar/mcp login --network testnet` (or `mainnet`), `status`, `logout`, or `clean`.
+  - Run `npx -y @sugarcasino/mcp login --network testnet` (or `mainnet`), `status`, `logout`, or `clean`.
   - Login uses a short-lived, localhost-only browser pairing flow and stores non-secret network-specific metadata in `~/.sugar-mcp/credentials.json` with owner-only permissions.
   - `status` shows the current connection. `logout --all` disconnects every stored network and opens both logout pages when using the default Sugar mainnet and testnet web origins. `clean` deletes the local credential file without opening a browser.
   - Set `SUGAR_MCP_BRIDGE_WEB_URL` or pass `--web-url` to use a local or custom connection-page origin.

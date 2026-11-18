@@ -1,5 +1,5 @@
 {
-	"name": "@sugar/suifrens-display-system",
+	"name": "@sugarcasino/suifrens-display-system",
 	"version": "0.0.0",
 	"description": "React components for rendering and animating Suifrens capys and bullsharks with inline or external SVG accessories",
 	"keywords": [

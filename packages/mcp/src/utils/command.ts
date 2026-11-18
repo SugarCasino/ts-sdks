@@ -8,7 +8,7 @@ export function runSugarCommand(...args: Array<string>): {
 	command: string;
 	pid: number | undefined;
 } {
-	const npxArgs = ['-y', `@sugar/mcp@${VERSION}`, ...args];
+	const npxArgs = ['-y', `@sugarcasino/mcp@${VERSION}`, ...args];
 	const child = spawn('npx', npxArgs, {
 		detached: true,
 		stdio: 'ignore',

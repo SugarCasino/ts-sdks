@@ -14,7 +14,7 @@ Build Sugar transactions on Sui with the TypeScript SDK or MCP server, and rende
 Install Sugar MCP for all detected coding agents with [add-mcp](https://www.npmjs.com/package/add-mcp):
 
 ```bash
-npx add-mcp @sugar/mcp@latest --name sugar
+npx add-mcp @sugarcasino/mcp@latest --name sugar
 ```
 
 Add `-y` to skip the installer prompts. Restart or reload your MCP client after installation.
@@ -26,7 +26,7 @@ To configure an MCP client manually, use:
 	"mcpServers": {
 		"sugar": {
 			"command": "npx",
-			"args": ["-y", "@sugar/mcp@latest"]
+			"args": ["-y", "@sugarcasino/mcp@latest"]
 		}
 	}
 }
@@ -36,7 +36,7 @@ To configure an MCP client manually, use:
 
 Each public npm package includes an entry under `skills/`: `sugar-sdk`, `sugar-mcp`, or `suifrens-display-system`. Compatible agents discover these entries and fetch the full instructions and references they need from `main` in the skills repository. Agent skills are not versioned with the packages. Packing the entries needs no install hook or network access.
 
-Sugar agent skills live in `SugarCasino/agent-skills`. The MCP skill explains how to install and configure `@sugar/mcp`, read Sugar config, game metadata, NFTs and claimable referral amounts, and build and simulate unsigned transactions, including SweetHouse transactions.
+Sugar agent skills live in `SugarCasino/agent-skills`. The MCP skill explains how to install and configure `@sugarcasino/mcp`, read Sugar config, game metadata, NFTs and claimable referral amounts, and build and simulate unsigned transactions, including SweetHouse transactions.
 
 Install all Sugar skills with:
 
@@ -52,9 +52,11 @@ npx skills add SugarCasino/agent-skills --skill sugar-mcp --global --yes
 
 ## Packages
 
-- [`@sugar/sdk`](packages/sdk/README.md) in `packages/sdk`: ESM-only TypeScript SDK for transactions involving Sugar's provably fair casino games on Sui, SweetHouse, NFTs and referrals.
-- [`@sugar/mcp`](packages/mcp/README.md) in `packages/mcp`: MCP stdio server and MCP App for reading Sugar config, game metadata, NFTs, and referral claim amounts, plus building unsigned Sugar and SweetHouse transactions through the SDK.
-- [`@sugar/suifrens-display-system`](packages/suifrens-display-system/README.md) in `packages/suifrens-display-system`: React components for rendering Suifrens.
+The npm scope is `@sugarcasino`. Use it for package installation and all public imports, including subpaths. The client extension remains `sugar()` and `client.sugar`.
+
+- [`@sugarcasino/sdk`](packages/sdk/README.md) in `packages/sdk`: ESM-only TypeScript SDK for transactions involving Sugar's provably fair casino games on Sui, SweetHouse, NFTs and referrals.
+- [`@sugarcasino/mcp`](packages/mcp/README.md) in `packages/mcp`: MCP stdio server and MCP App for reading Sugar config, game metadata, NFTs, and referral claim amounts, plus building unsigned Sugar and SweetHouse transactions through the SDK.
+- [`@sugarcasino/suifrens-display-system`](packages/suifrens-display-system/README.md) in `packages/suifrens-display-system`: React components for rendering Suifrens.
 
 ## Development
 

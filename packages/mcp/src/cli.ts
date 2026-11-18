@@ -3,7 +3,7 @@
 
 import yargs, { type ArgumentsCamelCase, type Argv, type Options } from 'yargs';
 import { hideBin } from 'yargs/helpers';
-import { type SugarNetwork, SUPPORTED_SUI_NETWORKS } from '@sugar/sdk';
+import { type SugarNetwork, SUPPORTED_SUI_NETWORKS } from '@sugarcasino/sdk';
 import { normalizeNetwork } from './runtime/client.js';
 import { startSugarMcpServer } from './server/index.js';
 import { VERSION } from './version.js';

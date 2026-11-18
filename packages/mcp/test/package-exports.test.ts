@@ -113,7 +113,7 @@ describe('package exports', () => {
 			mcpServers: {
 				sugar: {
 					command: 'npx',
-					args: ['-y', `@sugar/mcp@${packageJson.version}`],
+					args: ['-y', `@sugarcasino/mcp@${packageJson.version}`],
 				},
 			},
 		});

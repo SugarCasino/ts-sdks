@@ -1,6 +1,6 @@
 import { createDAppKit } from '@mysten/dapp-kit-core';
 import { SuiGrpcClient } from '@mysten/sui/grpc';
-import { sugar, type SugarNetwork } from '@sugar/sdk';
+import { sugar, type SugarNetwork } from '@sugarcasino/sdk';
 
 type PlaygroundNetwork = Extract<SugarNetwork, 'testnet'>;
 

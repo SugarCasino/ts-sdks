@@ -2,14 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useEffect, useState } from 'react';
-import { ALL_EXPRESSIONS } from '@sugar/suifrens-display-system/expressions';
-import { SuiFrenImageInline } from '@sugar/suifrens-display-system/image-inline';
+import { ALL_EXPRESSIONS } from '@sugarcasino/suifrens-display-system/expressions';
+import { SuiFrenImageInline } from '@sugarcasino/suifrens-display-system/image-inline';
 import type {
 	BullsharkAttributes,
 	CapyAttributes,
 	SuiFrenExpression,
 	SuiFrenImageProps,
-} from '@sugar/suifrens-display-system/types';
+} from '@sugarcasino/suifrens-display-system/types';
 
 export type ExpressionGalleryProps = Omit<SuiFrenImageProps, 'attributes'> & {
 	attributes: Omit<CapyAttributes, 'expression'> | Omit<BullsharkAttributes, 'expression'>;

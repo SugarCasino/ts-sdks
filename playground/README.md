@@ -1,6 +1,6 @@
 # Sugar Playground
 
-This Next.js app runs on Sui `testnet` and uses UI styles and theme tokens based on the Sugar frontend. It imports the client extension from `@sugar/sdk`, game option types from `@sugar/sdk/games`, and parsing helpers from `@sugar/sdk/utils`. Wallet integration uses `@mysten/dapp-kit-core`, `@mysten/dapp-kit-react`, and `@mysten/sui`.
+This Next.js app runs on Sui `testnet` and uses UI styles and theme tokens based on the Sugar frontend. It imports the client extension from `@sugarcasino/sdk`, game option types from `@sugarcasino/sdk/games`, and parsing helpers from `@sugarcasino/sdk/utils`. Wallet integration uses `@mysten/dapp-kit-core`, `@mysten/dapp-kit-react`, and `@mysten/sui`.
 
 ## Pages
 
@@ -26,7 +26,7 @@ Game routes read the selection from the query string. They have:
 - Copyable NFT lookup and referral read/claim code previews that mirror the calls used by their respective routes
 - The transaction execution card reads the connected wallet state from Mysten dApp Kit.
 - Decoding of `BetResultEvent`, `PvPCoinflipGameCreatedEvent`, `PvPCoinflipGameResolvedEvent`, and `PvPCoinflipGameCancelledEvent`
-- Oracle price formatting with `fromMoveFloat` and unified event decoding with `parseSugarEvent` from `@sugar/sdk/utils`
+- Oracle price formatting with `fromMoveFloat` and unified event decoding with `parseSugarEvent` from `@sugarcasino/sdk/utils`
 - Shared persistent event table across route and game changes
 
 ## Development
@@ -42,7 +42,7 @@ pnpm turbo run dev --filter='./playground'
 
 Then open [http://localhost:3000](http://localhost:3000).
 
-The app resolves the workspace-local `@sugar/sdk` package through `workspace:^`. Use the root Turbo command to build the SDK dependency graph with `build:ci` before starting the app command.
+The app resolves the workspace-local `@sugarcasino/sdk` package through `workspace:^`. Use the root Turbo command to build the SDK dependency graph with `build:ci` before starting the app command.
 
 Build the app:
 
@@ -74,5 +74,5 @@ Input parsers use `TypeError` for malformed stake, bet-count, and Keno-pick valu
 
 - Limbo uses the exported SDK default multiplier scale, so the form shows how `targetMultiplier` is converted with `Math.round(targetMultiplier * scale)`.
 - Range point inputs are human values, not pre-scaled integers. The form derives the allowed max from the exported SDK constants `RANGE_POINT_LIMIT / scale`, so the default SDK scale allows `0` to `100`.
-- For SDK pagination outside the current UI, import `DEFAULT_QUERY_LIMIT` from `@sugar/sdk/utils` instead of hard-coding `50`; it is the default query page size used by `client.sugar.getPvPCoinflipGames()` when called without arguments.
+- For SDK pagination outside the current UI, import `DEFAULT_QUERY_LIMIT` from `@sugarcasino/sdk/utils` instead of hard-coding `50`; it is the default query page size used by `client.sugar.getPvPCoinflipGames()` when called without arguments.
 - The browser console logs the full decoded event payloads.

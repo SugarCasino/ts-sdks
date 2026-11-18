@@ -7,7 +7,7 @@ import { ObjectError } from '@mysten/sui/client';
 import type { FastifyPluginCallback } from 'fastify';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { Type } from 'typebox';
-import { SuiFrenImageInline } from '@sugar/suifrens-display-system/image-inline';
+import { SuiFrenImageInline } from '@sugarcasino/suifrens-display-system/image-inline';
 import { getSuiFrenAttributesAndAccessories } from '../client/sui-client.js';
 import { IMAGE_LOGO_SCHEMA, renderImageLogo } from '../lib/image-logo.js';
 import { renderImage } from '../lib/render-image.js';

@@ -1,9 +1,9 @@
 // Copyright (c) Sugar
 // SPDX-License-Identifier: Apache-2.0
 
-import { SuiFrenImage } from '@sugar/suifrens-display-system';
-import { SuiFrenImageInline } from '@sugar/suifrens-display-system/image-inline';
-import type { SuiFrenImageProps } from '@sugar/suifrens-display-system/types';
+import { SuiFrenImage } from '@sugarcasino/suifrens-display-system';
+import { SuiFrenImageInline } from '@sugarcasino/suifrens-display-system/image-inline';
+import type { SuiFrenImageProps } from '@sugarcasino/suifrens-display-system/types';
 
 const renderers = [
 	{ label: 'Inline SVG', Renderer: SuiFrenImageInline },

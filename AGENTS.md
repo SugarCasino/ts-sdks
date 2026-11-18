@@ -6,10 +6,10 @@ Read the scoped instructions before editing a package. Run commands from the rep
 
 This private pnpm workspace has three ESM-only publishable packages, an integration app, Storybook and a Fastify example:
 
-- [`packages/sdk/AGENTS.md`](packages/sdk/AGENTS.md): `@sugar/sdk`, public SDK APIs, transaction builders, generated Move bindings, configuration, and SDK tests.
-- [`packages/mcp/AGENTS.md`](packages/mcp/AGENTS.md): `@sugar/mcp`, stdio protocol, tools, wallet bridges, inspector App, and MCP tests.
+- [`packages/sdk/AGENTS.md`](packages/sdk/AGENTS.md): `@sugarcasino/sdk`, public SDK APIs, transaction builders, generated Move bindings, configuration, and SDK tests.
+- [`packages/mcp/AGENTS.md`](packages/mcp/AGENTS.md): `@sugarcasino/mcp`, stdio protocol, tools, wallet bridges, inspector App, and MCP tests.
 - [`packages/suifrens-display-system/AGENTS.md`](packages/suifrens-display-system/AGENTS.md): display rendering, compatibility and release validation.
-- [`playground/AGENTS.md`](playground/AGENTS.md): private `@sugar/sdk-playground` Next.js integration app.
+- [`playground/AGENTS.md`](playground/AGENTS.md): private `@sugarcasino/sdk-playground` Next.js integration app.
 
 Shared dependencies and catalogs are in `pnpm-workspace.yaml`, and shared compiler options are in `tsconfig.shared.json`. Each workspace has its own source, scripts and tests. Build output goes in `dist/`. Keep package-specific instructions in that package's file.
 
@@ -110,7 +110,7 @@ npx skills add SugarCasino/agent-skills --skill sugar-mcp --agent codex --global
 Use these Sugar skills when building a product with this SDK:
 
 - `installation` for SDK setup, client extension wiring, and config
-- `sugar-mcp` for installing, configuring, and operating the `@sugar/mcp` server and MCP App
+- `sugar-mcp` for installing, configuring, and operating the `@sugarcasino/mcp` server and MCP App
 - `create-standard-games` for standard game transactions
 - `create-pvp-games` for PvP game flows
 - `find-skills` to discover installable external skills when users ask for capabilities or workflows that may already exist

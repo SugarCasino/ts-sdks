@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { beforeEach, expect, test, vi } from 'vitest';
-import { ACCESSORIES } from '@sugar/suifrens-display-system/accessories';
+import { ACCESSORIES } from '@sugarcasino/suifrens-display-system/accessories';
 import { getSuiFrenAccessories } from '../../../../src/api/client/sui-client.js';
 import { ACCESSORIES_KEY_TYPE, ACCESSORY_TYPE } from '../../../../src/api/lib/config.js';
 import { Accessory } from '../../../../src/api/lib/suifren-bcs.js';

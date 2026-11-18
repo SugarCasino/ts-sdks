@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { z } from 'zod/v4';
-import { COIN_SIDES } from '@sugar/sdk/games';
+import { COIN_SIDES } from '@sugarcasino/sdk/games';
 import { POSITIVE_INTEGER_PATTERN } from '../../utils/index.js';
 import { configInputSchema } from './config.js';
 import {
@@ -25,7 +25,7 @@ const commonBuildInputSchema = configInputSchema
 			.describe('Build, dry-run, or return a read-only plan.'),
 		owner: z.string().min(1).optional().describe(ADDRESS_DESCRIPTION),
 		coinType: z.string().min(1).optional().describe(COIN_TYPE_DESCRIPTION),
-		metadata: metadataSchema.optional().describe('Metadata values encoded by @sugar/sdk.'),
+		metadata: metadataSchema.optional().describe('Metadata values encoded by @sugarcasino/sdk.'),
 		gasBudget: z.number().int().positive().optional().describe('Optional gas budget in MIST.'),
 		useGasCoin: z
 			.boolean()

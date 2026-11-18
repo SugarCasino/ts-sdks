@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { AnimationConfig, PlaybackOptions } from '@sugar/suifrens-display-system/types';
+import type { AnimationConfig, PlaybackOptions } from '@sugarcasino/suifrens-display-system/types';
 
 export type LocomotionState = 'idle' | 'walk' | 'run' | 'jump' | 'crouch' | 'crouchWalk';
 export type FacingDirection = 'left' | 'right';

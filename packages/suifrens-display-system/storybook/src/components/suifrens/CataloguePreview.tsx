@@ -1,8 +1,11 @@
 // Copyright (c) Sugar
 // SPDX-License-Identifier: Apache-2.0
 
-import { SuiFrenImageInline } from '@sugar/suifrens-display-system/image-inline';
-import type { SuiFrenExpression, SuiFrenImageProps } from '@sugar/suifrens-display-system/types';
+import { SuiFrenImageInline } from '@sugarcasino/suifrens-display-system/image-inline';
+import type {
+	SuiFrenExpression,
+	SuiFrenImageProps,
+} from '@sugarcasino/suifrens-display-system/types';
 
 const species = [
 	{ label: 'Bullshark', traits: { finStyle: 'classic' } },
