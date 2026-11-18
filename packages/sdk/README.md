@@ -274,7 +274,7 @@ const parameters = await client.sugar.getGameParameters({
 console.log(parameters.min_stake);
 ```
 
-Pass `ignoreCache: true` to refresh the on-chain read and replace the cached value.
+Pass `ignoreCache: true` to refresh the on-chain read and replace the cached value. Earlier reads that are still pending can finish without overwriting or invalidating the refreshed entry.
 
 ### `serializeTransactionToBase64({ transaction, ...options })`
 

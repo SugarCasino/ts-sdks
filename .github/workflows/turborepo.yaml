@@ -78,6 +78,12 @@ jobs:
         shell: bash
         run: pnpm exec manypkg check
 
+      - name: Verify generated Suifrens assets and presets
+        run: |
+          pnpm --dir packages/suifrens-display-system run codegen
+          git diff --exit-code -- packages/suifrens-display-system/src/generated
+          test -z "$(git ls-files --others --exclude-standard -- packages/suifrens-display-system/src/generated)"
+
       - name: Build packages
         shell: bash
         run: pnpm turbo run build:ci --filter='./packages/*'

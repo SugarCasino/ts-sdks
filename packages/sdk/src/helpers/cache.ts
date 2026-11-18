@@ -47,9 +47,9 @@ export function readCache<T>({
 		return load();
 	}
 
-	const { ttlMs, sync } = options;
+	const { ttlMs } = options;
 
-	const createEntry = (resolvedCache?: { cache: ClientCache; key: CacheKey }) => {
+	const createEntry = () => {
 		const value = load();
 		const entry: CacheEntry<T | Promise<T>> = {
 			expiresAt: Date.now() + ttlMs,
@@ -59,15 +59,12 @@ export function readCache<T>({
 		if (isPromiseLike(value)) {
 			entry.value = Promise.resolve(value)
 				.then((resolved) => {
-					resolvedCache?.cache.clear(resolvedCache.key);
-					void resolvedCache?.cache.read<CacheEntry<T>>(resolvedCache.key, () => ({
-						expiresAt: Date.now() + ttlMs,
-						value: resolved,
-					}));
+					entry.value = resolved;
+					entry.expiresAt = Date.now() + ttlMs;
 					return resolved;
 				})
 				.catch((error) => {
-					resolvedCache?.cache.clear(resolvedCache.key);
+					entry.expiresAt = Number.NEGATIVE_INFINITY;
 					throw error;
 				});
 		}
@@ -76,15 +73,12 @@ export function readCache<T>({
 	};
 
 	// The cache entry is synchronous; only its value may be a promise.
-	const readEntry = () =>
-		cache.readSync(key, () => createEntry(sync === true ? undefined : { cache, key }));
-	let cached = readEntry();
+	const cached = cache.readSync(key, createEntry);
 	if (cached.expiresAt > Date.now()) {
 		return cached.value;
 	}
 	cache.clear(key);
-	cached = readEntry();
-	return cached.value;
+	return cache.readSync(key, createEntry).value;
 }
 
 function isPromiseLike<T>(value: T | Promise<T>): value is Promise<T> {
