@@ -1,0 +1,40 @@
+// Copyright (c) Sugar
+// SPDX-License-Identifier: Apache-2.0
+
+import type { Transaction } from '@mysten/sui/transactions';
+import { playV2 } from '../contracts/wheel/wheel.js';
+import { optionalOptions } from '../helpers/options.js';
+import type { WheelTransactionOptions, WithPartner } from '../types/index.js';
+import { toU8 } from '../utils/numeric.js';
+import { buildSharedStandardGameBetTransaction } from './shared.js';
+
+export function buildWheelTransaction(options: WithPartner<WheelTransactionOptions>): Transaction {
+	const configId = toU8(options.configId);
+
+	return buildSharedStandardGameBetTransaction({
+		...options,
+		buildRewardCoin: ({
+			config,
+			coinType,
+			stake,
+			betCount,
+			metadata,
+			priceInfoObjectId,
+			betCoin,
+		}) =>
+			playV2({
+				...optionalOptions({ package: config.packageIds.wheel }),
+				typeArguments: [coinType],
+				arguments: [
+					config.objectIds.sweetHouse,
+					stake,
+					betCoin,
+					betCount,
+					configId,
+					metadata.keys,
+					metadata.values,
+					priceInfoObjectId,
+				],
+			}),
+	});
+}

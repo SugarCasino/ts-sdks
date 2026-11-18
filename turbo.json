@@ -1,0 +1,33 @@
+{
+	"$schema": "./node_modules/turbo/schema.json",
+	"globalDependencies": [".oxfmtrc.json", "pnpm-workspace.yaml", "tsconfig.shared.json"],
+	"tasks": {
+		"test": {
+			"dependsOn": ["^build:ci"],
+			"inputs": ["$TURBO_DEFAULT$", "!README.md", "!CHANGELOG.md"],
+			"outputs": []
+		},
+		"lint": {
+			"inputs": ["$TURBO_DEFAULT$"],
+			"outputs": []
+		},
+		"lint:fix": {
+			"cache": false,
+			"inputs": ["$TURBO_DEFAULT$"],
+			"outputs": []
+		},
+		"typecheck": {
+			"dependsOn": ["^build:ci"],
+			"inputs": ["$TURBO_DEFAULT$", "!README.md", "!CHANGELOG.md"],
+			"outputs": []
+		},
+		"build": {
+			"inputs": ["$TURBO_DEFAULT$", "!test/**", "!tests/**", "!README.md", "!CHANGELOG.md"],
+			"outputs": ["dist/**"]
+		},
+		"build:ci": {
+			"inputs": ["$TURBO_DEFAULT$", "!test/**", "!tests/**", "!README.md", "!CHANGELOG.md"],
+			"outputs": ["dist/**"]
+		}
+	}
+}

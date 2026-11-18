@@ -1,0 +1,210 @@
+// Copyright (c) Sugar
+// SPDX-License-Identifier: Apache-2.0
+
+import yargs, { type ArgumentsCamelCase, type Argv, type Options } from 'yargs';
+import { hideBin } from 'yargs/helpers';
+import { type SugarNetwork, SUPPORTED_SUI_NETWORKS } from '@sugar/sdk';
+import { startSugarMcpServer } from './server/index.js';
+import { VERSION } from './version.js';
+import {
+	BRIDGE_MAX_BODY_BYTES_ENV,
+	BRIDGE_TIMEOUT_MS_ENV,
+	BRIDGE_WEB_URL_ENV,
+	type BridgeOptions,
+	clearCredentials,
+	createLoginBridge,
+	createLogoutBridge,
+	DEFAULT_MAX_BODY_BYTES,
+	DEFAULT_TIMEOUT_MS,
+	loadCredentials,
+	type LogoutBridge,
+	resolveWebOrigin,
+	setDefaultNetwork,
+} from './wallet/index.js';
+
+type NetworkArgs = ArgumentsCamelCase<{ network?: SugarNetwork | undefined }>;
+type JsonArgs = ArgumentsCamelCase<{ json: boolean }>;
+type BridgeArgs = ArgumentsCamelCase<{
+	timeoutMs?: number | undefined;
+	maxBodyBytes?: number | undefined;
+	open: boolean;
+	webUrl?: string | undefined;
+}>;
+
+const JSON_OPTION = {
+	type: 'boolean',
+	default: false,
+	description: 'Output machine-readable JSON instead of human-readable text',
+} satisfies Options;
+
+function addBridgeOptions(command: Argv): Argv {
+	return command
+		.option('timeout-ms', {
+			type: 'number',
+			description: `Milliseconds before a local browser bridge expires; defaults to ${BRIDGE_TIMEOUT_MS_ENV} or ${DEFAULT_TIMEOUT_MS}`,
+		})
+		.option('max-body-bytes', {
+			type: 'number',
+			description: `Maximum JSON callback body size for the local browser bridge; defaults to ${BRIDGE_MAX_BODY_BYTES_ENV} or ${DEFAULT_MAX_BODY_BYTES}`,
+		})
+		.option('web-url', {
+			type: 'string',
+			description: `Browser app origin for wallet pairing and approval pages; defaults to ${BRIDGE_WEB_URL_ENV} or the selected network origin`,
+		})
+		.option('open', {
+			type: 'boolean',
+			default: true,
+			description:
+				'Open the connection page in the default browser; use --no-open to only print its URL',
+		});
+}
+function getBridgeOptions(args: BridgeArgs): BridgeOptions {
+	return {
+		timeoutMs: args.timeoutMs,
+		maxBodyBytes: args.maxBodyBytes,
+		open: args.open,
+	};
+}
+
+export async function runSugarCli(argv: Array<string> = hideBin(process.argv)): Promise<void> {
+	const parser = yargs(argv)
+		.scriptName('')
+		.strict()
+		.help()
+		.version(VERSION)
+		.command(
+			'login',
+			'Connect a wallet in the Sugar browser app',
+			(command) =>
+				addBridgeOptions(command)
+					.option('network', {
+						choices: SUPPORTED_SUI_NETWORKS,
+						default: 'testnet',
+					})
+					.option('json', JSON_OPTION),
+			async (args) => {
+				const bridgeArgs = args as unknown as BridgeArgs;
+				const network = args.network as SugarNetwork;
+				const bridge = await createLoginBridge({
+					network,
+					webOrigin: resolveWebOrigin({ network, webUrl: bridgeArgs.webUrl }),
+					...getBridgeOptions(bridgeArgs),
+				});
+				process.stderr.write(`Open this URL to connect your wallet:\n${bridge.url}\n`);
+				const profile = await bridge.done;
+				const result = {
+					network,
+					address: profile.address,
+					walletType: profile.walletType,
+				};
+				process.stdout.write(
+					args.json
+						? `${JSON.stringify(result)}\n`
+						: `Sugar MCP connected\n\nNetwork: ${network}\nWallet: ${profile.address} (${profile.walletType})\n`,
+				);
+			},
+		)
+		.command(
+			'logout',
+			'Disconnect a wallet through the Sugar browser app',
+			(command) =>
+				addBridgeOptions(command)
+					.option('network', { choices: SUPPORTED_SUI_NETWORKS })
+					.option('all', {
+						type: 'boolean',
+						default: false,
+						description:
+							'Disconnect wallets on every network; with default web origins, opens one page per network',
+					})
+					.option('json', JSON_OPTION),
+			async (args) => {
+				const bridgeArgs = args as unknown as BridgeArgs;
+				const credentials = await loadCredentials();
+				const network = args.network ?? credentials.defaultNetwork;
+				const bridgeOptions = getBridgeOptions(bridgeArgs);
+				const useNetworkOrigins =
+					args.all && !bridgeArgs.webUrl && !process.env[BRIDGE_WEB_URL_ENV];
+				const bridges: Array<LogoutBridge> = [];
+				if (useNetworkOrigins) {
+					for (const logoutNetwork of SUPPORTED_SUI_NETWORKS) {
+						bridges.push(
+							await createLogoutBridge({
+								network: logoutNetwork,
+								all: true,
+								webOrigin: resolveWebOrigin({ network: logoutNetwork }),
+								...bridgeOptions,
+							}),
+						);
+					}
+				} else {
+					bridges.push(
+						await createLogoutBridge({
+							network: args.all ? undefined : network,
+							all: args.all,
+							webOrigin: resolveWebOrigin({ network, webUrl: bridgeArgs.webUrl }),
+							...bridgeOptions,
+						}),
+					);
+				}
+				process.stderr.write(
+					`Open ${bridges.length === 1 ? 'this URL' : 'these URLs'} to disconnect your wallet:\n${bridges.map((bridge) => bridge.url).join('\n')}\n`,
+				);
+				await Promise.all(bridges.map((bridge) => bridge.done));
+				process.stdout.write(
+					args.json
+						? `${JSON.stringify({ network: args.all ? undefined : network, all: args.all, loggedOut: true })}\n`
+						: args.all
+							? 'Logged out of every Sugar MCP wallet.\n'
+							: `Logged out of Sugar MCP on ${network}.\n`,
+				);
+			},
+		)
+		.command(
+			'clean',
+			'Remove all local Sugar MCP credentials',
+			(command: Argv) => command.option('json', JSON_OPTION),
+			async (args: JsonArgs) => {
+				await clearCredentials();
+				process.stdout.write(
+					args.json
+						? `${JSON.stringify({ cleaned: true })}\n`
+						: 'Removed all local Sugar MCP credentials.\n',
+				);
+			},
+		)
+		.command(
+			'status',
+			'Show non-secret MCP connection status',
+			(command: Argv) =>
+				command.option('network', { choices: SUPPORTED_SUI_NETWORKS }).option('json', JSON_OPTION),
+			async (args: NetworkArgs & JsonArgs) => {
+				const credentials = await loadCredentials();
+				const network = args.network ?? credentials.defaultNetwork;
+				const profile = credentials.profiles[network];
+				const result = {
+					network,
+					connected: Boolean(profile),
+					address: profile?.address,
+					walletType: profile?.walletType,
+					defaultNetwork: credentials.defaultNetwork,
+				};
+				process.stdout.write(
+					args.json
+						? `${JSON.stringify(result)}\n`
+						: `Sugar MCP status\n\nNetwork: ${network}\nWallet: ${profile ? `${profile.address} (${profile.walletType})` : 'Not connected'}\nDefault network: ${credentials.defaultNetwork}\n`,
+				);
+			},
+		)
+		.command(
+			'$0',
+			'Start the stdio MCP server',
+			(command: Argv) => command.option('network', { choices: SUPPORTED_SUI_NETWORKS }),
+			async (args: NetworkArgs) => {
+				if (args.network) {
+					await setDefaultNetwork(args.network);
+				}
+				await startSugarMcpServer();
+			},
+		);
+	await parser.parseAsync();
+}

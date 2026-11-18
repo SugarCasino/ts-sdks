@@ -1,0 +1,20 @@
+{
+	"name": "sugar",
+	"interface": {
+		"displayName": "Sugar"
+	},
+	"plugins": [
+		{
+			"name": "sugar-mcp",
+			"source": {
+				"source": "local",
+				"path": "./packages/mcp/plugin"
+			},
+			"policy": {
+				"installation": "AVAILABLE",
+				"authentication": "ON_INSTALL"
+			},
+			"category": "Developer Tools"
+		}
+	]
+}

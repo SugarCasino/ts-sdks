@@ -1,0 +1,119 @@
+name: Changesets CI Comment
+
+on:
+  workflow_run:
+    workflows:
+      - Changesets CI
+    types:
+      - completed
+
+permissions:
+  issues: write
+  pull-requests: write
+  actions: read
+
+jobs:
+  comment:
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.event == 'pull_request'
+
+    steps:
+      - name: Resolve pull request number
+        id: pr
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          result-encoding: string
+          script: |
+            const pullRequest = context.payload.workflow_run.pull_requests?.[0];
+            return pullRequest ? String(pullRequest.number) : '';
+
+      - name: Check for missing changeset artifact
+        id: artifact
+        if: steps.pr.outputs.result != ''
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          result-encoding: string
+          script: |
+            const { owner, repo } = context.repo;
+            const run_id = context.payload.workflow_run.id;
+            const artifacts = await github.paginate(github.rest.actions.listWorkflowRunArtifacts, {
+              owner,
+              repo,
+              run_id,
+              per_page: 100,
+            });
+
+            return artifacts.some((artifact) => artifact.name === 'missing-changeset') ? 'true' : 'false';
+
+      - name: Create or update PR comment
+        if: steps.pr.outputs.result != '' && steps.artifact.outputs.result == 'true'
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          ISSUE_NUMBER: ${{ steps.pr.outputs.result }}
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const issue_number = Number(process.env.ISSUE_NUMBER);
+            const marker = '<!-- codex:changesets-warning -->';
+            const body = [
+              marker,
+              '⚠️ 🦋 **Changesets heads-up:** This PR touches one or more publishable Sugar npm packages, but it does not include a changeset yet.',
+              '',
+              'Run `pnpm run changeset` from the repository root and choose the package(s) whose published behavior changed. If this is only docs, tests, or internal CI cleanup, no release note is needed and you can leave this warning alone.',
+              '',
+              'The warning disappears automatically after a changeset is added to the pull request.',
+            ].join('\n');
+
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            });
+
+            const existingComment = comments.find((comment) => comment.body?.includes(marker));
+
+            if (existingComment) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existingComment.id,
+                body,
+              });
+              return;
+            }
+
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number,
+              body,
+            });
+
+      - name: Remove outdated PR comment
+        if: steps.pr.outputs.result != '' && steps.artifact.outputs.result != 'true'
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          ISSUE_NUMBER: ${{ steps.pr.outputs.result }}
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const issue_number = Number(process.env.ISSUE_NUMBER);
+            const marker = '<!-- codex:changesets-warning -->';
+
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            });
+
+            for (const comment of comments.filter((comment) => comment.body?.includes(marker))) {
+              await github.rest.issues.deleteComment({
+                owner,
+                repo,
+                comment_id: comment.id,
+              });
+            }

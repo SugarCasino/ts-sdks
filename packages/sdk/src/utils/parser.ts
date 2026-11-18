@@ -1,0 +1,264 @@
+// Copyright (c) Sugar
+// SPDX-License-Identifier: Apache-2.0
+
+import { bcs } from '@mysten/sui/bcs';
+import type { SuiClientTypes } from '@mysten/sui/client';
+import { normalizeStructTag, parseStructTag } from '@mysten/sui/utils';
+import { BetResultEvent } from '../contracts/core/core.js';
+import {
+	GameCancelledEvent as PvPCoinflipGameCancelledEvent,
+	GameCreatedEvent as PvPCoinflipGameCreatedEvent,
+	GameResolvedEvent as PvPCoinflipGameResolvedEvent,
+} from '../contracts/pvp-coinflip/pvp_coinflip.js';
+import type { SugarEvent } from '../types/event.type.js';
+import { GAME_DETAIL_BCS, GAME_DETAILS_SCHEMAS } from '../types/game-details.type.js';
+import { GAME_EVENTS, GAMES } from '../types/game.type.js';
+import type {
+	BetResultGameDetails,
+	Game,
+	GameDetail,
+	GameDetails,
+	GameDetailSchemaValueType,
+	GameDetailValueType,
+	GameDetailVectorValueType,
+	GameEvent,
+	MoveFloat,
+	SugarGameEvent,
+	WithGame,
+} from '../types/index.js';
+import { fromMoveFloat } from './numeric.js';
+
+const textDecoder = new TextDecoder();
+
+/**
+ * Extracts and normalizes the first generic coin type from a Move object type.
+ *
+ * PvP Coinflip game object types encode the wager coin as their first type parameter, for example
+ * `Game<0x2::sui::SUI>`. This helper converts that generic type argument into the SDK's canonical
+ * struct tag string.
+ *
+ * @param type Fully qualified Move object type with the coin type as its first generic argument.
+ * @returns Normalized coin type struct tag.
+ */
+export function parseCoinType(type: string): string {
+	const coinType = parseStructTag(type).typeParams[0];
+	if (!coinType) {
+		throw new TypeError(`Unable to parse coin type from ${type}`);
+	}
+
+	return normalizeStructTag(coinType);
+}
+
+/**
+ * Resolves a supported Sugar event into its normalized SDK game and event name.
+ *
+ * This helper recognizes all supported Sugar event names in `GAME_EVENTS`. Standard
+ * `BetResultEvent` payloads encode the game family through the core client event module or generic
+ * type parameter, while PvP Coinflip events resolve to the `pvp-coinflip` game id from their
+ * `pvp_coinflip` module.
+ *
+ * @param suiEvent Sui event returned by the core client.
+ * @returns SDK game and raw Move event name, or `null` when the event name is unsupported or the
+ *   game cannot be resolved.
+ */
+export function parseGameEvent(suiEvent: SuiClientTypes.Event): SugarGameEvent | null {
+	const { name: event, typeParams } = parseStructTag(suiEvent.eventType);
+	const module = suiEvent.module.replaceAll('_', '-');
+	const game = GAMES.includes(module as Game) ? module : typeParams[0];
+
+	if (
+		!GAME_EVENTS.includes(event as GameEvent) ||
+		typeof game !== 'string' ||
+		(game !== 'pvp-coinflip' && event !== 'BetResultEvent')
+	) {
+		return null;
+	}
+
+	return {
+		game,
+		event,
+	} as SugarGameEvent;
+}
+
+/**
+ * Parses a supported Sugar event into the SDK's normalized event shape.
+ *
+ * This helper first resolves the emitted Move event to a Sugar `game` and event `type`, then
+ * decodes the event BCS payload with the matching generated schema. For `BetResultEvent` payloads,
+ * it also decodes `game_details` into game-specific application values under `gameDetails`.
+ *
+ * @param suiEvent Sui event returned by the core client with its BCS payload included.
+ * @returns A decoded Sugar event with `{ game, event: { type, data } }`, plus `gameDetails` for
+ *   `BetResultEvent`; or `null` when the event is unsupported, cannot be mapped to a Sugar game, or
+ *   does not include a `Uint8Array` BCS payload.
+ */
+export function parseSugarEvent(suiEvent: SuiClientTypes.Event): SugarEvent | null {
+	const gameEvent = parseGameEvent(suiEvent);
+	if (!gameEvent || !(suiEvent.bcs instanceof Uint8Array)) {
+		return null;
+	}
+
+	switch (gameEvent.event) {
+		case 'BetResultEvent': {
+			const data = BetResultEvent.parse(suiEvent.bcs);
+			return {
+				game: gameEvent.game,
+				event: { type: gameEvent.event, data },
+				gameDetails: parseGameDetails({ game: gameEvent.game, gameDetails: data.game_details }),
+			};
+		}
+		case 'GameCreatedEvent':
+			return {
+				game: gameEvent.game,
+				event: {
+					type: gameEvent.event,
+					data: PvPCoinflipGameCreatedEvent.parse(suiEvent.bcs),
+				},
+			};
+		case 'GameResolvedEvent':
+			return {
+				game: gameEvent.game,
+				event: {
+					type: gameEvent.event,
+					data: PvPCoinflipGameResolvedEvent.parse(suiEvent.bcs),
+				},
+			};
+		case 'GameCancelledEvent':
+			return {
+				game: gameEvent.game,
+				event: {
+					type: gameEvent.event,
+					data: PvPCoinflipGameCancelledEvent.parse(suiEvent.bcs),
+				},
+			};
+	}
+}
+
+function parseStringGameDetail(value: Array<number>): string {
+	const bytes = Uint8Array.from(value);
+
+	try {
+		return bcs.String.parse(bytes);
+	} catch {
+		return textDecoder.decode(bytes);
+	}
+}
+
+function normalizeBcsGameDetailValue<TValueType extends GameDetailValueType>({
+	valueType,
+	value,
+}: {
+	valueType: TValueType;
+	value: unknown;
+}): GameDetail<TValueType> {
+	switch (valueType) {
+		case 'float':
+			return fromMoveFloat(value as MoveFloat) as GameDetail<TValueType>;
+		case 'u64':
+		case 'u128':
+			return BigInt(value as string | number | bigint) as GameDetail<TValueType>;
+		default:
+			return value as GameDetail<TValueType>;
+	}
+}
+
+function parseVectorValueType(valueType: GameDetailSchemaValueType): GameDetailValueType | null {
+	if (!valueType.startsWith('vector<') || !valueType.endsWith('>')) {
+		return null;
+	}
+
+	const elementType = valueType.slice(7, -1);
+	return elementType in GAME_DETAIL_BCS ? (elementType as GameDetailValueType) : null;
+}
+
+function parseVectorGameDetail<TValueType extends GameDetailVectorValueType>({
+	valueType,
+	elementType,
+	value,
+}: {
+	valueType: TValueType;
+	elementType: GameDetailValueType;
+	value: Array<number>;
+}): GameDetail<TValueType> {
+	const bytes = Uint8Array.from(value);
+	const vectorBcs = bcs.vector(GAME_DETAIL_BCS[elementType]);
+	const parsed = vectorBcs.parse(bytes);
+	const serialized = vectorBcs.serialize(parsed).toBytes();
+
+	if (
+		serialized.length !== bytes.length ||
+		serialized.some((byte, index) => byte !== bytes[index])
+	) {
+		throw new TypeError(`Invalid BCS ${valueType} game detail value.`);
+	}
+
+	return parsed.map((item) =>
+		normalizeBcsGameDetailValue({ valueType: elementType, value: item }),
+	) as GameDetail<TValueType>;
+}
+
+function parseGameDetail<TValueType extends GameDetailSchemaValueType>({
+	valueType,
+	value,
+}: {
+	valueType: TValueType;
+	value: Array<number>;
+}): GameDetail<TValueType> {
+	if (valueType === 'string') {
+		return parseStringGameDetail(value) as GameDetail<TValueType>;
+	}
+
+	const vectorElementType = parseVectorValueType(valueType);
+	if (vectorElementType) {
+		return parseVectorGameDetail({
+			valueType: valueType as GameDetailVectorValueType,
+			elementType: vectorElementType,
+			value,
+		}) as GameDetail<TValueType>;
+	}
+
+	const scalarValueType = valueType as GameDetailValueType;
+	const parsed = GAME_DETAIL_BCS[scalarValueType].parse(Uint8Array.from(value));
+	return normalizeBcsGameDetailValue({
+		valueType: scalarValueType,
+		value: parsed,
+	}) as GameDetail<TValueType>;
+}
+
+/**
+ * Decodes `BetResultEvent.game_details` into plain application values.
+ *
+ * Use this only with the `game_details` field from a decoded `BetResultEvent`. Sugar stores those
+ * entries as `VecMap<string, vector<u8>>`, so raw BCS decoding leaves each value as bytes. This
+ * helper uses the provided `game` to narrow the known detail schema, parses each byte array into
+ * the expected runtime type, and preserves the original on-chain keys in the returned object.
+ * Unknown keys fall back to string decoding so newer detail fields remain readable by default.
+ *
+ * Call `parseGameEvent(event)` first when you need to derive the matching `game` from the raw
+ * `SuiClientTypes.Event` before decoding `decoded.game_details`.
+ *
+ * @param options Game and game details from a decoded `BetResultEvent`.
+ * @returns An object with a null prototype containing decoded detail values. Use `Object.hasOwn` to
+ *   check keys; unknown keys are decoded as strings, including names such as `__proto__`.
+ */
+export function parseGameDetails<TGame extends Game>({
+	game,
+	gameDetails,
+}: WithGame<
+	{
+		gameDetails: BetResultGameDetails;
+	},
+	TGame
+>): GameDetails<TGame> {
+	const schema: Record<string, GameDetailSchemaValueType> = GAME_DETAILS_SCHEMAS[game];
+	const details = gameDetails.contents.reduce<Record<string, unknown>>((parsedDetails, entry) => {
+		const valueType = Object.hasOwn(schema, entry.key) ? (schema[entry.key] ?? 'string') : 'string';
+		parsedDetails[entry.key] = parseGameDetail({
+			valueType,
+			value: entry.value,
+		});
+		return parsedDetails;
+	}, Object.create(null));
+
+	return details as GameDetails<TGame>;
+}

@@ -1,0 +1,53 @@
+{
+	"$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+	"name": "io.github.SugarCasino/mcp",
+	"description": "AI agent MCP server for Sugar casino game, SweetHouse, NFT, and referral transactions.",
+	"repository": {
+		"url": "https://github.com/SugarCasino/ts-sdks",
+		"source": "github",
+		"subfolder": "packages/mcp"
+	},
+	"version": "0.0.0",
+	"websiteUrl": "https://github.com/SugarCasino/ts-sdks/blob/main/packages/mcp/README.md",
+	"packages": [
+		{
+			"registryType": "npm",
+			"identifier": "@sugar/mcp",
+			"version": "0.0.0",
+			"runtimeHint": "npx",
+			"transport": {
+				"type": "stdio"
+			},
+			"environmentVariables": [
+				{
+					"description": "Custom Sugar MCP browser app origin for wallet pairing and approval pages.",
+					"isRequired": false,
+					"format": "string",
+					"isSecret": false,
+					"name": "SUGAR_MCP_BRIDGE_WEB_URL"
+				},
+				{
+					"description": "Milliseconds before local browser login, logout, and approval bridges expire.",
+					"isRequired": false,
+					"format": "string",
+					"isSecret": false,
+					"name": "SUGAR_MCP_BRIDGE_TIMEOUT_MS"
+				},
+				{
+					"description": "Maximum JSON callback body size in bytes for local browser bridges.",
+					"isRequired": false,
+					"format": "string",
+					"isSecret": false,
+					"name": "SUGAR_MCP_BRIDGE_MAX_BODY_BYTES"
+				},
+				{
+					"description": "Milliseconds before local session-wallet setup pages expire.",
+					"isRequired": false,
+					"format": "string",
+					"isSecret": false,
+					"name": "SUGAR_MCP_SESSION_SETUP_TIMEOUT_MS"
+				}
+			]
+		}
+	]
+}

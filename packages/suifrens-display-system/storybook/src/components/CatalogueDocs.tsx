@@ -1,0 +1,15 @@
+// Copyright (c) Sugar
+// SPDX-License-Identifier: Apache-2.0
+
+import { Description, Primary, Subtitle, Title } from '@storybook/addon-docs/blocks';
+
+export function CatalogueDocs() {
+	return (
+		<>
+			<Title />
+			<Subtitle />
+			<Description />
+			<Primary />
+		</>
+	);
+}

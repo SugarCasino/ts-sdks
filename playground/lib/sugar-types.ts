@@ -1,0 +1,185 @@
+import type { Transaction } from '@mysten/sui/transactions';
+import type { SugarClient, SugarCoin } from '@sugar/sdk';
+import type { CoinSide, PvPCoinflipAction, PvPGame, StandardGame } from '@sugar/sdk/games';
+
+export type StandardGameId = StandardGame;
+export type PvPGameId = PvPGame;
+export type PvPAction = PvPCoinflipAction;
+export type SupportedCoinKey = SugarCoin;
+
+export type SharedFields = {
+	stake: string;
+};
+
+export type StandardSharedFields = SharedFields & {
+	betCount: string;
+};
+
+export type StakeRangeSummary = {
+	min: string;
+	max: string;
+	kind?: 'range' | 'minimum' | undefined;
+};
+
+export type NumberRangeSummary = {
+	min: number;
+	max: number;
+};
+
+export type RangeBoundsSummary = {
+	minZoneSize: number;
+	maxZoneSize: number;
+	minRtp: number;
+	maxRtp: number;
+};
+
+export type KenoBoundsSummary = {
+	boardSize: number;
+	drawCount: number;
+	minPicks: number;
+	maxPicks: number;
+	minRtp: number;
+	maxRtp: number;
+};
+
+export type GameConfigOption = {
+	id: string;
+	label: string;
+	description?: string | undefined;
+	details?:
+		| Array<{
+				label: string;
+				value: string;
+		  }>
+		| undefined;
+	multiplierValues?:
+		| Array<{
+				id: string;
+				label?: string | undefined;
+				value: string;
+		  }>
+		| undefined;
+	keno?:
+		| {
+				boardSize: number;
+				drawCount: number;
+				minPicks: number;
+				maxPicks: number;
+		  }
+		| undefined;
+	isPlayable: boolean;
+	stakeRange: StakeRangeSummary;
+};
+
+export type GameSettingsDetail = {
+	label: string;
+	value: string;
+};
+
+export type GameSelectionOption = {
+	id: string;
+	label: string;
+};
+
+export type BetCountLimitSummary = {
+	max: bigint;
+	label: string;
+};
+
+export type StandardGameParametersSummary = {
+	stakeRange: StakeRangeSummary;
+	betCountLimit?: BetCountLimitSummary | undefined;
+	configOptions?: Array<GameConfigOption> | undefined;
+	countryOptions?: Array<GameSelectionOption> | undefined;
+	topLevelDetails?: Array<GameSettingsDetail> | undefined;
+	targetMultiplierRange?: NumberRangeSummary | undefined;
+	rangeBounds?: RangeBoundsSummary | undefined;
+	kenoBounds?: KenoBoundsSummary | undefined;
+};
+
+export type PvPGameParametersSummary = {
+	stakeRange: StakeRangeSummary;
+	topLevelDetails?: Array<GameSettingsDetail> | undefined;
+};
+
+export type CoinflipFormValues = StandardSharedFields & {
+	side: CoinSide;
+};
+
+export type KenoFormValues = StandardSharedFields & {
+	configId: string;
+	picks: Array<string>;
+};
+
+export type LimboFormValues = StandardSharedFields & {
+	targetMultiplier: string;
+	scale: string;
+};
+
+export type PlinkoFormValues = StandardSharedFields & {
+	configId: string;
+};
+
+export type RangeFormValues = StandardSharedFields & {
+	leftPoint: string;
+	rightPoint: string;
+	outOfRange: boolean;
+	scale: string;
+};
+
+export type SoccerFormValues = StandardSharedFields & {
+	configId: string;
+	countryId: string;
+	shotZoneId: string;
+};
+
+export type WheelFormValues = StandardSharedFields & {
+	configId: string;
+};
+
+export type PvPCoinflipCreateFormValues = SharedFields & {
+	side: CoinSide;
+	isPrivate: boolean;
+};
+
+export type PvPCoinflipJoinFormValues = {
+	gameId: string;
+};
+
+export type PvPCoinflipCancelFormValues = {
+	gameId: string;
+};
+
+export type StandardForms = {
+	coinflip: CoinflipFormValues;
+	keno: KenoFormValues;
+	limbo: LimboFormValues;
+	plinko: PlinkoFormValues;
+	range: RangeFormValues;
+	soccer: SoccerFormValues;
+	wheel: WheelFormValues;
+};
+
+export type PvPCoinflipForms = {
+	create: PvPCoinflipCreateFormValues;
+	join: PvPCoinflipJoinFormValues;
+	cancel: PvPCoinflipCancelFormValues;
+};
+
+export type PvPCoinflipLobbyGame = Awaited<ReturnType<SugarClient['getPvPCoinflipGames']>>[number];
+
+export type EventLogRow = {
+	id: string;
+	timestamp: string;
+	eventType: string;
+	digest: string;
+	gameId?: string | undefined;
+	actor?: string | undefined;
+	details: string;
+	raw: unknown;
+};
+
+export type BuildResult = {
+	transaction: Transaction;
+	code: string;
+};

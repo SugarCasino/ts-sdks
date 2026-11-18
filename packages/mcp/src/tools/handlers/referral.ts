@@ -1,0 +1,221 @@
+// Copyright (c) Sugar
+// SPDX-License-Identifier: Apache-2.0
+
+import {
+	buildTransactionResult,
+	createSugarClient,
+	type McpConfig,
+	type ReferralClaimKind,
+	type ReferralClaimReadOnlyPlan,
+	type ReferralClaimReadResult,
+	resolveOwnerAddress,
+	type ToolTextResult,
+} from '../../runtime/index.js';
+import { formatBaseUnitAmount } from '../../utils/index.js';
+import { createExecutionBridge, resolveWebOrigin } from '../../wallet/index.js';
+import type {
+	BuildReferralCommissionClaimTransactionInput,
+	BuildReferralLevelUpUsdRewardsClaimTransactionInput,
+	GetReferralCommissionInput,
+	GetReferralLevelUpUsdRewardsInput,
+} from '../schemas/index.js';
+import {
+	asTextResponse,
+	coinMetadataForAmount,
+	getConfigInput,
+	getMode,
+	getSugarPackageId,
+	requireString,
+} from './shared.js';
+
+function referralClaimTarget({
+	config,
+	kind,
+}: {
+	config: McpConfig;
+	kind: ReferralClaimKind;
+}): string {
+	return `${getSugarPackageId({ config, pkg: 'referral' })}::referral::${
+		kind === 'commission' ? 'claim_commission_balance' : 'claim_referrer_level_up_usd_rewards'
+	}`;
+}
+
+async function referralClaimReadResult({
+	input,
+	kind,
+}: {
+	input: Partial<GetReferralCommissionInput> | Partial<GetReferralLevelUpUsdRewardsInput>;
+	kind: ReferralClaimKind;
+}): Promise<ToolTextResult> {
+	const bundle = createSugarClient(getConfigInput(input));
+	const owner = await resolveOwnerAddress({
+		owner: requireString({ value: input.owner, fieldName: 'owner' }),
+		bundle,
+	});
+	const coin =
+		kind === 'commission' && 'coinType' in input
+			? coinMetadataForAmount({ config: bundle.config, coinType: input.coinType })
+			: bundle.config.sdk.coins.usdc;
+	const amount =
+		kind === 'commission'
+			? await bundle.client.sugar.view.referral.getCommission({
+					owner,
+					coinType: coin.coinType,
+				})
+			: await bundle.client.sugar.view.referral.getLevelUpUsdRewards({
+					owner,
+				});
+
+	return asTextResponse({
+		network: bundle.config.network,
+		config: bundle.config,
+		owner,
+		referral: {
+			kind,
+			coinType: coin.coinType,
+			amount: amount.toString(),
+			amountDisplay: formatBaseUnitAmount({ value: amount, decimals: coin.decimals }),
+			notes: [
+				'Amount is simulated with the SDK claim transaction and is not a signed or executed claim.',
+			],
+		},
+	} satisfies ReferralClaimReadResult);
+}
+
+export async function getReferralCommissionTool(
+	input: Partial<GetReferralCommissionInput> = {},
+): Promise<ToolTextResult> {
+	return referralClaimReadResult({ input, kind: 'commission' });
+}
+
+export async function getReferralLevelUpUsdRewardsTool(
+	input: Partial<GetReferralLevelUpUsdRewardsInput> = {},
+): Promise<ToolTextResult> {
+	return referralClaimReadResult({ input, kind: 'level-up-usd-rewards' });
+}
+
+function referralReadOnlyPlan({
+	input,
+	kind,
+}: {
+	input:
+		| BuildReferralCommissionClaimTransactionInput
+		| BuildReferralLevelUpUsdRewardsClaimTransactionInput;
+	kind: ReferralClaimKind;
+}): ToolTextResult {
+	const { config } = createSugarClient(getConfigInput(input));
+	const coin =
+		kind === 'commission' && 'coinType' in input
+			? coinMetadataForAmount({ config, coinType: input.coinType })
+			: config.sdk.coins.usdc;
+	const plan = {
+		target: referralClaimTarget({ config, kind }),
+		typeArguments: [coin.coinType],
+		requiredInputs: ['owner'],
+		notes: [
+			'Builds an unsigned referral claim transaction; the returned coin is transferred to the owner by the SDK.',
+		],
+	};
+	return asTextResponse({
+		mode: 'read-only',
+		network: config.network,
+		config,
+		plan,
+		referral: {
+			kind,
+			coinType: coin.coinType,
+			packageId: getSugarPackageId({ config, pkg: 'referral' }),
+		},
+	} satisfies ReferralClaimReadOnlyPlan);
+}
+
+async function buildReferralClaimTransactionTool({
+	input,
+	kind,
+}: {
+	input:
+		| BuildReferralCommissionClaimTransactionInput
+		| BuildReferralLevelUpUsdRewardsClaimTransactionInput;
+	kind: ReferralClaimKind;
+}): Promise<ToolTextResult> {
+	const mode = getMode(input.mode);
+	if (mode === 'read-only') {
+		return referralReadOnlyPlan({ input, kind });
+	}
+
+	const bundle = createSugarClient(getConfigInput(input));
+	const owner = await resolveOwnerAddress({
+		owner: requireString({ value: input.owner, fieldName: 'owner' }),
+		bundle,
+	});
+	const coin =
+		kind === 'commission' && 'coinType' in input
+			? coinMetadataForAmount({ config: bundle.config, coinType: input.coinType })
+			: bundle.config.sdk.coins.usdc;
+	const transaction =
+		kind === 'commission'
+			? bundle.client.sugar.tx.referral.claimCommission({
+					owner,
+					coinType: coin.coinType,
+					gasBudget: input.gasBudget,
+				})
+			: bundle.client.sugar.tx.referral.claimLevelUpUsdRewards({
+					owner,
+					gasBudget: input.gasBudget,
+				});
+	if (mode === 'execute') {
+		const built = await buildTransactionResult({
+			mode: 'build',
+			transaction,
+			config: bundle.config,
+			client: bundle.client,
+			context: {
+				coinType: coin.coinType,
+				gasBudget: input.gasBudget,
+				gameInputs: { referralClaim: kind },
+			},
+		});
+		const execution = await createExecutionBridge({
+			network: bundle.config.network,
+			webOrigin: resolveWebOrigin({ network: bundle.config.network }),
+			transactionBytesBase64: built.transactionBytesBase64 ?? '',
+			summary: built.summary,
+		});
+		return asTextResponse({
+			mode: 'execute',
+			network: bundle.config.network,
+			config: bundle.config,
+			summary: built.summary,
+			execution: { ...execution, status: 'pending' },
+		});
+	}
+
+	return asTextResponse(
+		await buildTransactionResult({
+			mode,
+			transaction,
+			config: bundle.config,
+			client: bundle.client,
+			context: {
+				coinType: coin.coinType,
+				gasBudget: input.gasBudget,
+				gameInputs: { referralClaim: kind },
+			},
+		}),
+	);
+}
+
+export async function buildReferralCommissionClaimTransactionTool(
+	input: BuildReferralCommissionClaimTransactionInput = {},
+): Promise<ToolTextResult> {
+	return buildReferralClaimTransactionTool({ input, kind: 'commission' });
+}
+
+export async function buildReferralLevelUpUsdRewardsClaimTransactionTool(
+	input: BuildReferralLevelUpUsdRewardsClaimTransactionInput = {},
+): Promise<ToolTextResult> {
+	return buildReferralClaimTransactionTool({
+		input,
+		kind: 'level-up-usd-rewards',
+	});
+}

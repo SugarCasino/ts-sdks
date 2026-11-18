@@ -1,0 +1,323 @@
+// Copyright (c) Sugar
+// SPDX-License-Identifier: Apache-2.0
+
+import type { SuiClientTypes } from '@mysten/sui/client';
+import type { sugar, SugarClient, SugarNetwork } from '@sugar/sdk';
+import type { Game, PvPCoinflipAction } from '@sugar/sdk/games';
+import type { FormattedAmount } from '../utils/index.js';
+
+export type SugarConfig = ReturnType<SugarClient['getConfig']>;
+export type SugarConfigOverrides = NonNullable<Parameters<typeof sugar>[0]>['config'];
+export type RawDryRunResult = SuiClientTypes.SimulateTransactionResult<{
+	effects: true;
+	events: true;
+	balanceChanges: true;
+}>;
+
+export type JsonValue =
+	| string
+	| number
+	| boolean
+	| null
+	| Array<JsonValue>
+	| { [key: string]: JsonValue };
+
+export type DryRunResult = Record<string, JsonValue>;
+
+export type BuilderMode = 'build' | 'dry-run' | 'read-only' | 'execute';
+export type ExecutionWallet = 'connected' | 'session';
+
+export type SugarMcpConfigInput = {
+	network?: SugarNetwork | undefined;
+	providerUrl?: string | undefined;
+	config?: SugarConfigOverrides | undefined;
+	partner?: string | undefined;
+};
+
+export type McpConfig = {
+	network: SugarNetwork;
+	providerUrl: string;
+	sdk: SugarConfig;
+};
+
+export type TransactionCommandSummary = {
+	kind: string;
+	target?: string | undefined;
+	typeArguments?: Array<string> | undefined;
+};
+
+export type TransactionSummaryDetails = {
+	game?: Game | undefined;
+	action?: PvPCoinflipAction | undefined;
+	coinType?: string | undefined;
+	stake?: string | undefined;
+	stakeDisplay?: string | undefined;
+	coinDecimals?: number | undefined;
+	gameInputs?: Record<string, JsonValue> | undefined;
+};
+
+export type TransactionSummaryContext = Omit<TransactionSummaryDetails, 'stake'> & {
+	stake?: TransactionSummaryDetails['stake'] | bigint | number | undefined;
+	gasBudget?: string | bigint | number | undefined;
+};
+
+export type TransactionSummaryFormattingContext = Pick<TransactionSummaryDetails, 'coinDecimals'>;
+
+export type TransactionSummary = {
+	sender: string | null;
+	gasBudget: string | null;
+	gasBudgetDisplay: string | null;
+	gasPrice: string | null;
+	commandCount: number;
+	commands: Array<TransactionCommandSummary>;
+	inputs: number;
+	objectInputs: Array<string>;
+} & TransactionSummaryDetails;
+
+export type DryRunEventSummary = {
+	type: string;
+	game?: Game | undefined;
+	event?: string | undefined;
+	fields: Record<string, JsonValue>;
+};
+
+export type DryRunSummary = {
+	success: boolean;
+	error: string | null;
+	gasUsed: {
+		computation: FormattedAmount | null;
+		storage: FormattedAmount | null;
+		rebate: FormattedAmount | null;
+		nonRefundableStorageFee: FormattedAmount | null;
+		net: FormattedAmount | null;
+	};
+	balanceChanges: Array<{
+		address: string;
+		coinType: string;
+		amount: FormattedAmount;
+	}>;
+	events: Array<DryRunEventSummary>;
+};
+
+export type ReadOnlyPlan = {
+	mode: 'read-only';
+	network: SugarNetwork;
+	game: Game;
+	action?: PvPCoinflipAction | undefined;
+	config: McpConfig;
+	plan: {
+		target: string | null;
+		typeArguments: Array<string>;
+		requiredInputs: Array<string>;
+		notes: Array<string>;
+	};
+};
+
+export type BuildTransactionResult = {
+	mode: 'build' | 'dry-run';
+	network: SugarNetwork;
+	config: McpConfig;
+	summary: TransactionSummary;
+	transactionBytesBase64?: string | undefined;
+	dryRun?: DryRunResult | undefined;
+	dryRunSummary?: DryRunSummary | undefined;
+	errors?: Array<string> | undefined;
+};
+
+export type ReadConfigResult = {
+	network: SugarNetwork;
+	config: McpConfig;
+	supportedGames: Array<{
+		id: Game;
+		label: string;
+		tools: Array<string>;
+	}>;
+	supportedFeatures: Array<{
+		id: 'nfts' | 'referrals' | 'sweethouse';
+		label: string;
+		tools: Array<string>;
+	}>;
+};
+
+export type ReadGameMetadataResult = ReadConfigResult & {
+	game: {
+		id: Game;
+		label: string;
+		packageId: string;
+		coinType: string;
+		parameters: JsonValue;
+		ignoreCache: boolean;
+		notes: Array<string>;
+	};
+};
+
+export type NftSpec = {
+	id: string;
+	name: string;
+	description: string;
+	url: string;
+	supply: string;
+	available: string;
+	price: string;
+	priceDisplay: string;
+};
+
+export type Nft = {
+	id: string;
+	specId: string;
+	name: string;
+	description: string;
+	url: string;
+	imageUrl: string;
+};
+
+export type ListNftsResult = {
+	network: SugarNetwork;
+	config: McpConfig;
+	owner: string;
+	nftType: string;
+	nftCatalog: Array<NftSpec>;
+	ownedNfts: Array<Nft>;
+};
+
+export type ReferralClaimKind = 'commission' | 'level-up-usd-rewards';
+
+export type ReferralClaimReadResult = {
+	network: SugarNetwork;
+	config: McpConfig;
+	owner: string;
+	referral: {
+		kind: ReferralClaimKind;
+		coinType: string;
+		amount: string;
+		amountDisplay: string;
+		notes: Array<string>;
+	};
+};
+
+export type ReferralClaimReadOnlyPlan = {
+	mode: 'read-only';
+	network: SugarNetwork;
+	config: McpConfig;
+	plan: ReadOnlyPlan['plan'];
+	referral: {
+		kind: ReferralClaimKind;
+		coinType: string;
+		packageId: string;
+	};
+};
+
+export type NftV1MintReadOnlyPlan = {
+	mode: 'read-only';
+	network: SugarNetwork;
+	config: McpConfig;
+	plan: ReadOnlyPlan['plan'];
+	nft: {
+		packageId: string;
+		factoryId: string;
+	};
+};
+
+export type SweetHouseReadOnlyPlan = {
+	mode: 'read-only';
+	network: SugarNetwork;
+	config: McpConfig;
+	plan: ReadOnlyPlan['plan'];
+	sweethouse: {
+		action: string;
+		coinType: string;
+		packageId: string;
+		sweetHouseId: string;
+	};
+};
+
+export type WalletReadResult = {
+	network: SugarNetwork;
+	config: McpConfig;
+	wallet: {
+		owner: string;
+		balances?:
+			| Array<SuiClientTypes.Balance & { balanceDisplay: string; symbol: string }>
+			| undefined;
+		coins?:
+			| Array<
+					SuiClientTypes.Coin & {
+						balanceDisplay: string;
+						symbol: string;
+					}
+			  >
+			| undefined;
+		nextCursor?: string | null | undefined;
+		hasNextPage?: boolean | undefined;
+	};
+};
+
+export type ExecutionRequestResult = {
+	mode: 'execute';
+	network: SugarNetwork;
+	config: McpConfig;
+	summary: TransactionSummary;
+	execution:
+		| { requestId: string; approvalUrl: string; status: 'pending' }
+		| {
+				wallet: 'session';
+				address: string;
+				status: 'success' | 'failed';
+				digest: string;
+				error?: string | undefined;
+		  };
+};
+
+export type ExecutionStatusResult = {
+	network: SugarNetwork;
+	config: McpConfig;
+	execution: {
+		requestId: string;
+		status: 'pending' | 'approved' | 'rejected' | 'failed' | 'expired';
+		digest?: string | undefined;
+		error?: string | undefined;
+	};
+};
+
+export type ConnectionResult = {
+	network: SugarNetwork;
+	config: McpConfig;
+	connection: {
+		connected: boolean;
+		address?: string | undefined;
+		walletType?: string | undefined;
+		loginUrl?: string | undefined;
+		command?: string | undefined;
+		pid?: number | undefined;
+		note?: string | undefined;
+		status: 'connected' | 'pending' | 'logged-out';
+	};
+};
+
+export type SessionWalletResult = {
+	network: SugarNetwork;
+	config: McpConfig;
+	sessionWallet: Record<string, unknown>;
+};
+
+export type ToolStructuredResult =
+	| ReadConfigResult
+	| ReadGameMetadataResult
+	| ListNftsResult
+	| ReferralClaimReadResult
+	| ReferralClaimReadOnlyPlan
+	| NftV1MintReadOnlyPlan
+	| SweetHouseReadOnlyPlan
+	| ReadOnlyPlan
+	| BuildTransactionResult
+	| WalletReadResult
+	| ExecutionRequestResult
+	| ExecutionStatusResult
+	| ConnectionResult
+	| SessionWalletResult;
+
+export type ToolTextResult = {
+	content: [{ type: 'text'; text: string }];
+	structuredContent: ToolStructuredResult;
+	_meta?: Record<string, unknown> | undefined;
+};

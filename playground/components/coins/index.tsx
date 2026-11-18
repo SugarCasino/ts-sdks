@@ -1,0 +1,17 @@
+import { SuiCoinIcon } from '@/components/coins/sui';
+import { UsdcCoinIcon } from '@/components/coins/usdc';
+import type { SupportedCoinKey } from '@/lib/sugar-types';
+
+export function CoinIcon({
+	coinKey,
+	className,
+}: {
+	coinKey: SupportedCoinKey;
+	className?: string | undefined;
+}) {
+	if (coinKey === 'sui') {
+		return <SuiCoinIcon className={className} />;
+	}
+
+	return <UsdcCoinIcon className={className} />;
+}

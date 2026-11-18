@@ -1,0 +1,133 @@
+{
+	"name": "@sugar/mcp",
+	"version": "0.0.0",
+	"description": "AI agent MCP server for Sugar provably fair on-chain Sui casino game, SweetHouse, NFT, and referral transactions.",
+	"keywords": [
+		"agent",
+		"ai-agent",
+		"betting",
+		"casino",
+		"casino-games",
+		"coinflip",
+		"crypto-casino",
+		"dapp",
+		"dry-run",
+		"gamblefi",
+		"games",
+		"limbo",
+		"mcp",
+		"mcp-app",
+		"mcp-server",
+		"move",
+		"move-contracts",
+		"nft",
+		"on-chain",
+		"plinko",
+		"provably-fair",
+		"pvp",
+		"pvp-coinflip",
+		"range",
+		"referral",
+		"soccer",
+		"sugar",
+		"sui",
+		"sui-blockchain",
+		"sui-casino",
+		"transaction-builder",
+		"transactions",
+		"typescript",
+		"unsigned-transactions",
+		"wallet",
+		"web3",
+		"web3-gaming",
+		"wheel"
+	],
+	"homepage": "https://github.com/SugarCasino/ts-sdks/blob/main/packages/mcp/README.md",
+	"bugs": {
+		"url": "https://github.com/SugarCasino/ts-sdks/issues/new"
+	},
+	"license": "Apache-2.0",
+	"author": "Sugar <contact@sugar.win>",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/SugarCasino/ts-sdks.git",
+		"directory": "packages/mcp"
+	},
+	"bin": {
+		"sugar": "./dist/bin.mjs"
+	},
+	"files": [
+		"dist",
+		"plugin",
+		"CHANGELOG.md",
+		"README.md",
+		"skills"
+	],
+	"type": "module",
+	"sideEffects": false,
+	"main": "./dist/index.mjs",
+	"types": "./dist/index.d.mts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.mts",
+			"import": "./dist/index.mjs",
+			"default": "./dist/index.mjs"
+		}
+	},
+	"publishConfig": {
+		"access": "public"
+	},
+	"scripts": {
+		"build": "pnpm run clean && tsdown && vite build",
+		"build:ci": "pnpm run build",
+		"clean": "rimraf dist",
+		"codegen:version": "node genversion.ts",
+		"test": "vitest run",
+		"typecheck": "tsc",
+		"doctor": "react-doctor --yes",
+		"oxlint": "oxlint .",
+		"oxlint:fix": "oxlint . --fix",
+		"oxfmt": "oxfmt . --check",
+		"oxfmt:fix": "oxfmt .",
+		"lint": "pnpm run oxlint && pnpm run oxfmt",
+		"lint:fix": "pnpm run oxlint:fix && pnpm run oxfmt:fix"
+	},
+	"dependencies": {
+		"@modelcontextprotocol/ext-apps": "^2.0.4",
+		"@modelcontextprotocol/server": "^2.4.0",
+		"@mysten/bcs": "catalog:mysten",
+		"@mysten/sui": "catalog:mysten",
+		"@napi-rs/keyring": "^2.1.2",
+		"@noble/ciphers": "^2.4.0",
+		"@scure/bip39": "^2.4.0",
+		"@sugar/sdk": "workspace:^",
+		"clsx": "catalog:frontend",
+		"open": "^11.0.4",
+		"qr": "^0.7.2",
+		"react": "catalog:frontend",
+		"react-dom": "catalog:frontend",
+		"tailwind-merge": "catalog:frontend",
+		"yargs": "^18.2.0",
+		"zod": "^4.6.7"
+	},
+	"devDependencies": {
+		"@modelcontextprotocol/client": "^2.4.0",
+		"@tailwindcss/vite": "catalog:tooling",
+		"@types/node": "catalog:typescript",
+		"@types/react": "catalog:typescript",
+		"@types/react-dom": "catalog:typescript",
+		"@types/yargs": "^17.0.35",
+		"@vitejs/plugin-react": "^6.2.1",
+		"react-doctor": "catalog:tooling",
+		"tailwindcss": "catalog:tooling",
+		"tsdown": "catalog:tooling",
+		"typescript": "catalog:typescript",
+		"vite": "catalog:tooling",
+		"vite-plugin-singlefile": "^2.3.4",
+		"vitest": "catalog:tooling"
+	},
+	"engines": {
+		"node": "^24.0.0 || ^26.0.0"
+	},
+	"mcpName": "io.github.SugarCasino/mcp"
+}

@@ -1,0 +1,11 @@
+{
+	"extends": ["//"],
+	"tasks": {
+		"build": {
+			"dependsOn": ["@sugar/sdk#build"]
+		},
+		"build:ci": {
+			"dependsOn": ["@sugar/sdk#build:ci"]
+		}
+	}
+}

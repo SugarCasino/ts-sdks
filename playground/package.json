@@ -1,0 +1,53 @@
+{
+	"name": "@sugar/sdk-playground",
+	"private": true,
+	"license": "Apache-2.0",
+	"author": "Sugar <contact@sugar.win>",
+	"scripts": {
+		"dev": "next dev",
+		"build": "next build",
+		"start": "next start",
+		"typecheck": "tsc",
+		"doctor": "react-doctor --yes",
+		"oxlint": "oxlint .",
+		"oxlint:fix": "oxlint . --fix",
+		"oxfmt": "oxfmt . --check",
+		"oxfmt:fix": "oxfmt .",
+		"lint": "pnpm run oxlint && pnpm run oxfmt",
+		"lint:fix": "pnpm run oxlint:fix && pnpm run oxfmt:fix"
+	},
+	"dependencies": {
+		"@mysten/bcs": "catalog:mysten",
+		"@mysten/dapp-kit-core": "^1.6.43",
+		"@mysten/dapp-kit-react": "^2.1.45",
+		"@mysten/sui": "catalog:mysten",
+		"@radix-ui/react-accordion": "^1.3.1",
+		"@radix-ui/react-dialog": "^1.3.1",
+		"@radix-ui/react-label": "^2.1.17",
+		"@radix-ui/react-popover": "^1.3.1",
+		"@radix-ui/react-select": "^2.4.1",
+		"@radix-ui/react-separator": "^1.2.0",
+		"@radix-ui/react-slot": "^1.5.0",
+		"@radix-ui/react-switch": "^1.4.1",
+		"@sugar/sdk": "workspace:^",
+		"class-variance-authority": "^0.7.1",
+		"clsx": "catalog:frontend",
+		"lucide-react": "^1.70.0",
+		"next": "^16.4.5",
+		"next-themes": "^0.4.6",
+		"react": "catalog:frontend",
+		"react-dom": "catalog:frontend",
+		"sonner": "^2.0.8",
+		"tailwind-merge": "catalog:frontend",
+		"zustand": "^5.1.0"
+	},
+	"devDependencies": {
+		"@tailwindcss/postcss": "catalog:tooling",
+		"@types/node": "catalog:typescript",
+		"@types/react": "catalog:typescript",
+		"@types/react-dom": "catalog:typescript",
+		"react-doctor": "catalog:tooling",
+		"tailwindcss": "catalog:tooling",
+		"typescript": "catalog:typescript"
+	}
+}

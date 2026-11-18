@@ -1,0 +1,145 @@
+// Copyright (c) Sugar
+// SPDX-License-Identifier: Apache-2.0
+
+import type { SuiCodegenConfig } from '@mysten/codegen';
+import { PACKAGE_IDS as TESTNET_PACKAGE_IDS } from './src/configs/testnet/packages.ts';
+
+interface SugarPackage {
+	package: string;
+	packageName: string;
+	modules: Extract<
+		NonNullable<SuiCodegenConfig['packages'][number]['generate']>['modules'],
+		Record<string, unknown>
+	>;
+}
+
+export const SUGAR_PACKAGES: Array<SugarPackage> = [
+	{
+		package: TESTNET_PACKAGE_IDS.nftV1,
+		packageName: 'nft-v1',
+		modules: {
+			nft: {
+				types: ['Factory', 'Nft'],
+				functions: ['mint_to_sender'],
+			},
+		},
+	},
+	{
+		package: '@suigar/core',
+		packageName: 'core',
+		modules: {
+			core: {
+				types: ['BetResultEvent'],
+			},
+			house: {
+				types: ['StakedCoin'],
+			},
+			sweethouse: {
+				types: ['RedeemRequestCreatedEvent'],
+				functions: [
+					'deposit_public_pool_and_mint_staked_coins',
+					'redeem_request',
+					'claim_own_redeem_request_after_delay',
+				],
+			},
+		},
+	},
+	{
+		package: '@suigar/referral',
+		packageName: 'referral',
+		modules: {
+			referral: {
+				types: ['ReferrerClaimCommissionBalanceEvent', 'ReferrerClaimLevelUpUsdRewardsEvent'],
+				functions: ['claim_commission_balance', 'claim_referrer_level_up_usd_rewards_v2'],
+			},
+		},
+	},
+	{
+		package: '@suigar/coinflip',
+		packageName: 'coinflip',
+		modules: {
+			coinflip: {
+				types: ['CoinFlipSettingsKey', 'Parameters'],
+				functions: ['play_v2'],
+			},
+		},
+	},
+	{
+		package: '@suigar/keno',
+		packageName: 'keno',
+		modules: {
+			keno: {
+				types: ['KenoSettingsKey', 'Parameters'],
+				functions: ['play_v2'],
+			},
+		},
+	},
+	{
+		package: '@suigar/limbo',
+		packageName: 'limbo',
+		modules: {
+			limbo: {
+				types: ['LimboSettingsKey', 'Parameters'],
+				functions: ['play_v2'],
+			},
+		},
+	},
+	{
+		package: '@suigar/plinko',
+		packageName: 'plinko',
+		modules: {
+			plinko: {
+				types: ['PlinkoSettingsKey', 'PlinkoConfig', 'Parameters'],
+				functions: ['play_v2'],
+			},
+		},
+	},
+	{
+		package: '@suigar/pvp-coinflip',
+		packageName: 'pvp-coinflip',
+		modules: {
+			pvp_coinflip: {
+				types: [
+					'PvpCoinflipSettingsKey',
+					'PvpCoinflipRegistryKey',
+					'Game',
+					'GameCreatedEvent',
+					'GameResolvedEvent',
+					'GameCancelledEvent',
+					'Parameters',
+				],
+				functions: ['create_game', 'join_game_v2', 'cancel_game'],
+			},
+		},
+	},
+	{
+		package: '@suigar/range',
+		packageName: 'range',
+		modules: {
+			range: {
+				types: ['RangeSettingsKey', 'Parameters'],
+				functions: ['play_v2'],
+			},
+		},
+	},
+	{
+		package: '@suigar/soccer',
+		packageName: 'soccer',
+		modules: {
+			soccer: {
+				types: ['SoccerSettingsKey', 'SoccerConfig', 'Parameters'],
+				functions: ['play_v2'],
+			},
+		},
+	},
+	{
+		package: '@suigar/wheel',
+		packageName: 'wheel',
+		modules: {
+			wheel: {
+				types: ['WheelSettingsKey', 'WheelConfig', 'Parameters'],
+				functions: ['play_v2'],
+			},
+		},
+	},
+];

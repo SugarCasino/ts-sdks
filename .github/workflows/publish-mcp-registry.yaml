@@ -1,0 +1,74 @@
+name: Publish MCP Registry
+
+# Changesets creates package-scoped tags (for example, @sugar/mcp@1.0.0).
+# This reusable workflow is called only when Changesets reports publishing
+# @sugar/mcp, so SDK-only releases and release-PR creation do not invoke it.
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: publish-mcp-registry-${{ github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout released revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Verify the Changesets MCP release tag
+        shell: bash
+        run: |
+          PACKAGE_VERSION="$(jq --raw-output '.version' packages/mcp/package.json)"
+          RELEASE_TAG="@sugar/mcp@${PACKAGE_VERSION}"
+
+          git tag --points-at "$GITHUB_SHA" | grep --fixed-strings --line-regexp "$RELEASE_TAG"
+
+      - name: Wait for the MCP package to become available on npm
+        shell: bash
+        run: |
+          PACKAGE_VERSION="$(jq --raw-output '.version' packages/mcp/package.json)"
+          ATTEMPT=1
+          MAX_ATTEMPTS=5
+          INITIAL_DELAY_SECONDS=60
+          RETRY_DELAY_SECONDS=60
+
+          echo "Waiting ${INITIAL_DELAY_SECONDS} seconds for @sugar/mcp@${PACKAGE_VERSION} to propagate on npm before checking."
+          sleep "$INITIAL_DELAY_SECONDS"
+
+          until npm view "@sugar/mcp@${PACKAGE_VERSION}" version --json >/dev/null 2>&1; do
+            if [ "$ATTEMPT" -ge "$MAX_ATTEMPTS" ]; then
+              echo "@sugar/mcp@${PACKAGE_VERSION} is still unavailable on npm after ${MAX_ATTEMPTS} attempts and $((INITIAL_DELAY_SECONDS + (MAX_ATTEMPTS - 1) * RETRY_DELAY_SECONDS)) seconds of waiting." >&2
+              exit 1
+            fi
+
+            echo "@sugar/mcp@${PACKAGE_VERSION} is unavailable on npm (attempt ${ATTEMPT}/${MAX_ATTEMPTS}); retrying in ${RETRY_DELAY_SECONDS} seconds."
+            sleep "$RETRY_DELAY_SECONDS"
+            ATTEMPT=$((ATTEMPT + 1))
+          done
+
+          echo "@sugar/mcp@${PACKAGE_VERSION} is available on npm."
+
+      - name: Install MCP Registry publisher
+        shell: bash
+        run: |
+          curl --fail --location --retry 3 \
+            "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" \
+            | tar -xz mcp-publisher
+
+      - name: Authenticate to MCP Registry
+        shell: bash
+        run: ./mcp-publisher login github-oidc
+
+      - name: Publish MCP server manifest
+        working-directory: packages/mcp
+        shell: bash
+        run: ../../mcp-publisher publish

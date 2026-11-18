@@ -1,0 +1,13 @@
+// Copyright (c) Sugar
+// SPDX-License-Identifier: Apache-2.0
+
+import { parseToMist } from '@mysten/sui/utils';
+
+export const DEFAULT_GAS_BUDGET_MIST: bigint = parseToMist('0.05');
+
+export const DEFAULT_QUERY_LIMIT = 50;
+
+export const DEFAULT_RANGE_SCALE = 1_000_000;
+export const RANGE_POINT_LIMIT: number = DEFAULT_RANGE_SCALE * 100;
+
+export const DEFAULT_LIMBO_MULTIPLIER_SCALE = 100;

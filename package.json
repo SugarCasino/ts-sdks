@@ -1,0 +1,51 @@
+{
+	"name": "@sugar/ts-sdks",
+	"private": true,
+	"license": "Apache-2.0",
+	"author": "Sugar <contact@sugar.win>",
+	"type": "module",
+	"scripts": {
+		"prepare": "husky",
+		"build": "turbo run build",
+		"test": "turbo run test",
+		"typecheck": "turbo run typecheck",
+		"changeset": "changeset",
+		"changeset:prerelease:beta": "changeset pre enter beta",
+		"changeset:prerelease:exit": "changeset pre exit",
+		"changeset:version": "changeset version && pnpm run codegen:version",
+		"codegen:version": "pnpm --filter './packages/*' --if-present run codegen:version",
+		"release": "turbo run build:ci --filter='./packages/*' && changeset publish",
+		"oxlint": "oxlint .",
+		"oxlint:fix": "oxlint . --fix",
+		"oxfmt": "oxfmt . --check",
+		"oxfmt:fix": "oxfmt .",
+		"lint": "pnpm run oxlint && pnpm run oxfmt",
+		"lint:fix": "pnpm run oxlint:fix && pnpm run oxfmt:fix"
+	},
+	"devDependencies": {
+		"@changesets/changelog-github": "^1.0.1",
+		"@changesets/cli": "^3.0.3",
+		"@changesets/config": "^4.0.1",
+		"@manypkg/cli": "^0.25.1",
+		"husky": "^9.1.7",
+		"lint-staged": "^17.6.0",
+		"oxfmt": "^0.77.0",
+		"oxlint": "^1.92.0",
+		"oxlint-tsgolint": "^7.0.2006",
+		"rimraf": "^6.1.4",
+		"turbo": "^2.11.10"
+	},
+	"devEngines": {
+		"packageManager": {
+			"name": "pnpm",
+			"version": "12.21.0",
+			"onFail": "warn"
+		},
+		"runtime": {
+			"name": "node",
+			"version": "^24.20.0 || ^26.5.0",
+			"onFail": "warn"
+		}
+	},
+	"packageManager": "pnpm@12.21.0"
+}

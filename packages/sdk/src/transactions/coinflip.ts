@@ -1,0 +1,39 @@
+// Copyright (c) Sugar
+// SPDX-License-Identifier: Apache-2.0
+
+import type { Transaction } from '@mysten/sui/transactions';
+import { playV2 } from '../contracts/coinflip/coinflip.js';
+import { optionalOptions } from '../helpers/options.js';
+import type { CoinflipTransactionOptions, WithPartner } from '../types/index.js';
+import { buildSharedStandardGameBetTransaction } from './shared.js';
+
+export function buildCoinflipTransaction(
+	options: WithPartner<CoinflipTransactionOptions>,
+): Transaction {
+	return buildSharedStandardGameBetTransaction({
+		...options,
+		buildRewardCoin: ({
+			config,
+			coinType,
+			stake,
+			betCount,
+			metadata,
+			priceInfoObjectId,
+			betCoin,
+		}) =>
+			playV2({
+				...optionalOptions({ package: config.packageIds.coinflip }),
+				typeArguments: [coinType],
+				arguments: [
+					config.objectIds.sweetHouse,
+					stake,
+					betCoin,
+					betCount,
+					options.side === 'tails',
+					metadata.keys,
+					metadata.values,
+					priceInfoObjectId,
+				],
+			}),
+	});
+}

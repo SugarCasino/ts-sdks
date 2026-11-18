@@ -1,0 +1,109 @@
+{
+	"name": "@sugar/sdk",
+	"version": "0.0.0",
+	"description": "TypeScript SDK for Sugar provably fair on-chain Sui casino game, SweetHouse, NFT, and referral transactions",
+	"keywords": [
+		"betting",
+		"casino",
+		"casino-games",
+		"coinflip",
+		"crypto-casino",
+		"dapp",
+		"gamblefi",
+		"games",
+		"limbo",
+		"move",
+		"move-contracts",
+		"nft",
+		"on-chain",
+		"plinko",
+		"provably-fair",
+		"pvp",
+		"pvp-coinflip",
+		"range",
+		"referral",
+		"soccer",
+		"sugar",
+		"sui",
+		"sui-blockchain",
+		"sui-casino",
+		"sui-sdk",
+		"transaction-builder",
+		"transactions",
+		"typescript",
+		"web3",
+		"web3-gaming",
+		"wheel"
+	],
+	"homepage": "https://github.com/SugarCasino/ts-sdks/blob/main/packages/sdk/README.md",
+	"bugs": {
+		"url": "https://github.com/SugarCasino/ts-sdks/issues/new"
+	},
+	"license": "Apache-2.0",
+	"author": "Sugar <contact@sugar.win>",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/SugarCasino/ts-sdks.git",
+		"directory": "packages/sdk"
+	},
+	"files": [
+		"dist",
+		"CHANGELOG.md",
+		"README.md",
+		"skills"
+	],
+	"type": "module",
+	"sideEffects": false,
+	"main": "./dist/index.mjs",
+	"types": "./dist/index.d.mts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.mts",
+			"import": "./dist/index.mjs",
+			"default": "./dist/index.mjs"
+		},
+		"./games": {
+			"types": "./dist/games.d.mts",
+			"import": "./dist/games.mjs",
+			"default": "./dist/games.mjs"
+		},
+		"./utils": {
+			"types": "./dist/utils.d.mts",
+			"import": "./dist/utils.mjs",
+			"default": "./dist/utils.mjs"
+		}
+	},
+	"publishConfig": {
+		"access": "public"
+	},
+	"scripts": {
+		"build": "pnpm run clean && pnpm run codegen && tsdown",
+		"build:ci": "pnpm run clean && tsdown",
+		"clean": "rimraf dist",
+		"codegen": "sui-ts-codegen generate && pnpm run lint:fix",
+		"test": "vitest run",
+		"typecheck": "tsc",
+		"oxlint": "oxlint .",
+		"oxlint:fix": "oxlint . --fix",
+		"oxfmt": "oxfmt . --check",
+		"oxfmt:fix": "oxfmt .",
+		"lint": "pnpm run oxlint && pnpm run oxfmt",
+		"lint:fix": "pnpm run oxlint:fix && pnpm run oxfmt:fix"
+	},
+	"devDependencies": {
+		"@mysten/bcs": "catalog:mysten",
+		"@mysten/codegen": "catalog:mysten",
+		"@mysten/sui": "catalog:mysten",
+		"@types/node": "catalog:typescript",
+		"tsdown": "catalog:tooling",
+		"typescript": "catalog:typescript",
+		"vitest": "catalog:tooling"
+	},
+	"peerDependencies": {
+		"@mysten/bcs": "catalog:mysten",
+		"@mysten/sui": "catalog:mysten"
+	},
+	"engines": {
+		"node": "^24.0.0 || ^26.0.0"
+	}
+}

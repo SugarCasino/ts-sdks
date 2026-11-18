@@ -1,0 +1,430 @@
+// Copyright (c) Sugar
+// SPDX-License-Identifier: Apache-2.0
+
+import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
+import type { AddressInfo } from 'node:net';
+import open from 'open';
+import type { SugarNetwork } from '@sugar/sdk';
+import { randomHex, sameState } from '../utils/crypto.js';
+import {
+	clearCredentials,
+	loadCredentials,
+	removeProfile,
+	saveProfile,
+	type WalletProfile,
+} from './credentials.js';
+import { LOCALHOST_HOST, LOOPBACK_HOST, loopbackOrigin } from './loopback.js';
+import { resolvePositiveInteger } from './utils.js';
+
+export const DEFAULT_TIMEOUT_MS: number = 5 * 60_000;
+export const DEFAULT_MAX_BODY_BYTES: number = 16 * 1024;
+export const BRIDGE_TIMEOUT_MS_ENV: string = 'SUGAR_MCP_BRIDGE_TIMEOUT_MS';
+export const BRIDGE_MAX_BODY_BYTES_ENV: string = 'SUGAR_MCP_BRIDGE_MAX_BODY_BYTES';
+
+export type BridgeOptions = {
+	timeoutMs?: number | undefined;
+	maxBodyBytes?: number | undefined;
+	open?: boolean | undefined;
+};
+
+export type LoginBridge = {
+	url: string;
+	done: Promise<WalletProfile>;
+	close: () => void;
+};
+export type LogoutBridge = {
+	url: string;
+	done: Promise<{ network?: SugarNetwork | undefined; all: boolean }>;
+	close: () => void;
+};
+export type ExecutionStatus = {
+	requestId: string;
+	status: 'pending' | 'approved' | 'rejected' | 'failed' | 'expired';
+	digest?: string | undefined;
+	error?: string | undefined;
+};
+const EXECUTIONS: Map<string, ExecutionStatus> = new Map();
+
+export function getExecutionStatus(requestId: string): ExecutionStatus | null {
+	return EXECUTIONS.get(requestId) ?? null;
+}
+
+function resolveBridgeOptions(options: BridgeOptions = {}): {
+	timeoutMs: number;
+	maxBodyBytes: number;
+	open: boolean;
+} {
+	return {
+		timeoutMs: resolvePositiveInteger({
+			value: options.timeoutMs ?? process.env[BRIDGE_TIMEOUT_MS_ENV],
+			name: 'Bridge timeout',
+			defaultValue: DEFAULT_TIMEOUT_MS,
+		}),
+		maxBodyBytes: resolvePositiveInteger({
+			value: options.maxBodyBytes ?? process.env[BRIDGE_MAX_BODY_BYTES_ENV],
+			name: 'Maximum bridge request body size',
+			defaultValue: DEFAULT_MAX_BODY_BYTES,
+		}),
+		open: options.open ?? true,
+	};
+}
+
+async function openBridgeUrl({
+	url,
+	shouldOpen,
+}: {
+	url: string;
+	shouldOpen: boolean;
+}): Promise<void> {
+	if (shouldOpen) {
+		await open(url).catch(() => undefined);
+	}
+}
+
+function readBody({
+	request,
+	maxBodyBytes,
+}: {
+	request: IncomingMessage;
+	maxBodyBytes: number;
+}): Promise<string> {
+	return new Promise<string>((resolve, reject) => {
+		const decoder = new TextDecoder();
+		let body = '';
+		let length = 0;
+		request.on('data', (chunk: Uint8Array) => {
+			length += chunk.length;
+			if (length > maxBodyBytes) {
+				request.destroy();
+				reject(new RangeError('Request body is too large.'));
+				return;
+			}
+			body += decoder.decode(chunk, { stream: true });
+		});
+		request.on('end', () => resolve(body + decoder.decode()));
+		request.on('error', reject);
+	});
+}
+
+function respond({
+	response,
+	status,
+	body,
+}: {
+	response: ServerResponse;
+	status: number;
+	body: unknown;
+}): void {
+	response.writeHead(status, {
+		'content-type': 'application/json',
+		'cache-control': 'no-store',
+	});
+	response.end(JSON.stringify(body));
+}
+
+async function createLoopbackServer(webOrigin: string): Promise<{
+	server: Server;
+	port: number;
+	close: () => Server;
+	authorize: (input: { request: IncomingMessage; response: ServerResponse }) => boolean;
+}> {
+	const server = createServer();
+	await new Promise<void>((resolve) => server.listen(0, LOOPBACK_HOST, resolve));
+	const { port } = server.address() as AddressInfo;
+	const allowedHosts = new Set([`${LOOPBACK_HOST}:${port}`, `${LOCALHOST_HOST}:${port}`]);
+	const authorize = ({
+		request,
+		response,
+	}: {
+		request: IncomingMessage;
+		response: ServerResponse;
+	}) => {
+		response.setHeader('access-control-allow-origin', webOrigin);
+		response.setHeader('access-control-allow-methods', 'GET, POST, OPTIONS');
+		response.setHeader('access-control-allow-headers', 'content-type');
+		response.setHeader('vary', 'origin');
+		if (
+			!allowedHosts.has((request.headers.host ?? '').toLowerCase()) ||
+			request.headers.origin !== webOrigin
+		) {
+			respond({ response, status: 403, body: { error: 'Forbidden' } });
+			return false;
+		}
+		if (request.method === 'OPTIONS') {
+			if (request.headers['access-control-request-private-network'] === 'true') {
+				response.setHeader('access-control-allow-private-network', 'true');
+			}
+			response.writeHead(204).end();
+			return false;
+		}
+		return true;
+	};
+	return { server, port, close: () => server.close(), authorize };
+}
+
+export async function createLoginBridge({
+	network,
+	webOrigin,
+	...bridgeOptions
+}: {
+	network: SugarNetwork;
+	webOrigin: string;
+} & BridgeOptions): Promise<LoginBridge> {
+	const options = resolveBridgeOptions(bridgeOptions);
+	const state = randomHex(32);
+	const loopback = await createLoopbackServer(webOrigin);
+	const { server, port, close } = loopback;
+	let preflight = false;
+	const { promise: done, resolve, reject } = Promise.withResolvers<WalletProfile>();
+	const timeout = setTimeout(() => {
+		close();
+		reject(new Error('Wallet login expired. Start login again.'));
+	}, options.timeoutMs).unref();
+
+	server.on('request', async (request, response) => {
+		if (!loopback.authorize({ request, response })) {
+			return;
+		}
+		const url = new URL(request.url ?? '/', loopbackOrigin(port));
+		if (request.method === 'GET' && url.pathname === '/handshake') {
+			if (!(await sameState(url.searchParams.get('state') ?? '', state))) {
+				respond({ response, status: 403, body: { ok: false, error: 'Invalid pairing state' } });
+				return;
+			}
+			preflight = true;
+			respond({ response, status: 200, body: { ok: true, network } });
+			return;
+		}
+		if (request.method !== 'POST' || url.pathname !== '/callback') {
+			respond({ response, status: 404, body: { error: 'Not found' } });
+			return;
+		}
+		if (!request.headers['content-type']?.startsWith('application/json')) {
+			respond({ response, status: 415, body: { error: 'Expected JSON' } });
+			return;
+		}
+		try {
+			const payload = JSON.parse(
+				await readBody({ request, maxBodyBytes: options.maxBodyBytes }),
+			) as Record<string, unknown>;
+			if (typeof payload['state'] !== 'string' || !(await sameState(payload['state'], state))) {
+				respond({ response, status: 403, body: { error: 'Invalid pairing state' } });
+				return;
+			}
+			if (
+				!preflight ||
+				typeof payload['address'] !== 'string' ||
+				(payload['walletType'] !== 'wallet' && payload['walletType'] !== 'zklogin')
+			) {
+				respond({ response, status: 400, body: { error: 'Invalid wallet callback' } });
+				return;
+			}
+			preflight = false;
+			const profile: WalletProfile = {
+				address: payload['address'],
+				walletType: payload['walletType'],
+				frontendOrigin: webOrigin,
+				connectedAt: new Date().toISOString(),
+			};
+			await saveProfile({ network, profile });
+			clearTimeout(timeout);
+			respond({ response, status: 200, body: { ok: true } });
+			resolve(profile);
+			setTimeout(close, 100).unref();
+		} catch {
+			respond({ response, status: 400, body: { error: 'Invalid request' } });
+		}
+	});
+
+	const url = new URL('/connection', webOrigin);
+	url.searchParams.set('port', String(port));
+	url.searchParams.set('state', state);
+	url.searchParams.set('action', 'login');
+	const bridgeUrl = url.toString();
+	await openBridgeUrl({ url: bridgeUrl, shouldOpen: options.open });
+	return { url: bridgeUrl, done, close };
+}
+
+export async function createExecutionBridge({
+	network,
+	webOrigin,
+	transactionBytesBase64,
+	summary,
+	...bridgeOptions
+}: {
+	network: SugarNetwork;
+	webOrigin: string;
+	transactionBytesBase64: string;
+	summary: unknown;
+} & BridgeOptions): Promise<{ requestId: string; approvalUrl: string }> {
+	const options = resolveBridgeOptions(bridgeOptions);
+	const credentials = await loadCredentials();
+	const profile = credentials.profiles[network];
+	if (!profile) {
+		throw new Error(`No wallet is connected for ${network}. Call "sugar_login" first.`);
+	}
+	const state = randomHex(32);
+	const requestId = randomHex(16);
+	EXECUTIONS.set(requestId, { requestId, status: 'pending' });
+	const loopback = await createLoopbackServer(webOrigin);
+	const { server, port, close } = loopback;
+	const expire = setTimeout(() => {
+		EXECUTIONS.set(requestId, { requestId, status: 'expired' });
+		close();
+	}, options.timeoutMs).unref();
+	server.on('request', async (request, response) => {
+		const url = new URL(request.url ?? '/', loopbackOrigin(port));
+		if (!loopback.authorize({ request, response })) {
+			return;
+		}
+		if (
+			!(await sameState(url.searchParams.get('state') ?? '', state)) &&
+			request.method === 'GET'
+		) {
+			respond({ response, status: 403, body: { error: 'Invalid approval state' } });
+			return;
+		}
+		if (request.method === 'GET' && url.pathname === '/request') {
+			respond({
+				response,
+				status: 200,
+				body: {
+					requestId,
+					network,
+					address: profile.address,
+					transactionBytesBase64,
+					summary,
+				},
+			});
+			return;
+		}
+		if (
+			request.method !== 'POST' ||
+			url.pathname !== '/callback' ||
+			!request.headers['content-type']?.startsWith('application/json')
+		) {
+			respond({ response, status: 404, body: { error: 'Not found' } });
+			return;
+		}
+		try {
+			const payload = JSON.parse(
+				await readBody({ request, maxBodyBytes: options.maxBodyBytes }),
+			) as Record<string, unknown>;
+			if (
+				typeof payload['state'] !== 'string' ||
+				!(await sameState(payload['state'], state)) ||
+				payload['address'] !== profile.address
+			) {
+				respond({ response, status: 403, body: { error: 'Invalid approval callback' } });
+				return;
+			}
+			const status: ExecutionStatus =
+				payload['rejected'] === true
+					? { requestId, status: 'rejected' }
+					: typeof payload['digest'] === 'string'
+						? { requestId, status: 'approved', digest: payload['digest'] }
+						: {
+								requestId,
+								status: 'failed',
+								error:
+									typeof payload['error'] === 'string'
+										? payload['error']
+										: 'Wallet approval failed',
+							};
+			EXECUTIONS.set(requestId, status);
+			clearTimeout(expire);
+			respond({ response, status: 200, body: { ok: true } });
+			setTimeout(close, 100).unref();
+		} catch {
+			respond({ response, status: 400, body: { error: 'Invalid request' } });
+		}
+	});
+	const url = new URL('/approval', webOrigin);
+	url.searchParams.set('port', String(port));
+	url.searchParams.set('state', state);
+	const approvalUrl = url.toString();
+	await openBridgeUrl({ url: approvalUrl, shouldOpen: options.open });
+	return { requestId, approvalUrl };
+}
+
+export async function createLogoutBridge({
+	network,
+	all,
+	webOrigin,
+	...bridgeOptions
+}: {
+	network?: SugarNetwork | undefined;
+	all: boolean;
+	webOrigin: string;
+} & BridgeOptions): Promise<LogoutBridge> {
+	const options = resolveBridgeOptions(bridgeOptions);
+	const state = randomHex(32);
+	const loopback = await createLoopbackServer(webOrigin);
+	const { server, port, close } = loopback;
+	const {
+		promise: done,
+		resolve,
+		reject,
+	} = Promise.withResolvers<{
+		network?: SugarNetwork | undefined;
+		all: boolean;
+	}>();
+	const timeout = setTimeout(() => {
+		close();
+		reject(new Error('Wallet logout expired. Start logout again.'));
+	}, options.timeoutMs).unref();
+
+	server.on('request', async (request, response) => {
+		if (!loopback.authorize({ request, response })) {
+			return;
+		}
+		const url = new URL(request.url ?? '/', loopbackOrigin(port));
+		if (request.method === 'GET' && url.pathname === '/request') {
+			if (!(await sameState(url.searchParams.get('state') ?? '', state))) {
+				respond({ response, status: 403, body: { error: 'Invalid logout state' } });
+				return;
+			}
+			respond({ response, status: 200, body: { network, all } });
+			return;
+		}
+		if (
+			request.method !== 'POST' ||
+			url.pathname !== '/callback' ||
+			!request.headers['content-type']?.startsWith('application/json')
+		) {
+			respond({ response, status: 404, body: { error: 'Not found' } });
+			return;
+		}
+		try {
+			const payload = JSON.parse(
+				await readBody({ request, maxBodyBytes: options.maxBodyBytes }),
+			) as Record<string, unknown>;
+			if (typeof payload['state'] !== 'string' || !(await sameState(payload['state'], state))) {
+				respond({ response, status: 403, body: { error: 'Invalid logout callback' } });
+				return;
+			}
+			if (all) {
+				await clearCredentials();
+			} else if (network) {
+				await removeProfile(network);
+			}
+			clearTimeout(timeout);
+			respond({ response, status: 200, body: { ok: true } });
+			resolve({ network, all });
+			setTimeout(close, 100).unref();
+		} catch {
+			respond({ response, status: 400, body: { error: 'Invalid request' } });
+		}
+	});
+
+	const url = new URL('/connection', webOrigin);
+	url.searchParams.set('port', String(port));
+	url.searchParams.set('state', state);
+	url.searchParams.set('action', 'logout');
+	if (all) {
+		url.searchParams.set('all', 'true');
+	}
+	const bridgeUrl = url.toString();
+	await openBridgeUrl({ url: bridgeUrl, shouldOpen: options.open });
+	return { url: bridgeUrl, done, close };
+}
