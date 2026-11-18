@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { AnimatedAccessory } from '../../../../animation/AnimatedAccessory.js';
-import { getPartDefinition } from '../../../../animation/parts.js';
+import { getPartDefinition } from '../../../../helpers/animation/parts.js';
 import type { Matrix } from '../../../../types/animation.type.js';
 import type { SuiFrenGesture } from '../../../../types/gesture.type.js';
 import {

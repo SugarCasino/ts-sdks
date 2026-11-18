@@ -1,18 +1,14 @@
 // Copyright (c) Sugar
 // SPDX-License-Identifier: Apache-2.0
 
-import { WHITESPACE_PATTERN } from '../constants/svg-patterns.js';
-import type { AnimationPart } from '../types/animation.type.js';
-
-const TRAILING_DECIMAL_ZEROS_PATTERN: RegExp = /\.?0+$/u;
+import { WHITESPACE_PATTERN } from '../../constants/svg-patterns.js';
+import type { AnimationPart } from '../../types/animation.type.js';
 
 type PartDefinition = {
 	pivot: { x: number; y: number };
 	autoDetectTransforms: Array<string>;
 	parent?: AnimationPart;
 };
-
-const PRECISION = 6;
 
 function normalizeTransform(transform: string): string {
 	return transform.replace(WHITESPACE_PATTERN, '').toLowerCase();
@@ -100,9 +96,4 @@ export function matchPartByTransform(transform: string | null): AnimationPart | 
 	}
 	const normalized = normalizeTransform(transform);
 	return TRANSFORM_LOOKUP.get(normalized) ?? null;
-}
-
-export function formatNumber(value: number): string {
-	const fixed = value.toFixed(PRECISION);
-	return fixed.replace(TRAILING_DECIMAL_ZEROS_PATTERN, '');
 }

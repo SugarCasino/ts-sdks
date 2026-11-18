@@ -1,8 +1,8 @@
 // Copyright (c) Sugar
 // SPDX-License-Identifier: Apache-2.0
 import { expect, test } from 'vitest';
-import { interpolatePartPose } from '../../../src/animation/interpolate-part-pose.js';
-import { interpolatePose } from '../../../src/animation/sequence-player.js';
+import { interpolatePartPose } from '../../../src/helpers/animation/interpolate-part-pose.js';
+import { interpolatePose } from '../../../src/helpers/animation/interpolate-sequence-poses.js';
 
 test('missing transforms interpolate from neutral values', () => {
 	expect(

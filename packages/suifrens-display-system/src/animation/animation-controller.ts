@@ -1,6 +1,8 @@
 // Copyright (c) Sugar
 // SPDX-License-Identifier: Apache-2.0
 
+import { interpolatePartPose } from '../helpers/animation/interpolate-part-pose.js';
+import { normalizePlayback } from '../helpers/animation/normalize-playback.js';
 import type {
 	AnimationConfig,
 	AnimationPart,
@@ -10,8 +12,7 @@ import type {
 	PlayState,
 } from '../types/animation.type.js';
 import type { AnimationStore } from './animation-store.js';
-import { interpolatePartPose } from './interpolate-part-pose.js';
-import { normalizePlayback, SequencePlayer } from './sequence-player.js';
+import { SequencePlayer } from './sequence-player.js';
 
 type SequenceSource = {
 	sequence: AnimationSequence;

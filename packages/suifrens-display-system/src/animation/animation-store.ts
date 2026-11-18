@@ -2,13 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { composePartTransform } from '../helpers/animation/compose-part-transform.js';
+import { getPartDefinition } from '../helpers/animation/parts.js';
 import type {
 	AnimationPart,
 	AnimationRegistration,
 	AnimationTarget,
 	PartPose,
 } from '../types/animation.type.js';
-import { getPartDefinition } from './parts.js';
 
 type ElementRegistration = {
 	references: number;

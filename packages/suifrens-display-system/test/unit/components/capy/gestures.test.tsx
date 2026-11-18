@@ -3,8 +3,8 @@
 
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, test } from 'vitest';
-import { getPartDefinition } from '../../../../src/animation/parts.js';
 import { ACCESSORIES } from '../../../../src/constants/accessories.js';
+import { getPartDefinition } from '../../../../src/helpers/animation/parts.js';
 import { SuiFrenImageInline } from '../../../../src/image-inline/index.js';
 import { SuiFrenImage } from '../../../../src/index.js';
 import { parseMatrix } from '../../../../src/utils/matrix.js';

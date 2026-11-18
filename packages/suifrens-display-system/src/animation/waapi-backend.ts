@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { composePartTransform } from '../helpers/animation/compose-part-transform.js';
+import { interpolateSequencePoses } from '../helpers/animation/interpolate-sequence-poses.js';
+import { normalizePlayback } from '../helpers/animation/normalize-playback.js';
 import type {
 	AnimationConfig,
 	AnimationSequence,
@@ -9,7 +11,6 @@ import type {
 } from '../types/animation.type.js';
 import { matrixToAnimationTransform, parseMatrix } from '../utils/matrix.js';
 import type { AnimationStore } from './animation-store.js';
-import { interpolateSequencePoses, normalizePlayback } from './sequence-player.js';
 
 type BackendPreference = 'auto' | 'waapi' | 'fallback';
 

@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { DEFERRED_PRESETS } from '../../generated/presets/catalogues.js';
+import { normalizePlayback } from '../../helpers/animation/normalize-playback.js';
 import type {
 	AnimationPresetCatalogue,
 	AnimationSequence,
 	PlaybackOptions,
 } from '../../types/animation.type.js';
-import { normalizePlayback } from '../sequence-player.js';
 import { CORE_PRESET_SEQUENCES } from './core.js';
 
 const PRESETS: AnimationPresetCatalogue = {

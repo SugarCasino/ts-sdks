@@ -1,7 +1,6 @@
 // Copyright (c) Sugar
 // SPDX-License-Identifier: Apache-2.0
 
-import { getPartDefinition } from '../../animation/parts.js';
 import type { AnimationPart, PartPose } from '../../types/animation.type.js';
 import {
 	IDENTITY_MATRIX,
@@ -12,6 +11,7 @@ import {
 	scaleMatrix,
 	translateMatrix,
 } from '../../utils/matrix.js';
+import { getPartDefinition } from './parts.js';
 
 const ZERO_POSE: PartPose = {};
 const TRANSLATE_SCALE = 4;

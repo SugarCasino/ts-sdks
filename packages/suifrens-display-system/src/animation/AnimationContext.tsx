@@ -10,11 +10,11 @@ import {
 	useRef,
 	useState,
 } from 'react';
+import { matchPartByTransform } from '../helpers/animation/parts.js';
+import { observePlaybackVisibility } from '../helpers/animation/playback-visibility.js';
 import type { AnimationConfig } from '../types/animation.type.js';
 import { AnimationController } from './animation-controller.js';
 import { AnimationStore } from './animation-store.js';
-import { matchPartByTransform } from './parts.js';
-import { observePlaybackVisibility } from './playback-visibility.js';
 import { getCorePresetSequence } from './presets/core.js';
 import { isDeferredPreset, loadDeferredPresetSequence } from './presets/resolver.js';
 import { startWaapiAnimation } from './waapi-backend.js';

@@ -36,7 +36,7 @@ Documentation-only edits need formatting and diff checks.
 - Always use braces for `if`, `else if` and `else` bodies, including one-line branches.
 - Write hexadecimal color literals in lowercase, including palette keys without `#`, in source, SVGs, tests and examples.
 - Put shared types in `src/types/*.type.ts` and public exports in `src/types/index.ts`. Keep types used by one component below its imports.
-- Group pure domain helpers under `src/helpers/animation/`, `accessories/`, `appearance/` and `kits/`. Keep generic utilities in `src/utils/` and animation state/playback in `src/animation/`.
+- Group domain helpers under `src/helpers/animation/`, `accessories/`, `appearance/` and `kits/`. Keep generic utilities in `src/utils/` and animation state/playback in `src/animation/`.
 - Keep animation catalogues and their resolver in `src/animation/presets/`. To add a deferred catalogue, register its module path (without the extension) and export name in `scripts/generate-preset-catalogues.ts`. Give each preset a unique name across catalogues.
 - Run `codegen:presets` after changing a catalogue. In `src/generated/presets/`, `catalogues.ts` provides the presets for synchronous lookups and `loaders.ts` maps preset names to on-demand imports.
 - Keep character patterns and gestures in `src/components/shared/`; species shapes and pattern selection belong in `src/components/capy/` and `src/components/bullshark/`.
