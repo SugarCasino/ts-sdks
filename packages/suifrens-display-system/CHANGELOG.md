@@ -1,5 +1,17 @@
 # @sugarcasino/suifrens-display-system
 
+## 0.1.0-beta.1
+
+### Minor Changes
+
+- [#8](https://github.com/SugarCasino/ts-sdks/pull/8) [`bc67254`](https://github.com/SugarCasino/ts-sdks/commit/bc67254144235c711a473841b2d69f2d5e1015e7) - Keep the Bullshark tail anchored to the torso as it swings and bring the mirrored left leg closer to the body during Goalkeeper Crab.
+
+  Keep the Bullshark tail tucked against the torso, anchor the rear leg at the hip, and keep both species within the image frame throughout all three death animations. The landing poses settle over a ground shadow that follows the direction of each fall.
+
+  Keep both characters fully visible during Knockdown / Get Up.
+
+  Add the optional `shadow` sequence field with `static`, `falling`, and `airborne` modes. Jumps now cast a smaller, lighter shadow as the character rises.
+
 ## 0.0.1-beta.0
 
 ### Patch Changes
