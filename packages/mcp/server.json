@@ -7,13 +7,13 @@
 		"source": "github",
 		"subfolder": "packages/mcp"
 	},
-	"version": "0.0.0",
+	"version": "0.0.1-beta.0",
 	"websiteUrl": "https://github.com/SugarCasino/ts-sdks/blob/main/packages/mcp/README.md",
 	"packages": [
 		{
 			"registryType": "npm",
 			"identifier": "@sugarcasino/mcp",
-			"version": "0.0.0",
+			"version": "0.0.1-beta.0",
 			"runtimeHint": "npx",
 			"transport": {
 				"type": "stdio"

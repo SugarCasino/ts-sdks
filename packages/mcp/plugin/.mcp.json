@@ -2,7 +2,7 @@
 	"mcpServers": {
 		"sugar": {
 			"command": "npx",
-			"args": ["-y", "@sugarcasino/mcp@0.0.0"]
+			"args": ["-y", "@sugarcasino/mcp@0.0.1-beta.0"]
 		}
 	}
 }
