@@ -25,10 +25,12 @@ Passing these checks does not grant write access or approve a PR. SugarCasino ma
 Tests use synthetic identities and local Git fixtures:
 
 ```sh
-node --test scripts/validate-git-identities.test.mjs scripts/check-publication-event.test.mjs scripts/dispatch-version-publication-check.test.mjs
+node --test scripts/validate-git-identities.test.mjs scripts/check-publication-event.test.mjs
 node scripts/validate-git-identities.mjs --config
 ```
 
 ## Automated version PRs
 
-The Changesets release job dispatches `publication-privacy.yaml` on the same-repository `changeset-release/*` branch after creating or updating its version PR. The dispatch validates the repository, branch and base; it does not approve or merge the PR. The privacy job has only contents-read permission and does not publish packages.
+The Changesets release job uses a GitHub App installation token to push version commits and open or update release PRs. These events trigger the regular pull request workflows, including the publication identity check.
+
+Install the private release App on `SugarCasino/ts-sdks` with read/write access to Contents and Pull requests. Set the repository Actions variable `RELEASE_APP_CLIENT_ID` to its client ID and the Actions secret `RELEASE_APP_PRIVATE_KEY` to its PEM private key.

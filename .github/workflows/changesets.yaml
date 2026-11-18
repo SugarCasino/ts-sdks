@@ -7,8 +7,7 @@ on:
       - main
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
   id-token: write
 
 concurrency:
@@ -17,11 +16,6 @@ concurrency:
 
 jobs:
   release:
-    permissions:
-      actions: write
-      contents: write
-      pull-requests: write
-      id-token: write
     runs-on: ubuntu-latest
     outputs:
       published: ${{ steps.changesets.outputs.published }}
@@ -36,21 +30,24 @@ jobs:
       - name: Setup pnpm
         uses: ./.github/actions/setup-pnpm
 
+      - name: Create release app token
+        id: release-token
+        uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3.4.0
+        with:
+          client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
       - name: Create release PR or publish packages
         id: changesets
         uses: changesets/action@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
         with:
+          github-token: ${{ steps.release-token.outputs.token }}
           version-script: pnpm run changeset:version
           publish-script: pnpm run release
           commit-message: 'ci: version packages'
           pr-title: 'ci: version packages'
-
-      - name: Check publication identities on the token-created version PR
-        if: steps.changesets.outputs['pr-number'] != ''
-        env:
-          GH_TOKEN: ${{ github.token }}
-          VERSION_PR: ${{ steps.changesets.outputs['pr-number'] }}
-        run: node scripts/dispatch-version-publication-check.mjs
 
   publish-mcp-registry:
     needs: release
