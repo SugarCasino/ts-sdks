@@ -85,7 +85,7 @@ const MOTION_VARIANTS = [
 const meta = {
 	title: 'Suifrens/Accessories/VIP Crowns',
 	parameters: { controls: { disable: true } },
-	tags: [],
+	tags: ['0.0.1'],
 } satisfies Meta;
 
 export default meta;
@@ -93,7 +93,6 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const ClippingCheck: Story = {
-	tags: [],
 	render: () => (
 		<div className="flex flex-col gap-10">
 			{VIP_CROWN_ACCESSORIES.map((accessory) => (

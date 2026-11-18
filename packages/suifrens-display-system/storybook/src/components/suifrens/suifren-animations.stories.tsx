@@ -27,7 +27,7 @@ function PresetPreview({ preset }: { preset: PresetCatalogEntry }) {
 const meta = {
 	title: 'Suifrens/Animations/Presets',
 	parameters: { controls: { disable: true }, docs: { page: CatalogueDocs } },
-	tags: [],
+	tags: ['0.0.1'],
 } satisfies Meta;
 
 export default meta;
@@ -60,36 +60,30 @@ function presetStory(name: string): Story {
 	}
 	return { render: () => <PresetPreview preset={preset} /> };
 }
-export const Idle: Story = { ...presetStory('idle'), tags: [] };
-export const Walk: Story = { ...presetStory('walk'), tags: [] };
+export const Idle: Story = presetStory('idle');
+export const Walk: Story = presetStory('walk');
 export const GoalkeeperCrab: Story = {
 	...presetStory('goalkeeperCrab'),
-	tags: [],
 };
-export const Sit: Story = { ...presetStory('sit'), tags: [] };
-export const Stand: Story = { ...presetStory('stand'), tags: [] };
+export const Sit: Story = presetStory('sit');
+export const Stand: Story = presetStory('stand');
 export const Run: Story = presetStory('run');
 export const Sprint: Story = presetStory('sprint');
-export const Jump: Story = { ...presetStory('jump'), tags: [] };
+export const Jump: Story = presetStory('jump');
 export const WalkJumpSit: Story = {
 	...presetStory('walkJumpSit'),
-	tags: [],
 };
 export const Celebrate: Story = {
 	...presetStory('celebrate'),
-	tags: [],
 };
-export const Jackpot: Story = { ...presetStory('jackpot'), tags: [] };
+export const Jackpot: Story = presetStory('jackpot');
 export const SlotPull: Story = {
 	...presetStory('slotPull'),
-	tags: [],
 };
 export const Suspense: Story = {
 	...presetStory('suspense'),
-	tags: [],
 };
 export const TalkMicrophone: Story = {
-	tags: [],
 	...presetStory('talkMicrophone'),
 	name: 'Talk Mic · talkMicrophone',
 };

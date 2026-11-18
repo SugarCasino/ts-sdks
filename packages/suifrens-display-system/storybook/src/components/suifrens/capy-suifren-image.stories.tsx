@@ -23,7 +23,7 @@ const meta = {
 		...characterControls,
 		earShape: { control: 'select', options: Object.values(EAR_GENE_TO_EAR_SHAPE) },
 	},
-	tags: [],
+	tags: ['0.0.1'],
 } satisfies Meta<Args>;
 
 export default meta;
@@ -153,18 +153,15 @@ export const Incognito: Story = {
 
 export const ThumbsUp: Story = {
 	...WithShadow,
-	tags: [],
 	args: { ...WithShadow.args, gesture: 'thumbs_up' },
 };
 
 export const ThumbsDown: Story = {
 	...WithShadow,
-	tags: ['unreleased'],
 	args: { ...WithShadow.args, gesture: 'thumbs_down' },
 };
 
 export const Point: Story = {
 	...WithShadow,
-	tags: ['unreleased'],
 	args: { ...WithShadow.args, gesture: 'point' },
 };

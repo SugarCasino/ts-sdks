@@ -19,7 +19,7 @@ const meta = {
 	title: 'Suifrens/Characters/Bullshark',
 	render: (args) => <CharacterPreview {...args} />,
 	argTypes: { ...characterControls, finStyle: { control: 'select', options: ['classic'] } },
-	tags: [],
+	tags: ['0.0.1'],
 } satisfies Meta<Args>;
 
 export default meta;
@@ -149,7 +149,6 @@ export const Incognito: Story = {
 
 export const ThumbsUp: Story = {
 	...WithShadow,
-	tags: ['unreleased'],
 	args: {
 		...WithShadow.args,
 		gesture: 'thumbs_up',
@@ -158,12 +157,10 @@ export const ThumbsUp: Story = {
 
 export const ThumbsDown: Story = {
 	...WithShadow,
-	tags: ['unreleased'],
 	args: { ...WithShadow.args, gesture: 'thumbs_down' },
 };
 
 export const Point: Story = {
 	...WithShadow,
-	tags: ['unreleased'],
 	args: { ...WithShadow.args, gesture: 'point' },
 };
