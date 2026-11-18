@@ -1,7 +1,7 @@
 {
 	"name": "sugar-mcp",
 	"displayName": "Sugar MCP",
-	"version": "0.0.0",
+	"version": "0.0.1-beta.0",
 	"description": "AI agent MCP tools for Sugar casino game, SweetHouse, NFT, and referral transactions.",
 	"author": {
 		"name": "Sugar",
