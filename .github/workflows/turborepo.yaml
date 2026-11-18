@@ -1,0 +1,105 @@
+name: Turborepo
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/actions/setup-pnpm/action.yaml'
+      - '.github/workflows/turborepo.yaml'
+      - '.node-version'
+      - '.oxlintrc.json'
+      - '.oxfmtrc.json'
+      - 'playground/**'
+      - 'packages/**'
+      - 'scripts/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'tsconfig.shared.json'
+      - 'turbo.json'
+  pull_request:
+    paths:
+      - '.github/actions/setup-pnpm/action.yaml'
+      - '.github/workflows/turborepo.yaml'
+      - '.node-version'
+      - '.oxlintrc.json'
+      - '.oxfmtrc.json'
+      - 'playground/**'
+      - 'packages/**'
+      - 'scripts/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'tsconfig.shared.json'
+      - 'turbo.json'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: ./.github/actions/setup-pnpm
+        with:
+          install: false
+          cache: false
+
+      - name: Run audit
+        shell: bash
+        run: pnpm audit --prod --audit-level moderate
+
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: ./.github/actions/setup-pnpm
+
+      - name: Manypkg Check
+        shell: bash
+        run: pnpm exec manypkg check
+
+      - name: Lint workspace sources and tests
+        run: pnpm run lint
+
+      - name: Run packages tests
+        shell: bash
+        run: pnpm turbo run test --filter='./packages/*'
+
+      - name: Run packages typecheck
+        shell: bash
+        run: pnpm turbo run typecheck --filter='./packages/*'
+
+      - name: Run packages builds
+        shell: bash
+        run: pnpm turbo run build:ci --filter='./packages/*'
+
+      - name: Run Playground typecheck
+        shell: bash
+        run: pnpm turbo run typecheck --filter='./playground'
+
+      - name: Run Playground build
+        shell: bash
+        run: pnpm turbo run build --filter='./playground'
+
+      - name: Validate display Storybook and examples
+        run: pnpm turbo run build test typecheck --filter='./packages/suifrens-display-system/examples/*' --filter='./packages/suifrens-display-system/storybook'

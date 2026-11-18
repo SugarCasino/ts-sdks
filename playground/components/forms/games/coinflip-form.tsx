@@ -1,0 +1,54 @@
+'use client';
+
+import type * as React from 'react';
+import { StandardGameFields } from '@/components/forms/shared-game-fields';
+import { Field, FieldLabel } from '@/components/ui/field';
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '@/components/ui/select';
+import type { CoinflipFormValues } from '@/lib/sugar-types';
+
+export function CoinflipForm({
+	value,
+	onChange,
+	onStakeBlur,
+	stakeDescription,
+}: {
+	value: CoinflipFormValues;
+	onChange: (patch: Partial<CoinflipFormValues>) => void;
+	onStakeBlur?: (() => void) | undefined;
+	stakeDescription?: React.ReactNode | undefined;
+}) {
+	return (
+		<div className="space-y-6">
+			<Field>
+				<FieldLabel>Side</FieldLabel>
+				<Select
+					value={value.side}
+					onValueChange={(side: CoinflipFormValues['side']) => onChange({ side })}
+				>
+					<SelectTrigger
+						aria-label="Select coinflip side"
+						className="bg-background/55 h-11 rounded-2xl px-4"
+					>
+						<SelectValue />
+					</SelectTrigger>
+					<SelectContent>
+						<SelectItem value="heads">Heads</SelectItem>
+						<SelectItem value="tails">Tails</SelectItem>
+					</SelectContent>
+				</Select>
+			</Field>
+			<StandardGameFields
+				value={value}
+				onChange={onChange}
+				onStakeBlur={onStakeBlur}
+				description={stakeDescription}
+			/>
+		</div>
+	);
+}

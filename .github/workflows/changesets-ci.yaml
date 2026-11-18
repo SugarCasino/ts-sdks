@@ -1,0 +1,87 @@
+name: Changesets CI
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: ./.github/actions/setup-pnpm
+
+      - name: Determine changed public packages
+        id: public-packages
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          CHANGED_PACKAGES=$(pnpm list --filter "...[$BASE_SHA]" --depth -1 --json | jq -r '[.[] | select(.private != true) | .name] | unique | join(" ")')
+
+          if [ -n "$CHANGED_PACKAGES" ]; then
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          echo "packages=$CHANGED_PACKAGES" >> "$GITHUB_OUTPUT"
+
+      - name: Check for changesets
+        id: changeset-files
+        uses: tj-actions/changed-files@9426d40962ed5378910ee2e21d5f8c6fcbf2dd96 # v47.0.6
+        with:
+          files: |
+            .changeset/*.md
+          files_ignore: |
+            .changeset/README.md
+
+      - name: Create missing changeset note
+        if: steps.public-packages.outputs.has_changes == 'true' && steps.changeset-files.outputs.any_changed != 'true'
+        env:
+          CHANGED_PACKAGES: ${{ steps.public-packages.outputs.packages }}
+        run: |
+          {
+            echo "This pull request changes public npm package(s) but does not include a changeset file in .changeset/."
+            echo
+            echo "Changed package(s): $CHANGED_PACKAGES"
+            echo
+            echo "Add a changeset with `pnpm run changeset` so this PR can merge."
+          } > missing-changeset.txt
+
+      - name: Upload missing changeset artifact
+        if: steps.public-packages.outputs.has_changes == 'true' && steps.changeset-files.outputs.any_changed != 'true'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: missing-changeset
+          path: missing-changeset.txt
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Validate versioning
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          if ! find .changeset -maxdepth 1 -name '*.md' ! -name 'README.md' | grep -q .; then
+            echo "No changesets found; skipping version validation."
+            exit 0
+          fi
+
+          if [ "$(jq -r '.mode // empty' .changeset/pre.json 2>/dev/null)" = "pre" ]; then
+            pnpm run changeset:version
+          else
+            pnpm run changeset:version --snapshot changesets-ci
+          fi
+
+      - name: Fail when changeset is missing
+        if: steps.public-packages.outputs.has_changes == 'true' && steps.changeset-files.outputs.any_changed != 'true'
+        run: |
+          echo "This pull request changes public npm package(s) but does not include a changeset file in .changeset/."
+          exit 1

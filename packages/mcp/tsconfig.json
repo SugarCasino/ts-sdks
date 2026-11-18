@@ -1,0 +1,16 @@
+{
+	"extends": "../../tsconfig.shared.json",
+	"compilerOptions": {
+		"rootDir": "."
+	},
+	"include": [
+		"src/**/*.ts",
+		"src/**/*.tsx",
+		"test/**/*.ts",
+		"doctor.config.ts",
+		"genversion.ts",
+		"package.json",
+		"tsdown.config.ts",
+		"vite.config.ts"
+	]
+}

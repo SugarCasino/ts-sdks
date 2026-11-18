@@ -1,0 +1,48 @@
+{
+	"$schema": "./node_modules/oxfmt/configuration_schema.json",
+	"useTabs": true,
+	"singleQuote": true,
+	"trailingComma": "all",
+	"semi": true,
+	"proseWrap": "never",
+	"sortPackageJson": true,
+	"jsdoc": true,
+	"ignorePatterns": [
+		"**/.next/**",
+		"**/build/**",
+		"**/coverage/**",
+		"**/out/**",
+		"**/pnpm-lock.yaml"
+	],
+	"overrides": [
+		{
+			"files": ["packages/*/src/contracts/**"],
+			"options": {
+				"jsdoc": false,
+				"sortImports": false
+			}
+		}
+	],
+	"sortImports": {
+		"newlinesBetween": false,
+		"customGroups": [
+			{
+				"groupName": "sugar",
+				"elementNamePattern": ["@sugar/**"]
+			},
+			{
+				"groupName": "app",
+				"elementNamePattern": ["@/**"]
+			}
+		],
+		"groups": [
+			["type-builtin", "value-builtin"],
+			["type-external", "value-external"],
+			"sugar",
+			"app",
+			["type-parent", "type-sibling", "type-index", "value-parent", "value-sibling", "value-index"],
+			"unknown"
+		]
+	},
+	"sortTailwindcss": true
+}

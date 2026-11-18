@@ -1,0 +1,62 @@
+name: Changesets
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    permissions:
+      actions: write
+      contents: write
+      pull-requests: write
+      id-token: write
+    runs-on: ubuntu-latest
+    outputs:
+      published: ${{ steps.changesets.outputs.published }}
+      published_packages: ${{ steps.changesets.outputs['published-packages'] }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: ./.github/actions/setup-pnpm
+
+      - name: Create release PR or publish packages
+        id: changesets
+        uses: changesets/action@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
+        with:
+          version-script: pnpm run changeset:version
+          publish-script: pnpm run release
+          commit-message: 'ci: version packages'
+          pr-title: 'ci: version packages'
+
+      - name: Check publication identities on the token-created version PR
+        if: steps.changesets.outputs['pr-number'] != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION_PR: ${{ steps.changesets.outputs['pr-number'] }}
+        run: node scripts/dispatch-version-publication-check.mjs
+
+  publish-mcp-registry:
+    needs: release
+    if: >-
+      needs.release.outputs.published == 'true' && contains(fromJSON(needs.release.outputs.published_packages || '[]').*.name, '@sugar/mcp')
+    permissions:
+      contents: read
+      id-token: write
+    uses: ./.github/workflows/publish-mcp-registry.yaml

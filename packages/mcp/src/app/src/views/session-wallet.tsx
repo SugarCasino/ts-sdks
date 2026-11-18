@@ -1,0 +1,101 @@
+// Copyright (c) Sugar
+// SPDX-License-Identifier: Apache-2.0
+
+import { ActionLink, DefinitionList, Panel } from '../components/inspector-components.js';
+import { asRecord } from '../lib/format.js';
+
+export function SessionWalletView({ payload }: { payload: unknown }) {
+	const result = asRecord(payload);
+	const sessionWallet = asRecord(result['sessionWallet']);
+	const funding = asRecord(sessionWallet['funding']);
+	const qrCode =
+		typeof funding['addressQrCodeDataUrl'] === 'string' ? funding['addressQrCodeDataUrl'] : null;
+	const balances = Array.isArray(sessionWallet['balances']) ? sessionWallet['balances'] : [];
+	const fundingUrl = typeof funding['fundingUrl'] === 'string' ? funding['fundingUrl'] : null;
+	const setupUrl = typeof sessionWallet['setupUrl'] === 'string' ? sessionWallet['setupUrl'] : null;
+
+	if (setupUrl) {
+		return (
+			<section className="grid grid-cols-1 gap-3.5">
+				<Panel title="Set up your session wallet">
+					<p className="text-muted-foreground text-xs leading-5 font-semibold">
+						{typeof sessionWallet['note'] === 'string'
+							? sessionWallet['note']
+							: 'Create or recover the session wallet shared by mainnet and testnet.'}
+					</p>
+					<div className="grid justify-items-center">
+						<ActionLink href={setupUrl}>Open local setup page</ActionLink>
+					</div>
+				</Panel>
+			</section>
+		);
+	}
+
+	return (
+		<section className="grid grid-cols-1 gap-3.5 md:grid-cols-2">
+			<Panel title="Session wallet">
+				<DefinitionList
+					entries={[
+						['Networks', 'Mainnet and testnet'],
+						['Balance network', result['network']],
+						['Address', sessionWallet['address']],
+						['Status', sessionWallet['status']],
+					]}
+				/>
+			</Panel>
+			<Panel title="Balances">
+				{balances.length === 0 ? (
+					<p className="text-muted-foreground text-xs font-semibold">
+						No balances found for this wallet.
+					</p>
+				) : (
+					<dl className="grid gap-2">
+						{balances.map((item) => {
+							const balance = asRecord(item);
+							return (
+								<div
+									className="flex justify-between gap-3 text-xs"
+									key={String(balance['coinType'])}
+								>
+									<dt
+										className="text-muted-foreground truncate font-mono"
+										title={String(balance['coinType'])}
+									>
+										{String(balance['symbol'] ?? balance['coinType'])}
+									</dt>
+									<dd className="shrink-0 font-mono font-bold">
+										{String(balance['balanceDisplay'] ?? balance['balance'])}{' '}
+										{typeof balance['symbol'] === 'string' ? balance['symbol'] : ''}
+									</dd>
+								</div>
+							);
+						})}
+					</dl>
+				)}
+			</Panel>
+			<Panel title="Fund this wallet">
+				{qrCode ? (
+					<div className="grid justify-items-center gap-3">
+						<img
+							alt="QR code for the session wallet address"
+							className="border-border/70 size-48 rounded-md border bg-white p-2"
+							height={192}
+							src={qrCode}
+							width={192}
+						/>
+						<p className="text-muted-foreground text-center text-xs leading-5 font-semibold">
+							{typeof funding['note'] === 'string'
+								? funding['note']
+								: 'Scan this code in a Sui wallet to fund the session wallet.'}
+						</p>
+						{fundingUrl ? <ActionLink href={fundingUrl}>Fund from paired wallet</ActionLink> : null}
+					</div>
+				) : (
+					<p className="text-muted-foreground text-xs font-semibold">
+						No funding QR code is available.
+					</p>
+				)}
+			</Panel>
+		</section>
+	);
+}

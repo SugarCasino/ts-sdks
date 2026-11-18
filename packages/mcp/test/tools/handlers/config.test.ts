@@ -1,0 +1,69 @@
+// Copyright (c) Sugar
+// SPDX-License-Identifier: Apache-2.0
+
+import { describe, expect, it } from 'vitest';
+import { readConfigTool } from '../../../src/tools/handlers/index.js';
+
+describe('read_config', () => {
+	it('omits undefined nested overrides while preserving configured zero values', async () => {
+		const defaults = await readConfigTool({});
+		const omitted = await readConfigTool({
+			config: {
+				packageIds: { coinflip: undefined },
+				objectIds: { sweetHouse: undefined },
+				coins: { sui: { decimals: undefined, coinType: undefined }, usdc: undefined },
+			},
+		});
+		expect(omitted.structuredContent).toEqual(defaults.structuredContent);
+
+		const configured = await readConfigTool({ config: { coins: { sui: { decimals: 0 } } } });
+		expect(configured.structuredContent).toMatchObject({
+			config: { sdk: { coins: { sui: { decimals: 0 } } } },
+		});
+	});
+
+	it('defaults to testnet and returns SDK-shaped config', async () => {
+		const result = await readConfigTool({});
+		const content = result.structuredContent as Awaited<
+			ReturnType<typeof readConfigTool>
+		>['structuredContent'] & {
+			supportedGames: Array<{ id: string }>;
+			supportedFeatures: Array<{ id: string; tools: Array<string> }>;
+		};
+
+		expect(content.network).toBe('testnet');
+		expect(content.config.sdk.packageIds).toEqual(
+			expect.objectContaining({
+				nftV1: expect.stringMatching(/^0x/u),
+			}),
+		);
+		expect(content.config.sdk.packageIds.coinflip).toBeUndefined();
+		expect(content.config.sdk.packageIds.soccer).toBeUndefined();
+		expect(content.config.sdk.objectIds.sweetHouse).toMatch(/^0x/u);
+		expect(content.config.sdk.coins.sui.coinType).toMatch(/::/u);
+		expect(content.supportedGames.map((game) => game.id)).toContain('pvp-coinflip');
+		expect(content.supportedFeatures).toEqual(
+			expect.arrayContaining([
+				expect.objectContaining({
+					id: 'nfts',
+					tools: ['list_nfts', 'build_nft_v1_mint_transaction'],
+				}),
+				expect.objectContaining({
+					id: 'referrals',
+					tools: expect.arrayContaining([
+						'get_referral_commission',
+						'build_referral_commission_claim_transaction',
+					]),
+				}),
+				expect.objectContaining({
+					id: 'sweethouse',
+					tools: [
+						'build_sweethouse_deposit_transaction',
+						'build_sweethouse_redeem_request_transaction',
+						'build_sweethouse_claim_own_redeem_request_after_delay_transaction',
+					],
+				}),
+			]),
+		);
+	});
+});

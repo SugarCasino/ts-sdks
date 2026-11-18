@@ -1,0 +1,358 @@
+// Copyright (c) Sugar
+// SPDX-License-Identifier: Apache-2.0
+
+import type { SuiClientTypes } from '@mysten/sui/client';
+import { SUI_DECIMALS } from '@mysten/sui/utils';
+import { type Game, GAMES } from '@sugar/sdk/games';
+import { parseGameEvent, parseSugarEvent } from '@sugar/sdk/utils';
+import { formatAmount, isAmountFieldName } from '../utils/index.js';
+import type {
+	DryRunEventSummary,
+	DryRunSummary,
+	JsonValue,
+	RawDryRunResult,
+	TransactionSummaryFormattingContext,
+} from './types.js';
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return value !== null && typeof value === 'object';
+}
+
+function getDryRunTransaction(dryRun: RawDryRunResult): RawDryRunResult['Transaction'] | undefined {
+	if (!isRecord(dryRun)) {
+		return undefined;
+	}
+	return dryRun.FailedTransaction ?? dryRun.Transaction;
+}
+
+export function toJsonValue(value: unknown): JsonValue | undefined {
+	if (value == null || typeof value === 'string' || typeof value === 'boolean') {
+		return value ?? null;
+	}
+	if (typeof value === 'number') {
+		return Number.isFinite(value) ? value : String(value);
+	}
+	if (typeof value === 'bigint') {
+		return value.toString();
+	}
+	if (value instanceof Uint8Array) {
+		return Array.from(value);
+	}
+	if (Array.isArray(value)) {
+		const jsonValues: Array<JsonValue> = [];
+		for (const item of value) {
+			const jsonValue = toJsonValue(item);
+			if (jsonValue !== undefined) {
+				jsonValues.push(jsonValue);
+			}
+		}
+		return jsonValues;
+	}
+	if (isRecord(value)) {
+		const jsonRecord: Record<string, JsonValue> = {};
+		for (const key in value) {
+			if (Object.hasOwn(value, key)) {
+				const jsonValue = toJsonValue(value[key]);
+				if (jsonValue !== undefined) {
+					jsonRecord[key] = jsonValue;
+				}
+			}
+		}
+		return jsonRecord;
+	}
+	return undefined;
+}
+
+function collectStrings({ value, path }: { value: unknown; path: Array<string> }): Array<string> {
+	if (!isRecord(value)) {
+		return [];
+	}
+
+	return path.flatMap((key) => {
+		const next = value[key];
+		if (typeof next === 'string' && next.trim()) {
+			return [next.trim()];
+		}
+		if (Array.isArray(next)) {
+			return next.filter((item): item is string => typeof item === 'string');
+		}
+		if (isRecord(next)) {
+			return collectStrings({ value: next, path });
+		}
+		return [];
+	});
+}
+
+export function extractDryRunErrors(dryRun: RawDryRunResult): Array<string> {
+	const source: unknown = getDryRunTransaction(dryRun) ?? dryRun;
+	const effects = isRecord(source) ? source['effects'] : undefined;
+	const status = isRecord(effects) ? effects['status'] : undefined;
+	const errorSources = [source, effects, status].filter(isRecord);
+
+	const errors = errorSources.flatMap((item) =>
+		collectStrings({ value: item, path: ['error', 'cleverError', 'message'] }),
+	);
+	return [...new Set(errors)];
+}
+
+function stringField({
+	record,
+	key,
+}: {
+	record: Record<string, unknown>;
+	key: string;
+}): string | undefined {
+	const value = record[key];
+	return typeof value === 'string' || typeof value === 'number' || typeof value === 'bigint'
+		? String(value)
+		: undefined;
+}
+
+function gasUsedSummary({
+	effects,
+	decimals,
+}: {
+	effects: unknown;
+	decimals?: number | undefined;
+}): DryRunSummary['gasUsed'] {
+	const gasUsed = isRecord(effects) ? effects['gasUsed'] : undefined;
+	if (!isRecord(gasUsed)) {
+		return {
+			computation: null,
+			storage: null,
+			rebate: null,
+			nonRefundableStorageFee: null,
+			net: null,
+		};
+	}
+
+	const computation = stringField({ record: gasUsed, key: 'computationCost' });
+	const storage = stringField({ record: gasUsed, key: 'storageCost' });
+	const rebate = stringField({ record: gasUsed, key: 'storageRebate' });
+	const nonRefundableStorageFee = stringField({ record: gasUsed, key: 'nonRefundableStorageFee' });
+	const net =
+		computation && storage && rebate
+			? String(-(BigInt(computation) + BigInt(storage) - BigInt(rebate)))
+			: undefined;
+
+	return {
+		computation: formatAmount({ value: computation, decimals }),
+		storage: formatAmount({ value: storage, decimals }),
+		rebate: formatAmount({ value: rebate, decimals }),
+		nonRefundableStorageFee: formatAmount({ value: nonRefundableStorageFee, decimals }),
+		net: formatAmount({ value: net, decimals }),
+	};
+}
+
+function eventFields({
+	fields,
+	decimals,
+}: {
+	fields: Record<string, unknown>;
+	decimals?: number | undefined;
+}): Record<string, JsonValue> {
+	const formattedFields: Record<string, JsonValue> = {};
+	for (const key in fields) {
+		if (!Object.hasOwn(fields, key)) {
+			continue;
+		}
+
+		const value = fields[key];
+		const jsonValue = toJsonValue(value);
+		if (jsonValue === undefined) {
+			continue;
+		}
+
+		formattedFields[key] = jsonValue;
+		if (isAmountFieldName(key)) {
+			const displayValue = formatAmount({ value, decimals });
+			if (displayValue) {
+				formattedFields[`${key}_display`] = displayValue.display;
+			}
+		}
+	}
+	return formattedFields;
+}
+
+function parseDryRunEvent({
+	event,
+	eventType,
+}: {
+	event: Record<string, unknown>;
+	eventType: string;
+}): ReturnType<typeof parseGameEvent> {
+	const module =
+		typeof event['module'] === 'string'
+			? event['module']
+			: eventType.includes('::core::')
+				? 'core'
+				: eventType.includes('::pvp_coinflip::')
+					? 'pvp_coinflip'
+					: '';
+
+	if (!module) {
+		return null;
+	}
+
+	try {
+		const gameEvent = parseGameEvent({
+			...event,
+			eventType,
+			module,
+		} as never);
+		if (gameEvent) {
+			return gameEvent;
+		}
+	} catch {
+		// Fall back to string matching below for JSON-only simulated events.
+	}
+
+	const standardBetResult = /::BetResultEvent<[^>]+::([^:<>,]+)::Game>/u.exec(eventType);
+	const game = standardBetResult?.[1]?.replaceAll('_', '-');
+	return game && GAMES.includes(game as Game)
+		? {
+				game: game as Game,
+				event: 'BetResultEvent',
+			}
+		: null;
+}
+
+function summarizeDryRunEvent({
+	event,
+	decimals,
+}: {
+	event: unknown;
+	decimals?: number | undefined;
+}): DryRunEventSummary | null {
+	if (!isRecord(event)) {
+		return null;
+	}
+
+	const eventType =
+		typeof event['eventType'] === 'string'
+			? event['eventType']
+			: typeof event['type'] === 'string'
+				? event['type']
+				: 'unknown';
+	const baseSummary = {
+		type: eventType,
+	};
+	const module =
+		typeof event['module'] === 'string'
+			? event['module']
+			: eventType.includes('::core::')
+				? 'core'
+				: eventType.includes('::pvp_coinflip::')
+					? 'pvp_coinflip'
+					: '';
+	let gameEvent: ReturnType<typeof parseDryRunEvent> = null;
+
+	try {
+		gameEvent = parseDryRunEvent({ event, eventType });
+		if (gameEvent && event['bcs'] instanceof Uint8Array) {
+			const sugarEvent = parseSugarEvent({
+				...event,
+				eventType,
+				module,
+			} as SuiClientTypes.Event);
+			if (!sugarEvent) {
+				return null;
+			}
+			const data = sugarEvent.event.data;
+			const details = 'gameDetails' in sugarEvent ? sugarEvent.gameDetails : undefined;
+			return {
+				...baseSummary,
+				game: sugarEvent.game,
+				event: sugarEvent.event.type,
+				fields: eventFields({
+					fields: { ...data, ...(details ? { game_details: details, ...details } : {}) },
+					decimals,
+				}),
+			};
+		}
+	} catch {
+		// Fall back to API-provided JSON below.
+	}
+
+	const json = isRecord(event['json'])
+		? event['json']
+		: isRecord(event['parsedJson'])
+			? event['parsedJson']
+			: null;
+	return json
+		? {
+				...baseSummary,
+				...(gameEvent
+					? {
+							game: gameEvent.game,
+							event: gameEvent.event,
+						}
+					: {}),
+				fields: eventFields({ fields: json, decimals }),
+			}
+		: null;
+}
+
+export function summarizeDryRun({
+	dryRun,
+	context = {},
+}: {
+	dryRun: RawDryRunResult;
+	context?: TransactionSummaryFormattingContext | undefined;
+}): DryRunSummary {
+	const transaction = getDryRunTransaction(dryRun);
+	const transactionRecord: Record<string, unknown> = isRecord(transaction) ? transaction : {};
+	const effects = transactionRecord['effects'];
+	const status = isRecord(effects) ? effects['status'] : undefined;
+	const success = isRecord(status) ? status['success'] === true : false;
+	const statusError = isRecord(status) ? status['error'] : undefined;
+	const error =
+		typeof statusError === 'string'
+			? statusError
+			: isRecord(statusError) && typeof statusError['message'] === 'string'
+				? statusError['message']
+				: null;
+	const balanceChanges = Array.isArray(transactionRecord['balanceChanges'])
+		? transactionRecord['balanceChanges'].reduce<DryRunSummary['balanceChanges']>(
+				(changes, change) => {
+					if (isRecord(change)) {
+						const rawAmount = toJsonValue(change['amount']);
+						changes.push({
+							address: typeof change['address'] === 'string' ? change['address'] : '',
+							coinType: typeof change['coinType'] === 'string' ? change['coinType'] : '',
+							amount:
+								formatAmount({ value: change['amount'], decimals: context.coinDecimals }) ??
+								({
+									raw:
+										typeof rawAmount === 'string' ||
+										typeof rawAmount === 'number' ||
+										typeof rawAmount === 'boolean'
+											? String(rawAmount)
+											: '',
+									display: '',
+								} as const),
+						});
+					}
+					return changes;
+				},
+				[],
+			)
+		: [];
+	const events = Array.isArray(transactionRecord['events'])
+		? transactionRecord['events'].reduce<Array<DryRunEventSummary>>((summaries, event) => {
+				const summary = summarizeDryRunEvent({ event, decimals: context.coinDecimals });
+				if (summary) {
+					summaries.push(summary);
+				}
+				return summaries;
+			}, [])
+		: [];
+
+	return {
+		success,
+		error,
+		gasUsed: gasUsedSummary({ effects, decimals: SUI_DECIMALS }),
+		balanceChanges,
+		events,
+	};
+}

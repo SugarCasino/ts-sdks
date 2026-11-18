@@ -1,0 +1,69 @@
+// Copyright (c) Sugar
+// SPDX-License-Identifier: Apache-2.0
+
+import { describe, expect, it } from 'vitest';
+import {
+	AMOUNT_FIELD_NAMES,
+	formatAmount,
+	formatBaseUnitAmount,
+	isAmountFieldName,
+} from '../../src/utils/index.js';
+
+describe('amount formatting', () => {
+	it.each([
+		['1000000000', 9, '1'],
+		['2000000000', 9, '2'],
+		['1120000', 9, '0.00112'],
+		['-9803836', 9, '-0.009803836'],
+		['1234500', 6, '1.2345'],
+		['42', 0, '42'],
+		[0n, 9, '0'],
+	])('formats %s with %i decimals as %s', (value, decimals, expected) => {
+		expect(formatBaseUnitAmount({ value, decimals })).toBe(expected);
+	});
+
+	it('uses 9 decimals by default for SUI-denominated values', () => {
+		expect(formatBaseUnitAmount({ value: '50000000' })).toBe('0.05');
+	});
+
+	it('passes through non-integer strings without decimal formatting', () => {
+		expect(formatBaseUnitAmount({ value: 'not-a-number', decimals: 9 })).toBe('not-a-number');
+		expect(formatBaseUnitAmount({ value: '1.5', decimals: 9 })).toBe('1.5');
+	});
+
+	it('returns raw and display values for supported scalar inputs', () => {
+		expect(formatAmount({ value: '1000000000', decimals: 9 })).toEqual({
+			raw: '1000000000',
+			display: '1',
+		});
+		expect(formatAmount({ value: 1120000, decimals: 9 })).toEqual({
+			raw: '1120000',
+			display: '0.00112',
+		});
+	});
+
+	it('returns null for non-scalar amount values', () => {
+		expect(formatAmount({ value: null, decimals: 9 })).toBeNull();
+		expect(formatAmount({ value: { raw: '1000' }, decimals: 9 })).toBeNull();
+		expect(formatAmount({ value: [1000], decimals: 9 })).toBeNull();
+	});
+
+	it('defines amount field names used by parameter and event formatting', () => {
+		expect(Array.from(AMOUNT_FIELD_NAMES)).toEqual([
+			'amount',
+			'house_edge_amount',
+			'max_payout',
+			'max_stake',
+			'min_stake',
+			'outcome_amount',
+			'payout_amount',
+			'stake_amount',
+			'stake_per_player',
+		]);
+		expect(isAmountFieldName('min_stake')).toBe(true);
+		expect(isAmountFieldName('stake_amount')).toBe(true);
+		expect(isAmountFieldName('stake_per_player')).toBe(true);
+		expect(isAmountFieldName('house_edge')).toBe(false);
+		expect(isAmountFieldName('usd_amount')).toBe(false);
+	});
+});

@@ -1,0 +1,142 @@
+// Copyright (c) Sugar
+// SPDX-License-Identifier: Apache-2.0
+
+import {
+	isValidStructTag,
+	isValidSuiAddress,
+	isValidSuiObjectId,
+	normalizeStructTag,
+	normalizeSuiAddress,
+} from '@mysten/sui/utils';
+import { COINS, OBJECT_IDS, PACKAGE_IDS } from '../configs/index.js';
+import type {
+	SugarCoin,
+	SugarCoinMetadata,
+	SugarConfig,
+	SugarConfigOverrides,
+	SugarNetwork,
+	WithCoinType,
+	WithConfig,
+} from '../types/index.js';
+
+export const DEFAULT_CACHE_TTL_MS: number = 30 * 60 * 1000;
+
+export function resolvePartnerAddress(partner: string | undefined): string | undefined {
+	if (partner === undefined) {
+		return undefined;
+	}
+
+	if (typeof partner !== 'string' || partner.trim().length <= 0) {
+		throw new TypeError('Partner must be a non-empty string');
+	}
+
+	const normalizedPartner = normalizeSuiAddress(partner);
+
+	if (!isValidSuiAddress(normalizedPartner)) {
+		throw new TypeError('Invalid partner address');
+	}
+
+	return normalizedPartner;
+}
+
+export function resolveSugarConfig({
+	network,
+	config = {},
+}: {
+	network: SugarNetwork;
+	config?: SugarConfigOverrides | undefined;
+}): SugarConfig {
+	const packageIds = PACKAGE_IDS[network];
+	const objectIds = OBJECT_IDS[network];
+	const coins = COINS[network];
+
+	const resolvedCoins = getSupportedCoins(coins).reduce<SugarConfig['coins']>((result, coin) => {
+		result[coin] = resolveCoinMetadata({
+			coin,
+			coinMetadata: coins[coin],
+			configCoinMetadata: config.coins?.[coin],
+		});
+		return result;
+	}, Object.create(null));
+	const resolvedPackageIds = { ...packageIds, ...config.packageIds };
+	const resolvedObjectIds = { ...objectIds, ...config.objectIds };
+
+	assertSuiObjectIds('package', resolvedPackageIds);
+	assertSuiObjectIds('object', resolvedObjectIds);
+
+	return {
+		packageIds: resolvedPackageIds,
+		objectIds: resolvedObjectIds,
+		coins: resolvedCoins,
+	};
+}
+
+export function resolvePriceInfoObjectId({ config, coinType }: WithConfig<WithCoinType>): string {
+	const supportedCoin = resolveSupportedCoin({
+		config,
+		coinType,
+	});
+	const objectId = config.coins[supportedCoin].priceInfoObjectId;
+
+	if (!objectId) {
+		throw new TypeError(`Missing price info object configuration for coin type ${coinType}`);
+	}
+
+	return objectId;
+}
+
+function getSupportedCoins(coins: SugarConfig['coins']): Array<SugarCoin> {
+	return Object.keys(coins) as Array<SugarCoin>;
+}
+
+function assertSuiObjectIds<T extends Record<string, string | undefined>>(
+	kind: 'package' | 'object',
+	ids: T,
+): asserts ids is T & { [K in keyof T]: Exclude<T[K], undefined> } {
+	for (const [name, id] of Object.entries(ids)) {
+		if (typeof id !== 'string' || !isValidSuiObjectId(id)) {
+			throw new TypeError(`Invalid ${kind} id configuration for ${name}`);
+		}
+	}
+}
+
+function resolveCoinMetadata({
+	coin,
+	coinMetadata,
+	configCoinMetadata,
+}: {
+	coin: SugarCoin;
+	coinMetadata: SugarCoinMetadata;
+	configCoinMetadata: Partial<SugarCoinMetadata> | undefined;
+}): SugarCoinMetadata {
+	const metadata = { ...coinMetadata, ...configCoinMetadata };
+	if (
+		!isValidStructTag(metadata.coinType) ||
+		!Number.isSafeInteger(metadata.decimals) ||
+		!isValidSuiObjectId(metadata.priceInfoObjectId)
+	) {
+		throw new TypeError(`Invalid coin metadata configuration for supported coin ${coin}`);
+	}
+
+	return {
+		...metadata,
+		coinType: normalizeStructTag(metadata.coinType),
+	};
+}
+
+function resolveSupportedCoin({ config, coinType }: WithConfig<WithCoinType>): SugarCoin {
+	const normalizedCoinType = normalizeStructTag(coinType);
+	const supportedCoin = getSupportedCoins(config.coins).find(
+		(coin) => config.coins[coin].coinType === normalizedCoinType,
+	);
+
+	if (!supportedCoin) {
+		throw new RangeError(
+			`Unsupported coin type ${coinType}. Supported coin types: ${Object.values(config.coins)
+				.map(({ coinType }) => coinType)
+				.join(', ')}`,
+		);
+	}
+
+	return supportedCoin;
+}

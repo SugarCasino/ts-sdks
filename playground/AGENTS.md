@@ -1,0 +1,26 @@
+# Playground agent instructions
+
+Applies to `playground/` and its descendants, in addition to the [workspace instructions](../AGENTS.md). Commands below run from the repository root.
+
+## Development
+
+`@sugar/sdk-playground` is a private Next.js app that demonstrates the public SDK. Its `tsconfig.json` inherits `tsconfig.shared.json` and keeps the Next.js settings for bundler resolution, DOM libraries and no emission. Keep the shared strict checks enabled. Optional app props can accept explicit `undefined` when passed between components. Preserve the types required by external APIs. See its [README](README.md) for the current pages and wallet flows.
+
+```bash
+pnpm --dir playground run dev
+pnpm --dir playground run build
+pnpm --dir playground run typecheck
+pnpm --dir playground run lint
+```
+
+## SDK integration
+
+- Use `sugar()` on the existing client and the public `@sugar/sdk`, `@sugar/sdk/games`, and `@sugar/sdk/utils` entrypoints. Do not import SDK internals or copy transaction builders into the app.
+- Standard bets go through `client.sugar.tx.createGameBet`; PvP flows use dedicated properties such as `client.sugar.tx.pvpCoinflip`.
+- Prefer SDK constants and numeric helpers over copied defaults. Use `bigint` for on-chain amounts, converting human-readable stake inputs to atomic units at the UI boundary.
+- Configure partner wallet attribution through `sugar({ partner })`, and pass plain application values as transaction metadata.
+- Use `client.sugar.getConfig()` for supported coins and object ids, and the SDK's BCS helpers for object and event decoding.
+- Preserve the app's testnet configuration. Keep code previews in sync with the public SDK APIs, ESM requirements, explicit network selection and `@mysten/sui/grpc` setup.
+- Read the [SDK instructions](../packages/sdk/AGENTS.md) before changing SDK source to support a playground feature. Follow the relevant Sugar application skills listed in the workspace instructions.
+
+Playground-only changes do not need a publishable-package changeset. Changes to SDK or MCP source still follow the workspace's branch changeset and documentation rules.

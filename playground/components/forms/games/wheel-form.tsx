@@ -1,0 +1,94 @@
+'use client';
+
+import type * as React from 'react';
+import { StandardGameFields } from '@/components/forms/shared-game-fields';
+import { Field, FieldDescription, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '@/components/ui/select';
+import { Spinner } from '@/components/ui/spinner';
+import type { GameConfigOption, WheelFormValues } from '@/lib/sugar-types';
+
+export function WheelForm({
+	value,
+	onChange,
+	onStakeBlur,
+	configOptions,
+	isConfigLoading,
+	configError,
+	stakeDescription,
+}: {
+	value: WheelFormValues;
+	onChange: (patch: Partial<WheelFormValues>) => void;
+	onStakeBlur?: (() => void) | undefined;
+	configOptions?: Array<GameConfigOption> | undefined;
+	isConfigLoading?: boolean | undefined;
+	configError?: string | null | undefined;
+	stakeDescription?: React.ReactNode | undefined;
+}) {
+	const selectedConfig = configOptions?.find((option) => option.id === value.configId) ?? null;
+	const playableConfigOptions = configOptions?.filter((option) => option.isPlayable) ?? [];
+
+	return (
+		<div className="space-y-6">
+			<Field>
+				<FieldLabel htmlFor="wheelConfigId">Wheel config ID</FieldLabel>
+				{playableConfigOptions.length > 0 ? (
+					<Select
+						value={value.configId}
+						onValueChange={(configId: string) => onChange({ configId })}
+					>
+						<SelectTrigger
+							id="wheelConfigId"
+							aria-label="Select Wheel config"
+							className="bg-background/55 h-11 rounded-2xl px-4"
+						>
+							<SelectValue />
+						</SelectTrigger>
+						<SelectContent className="max-h-[min(22rem,calc(100vh-6rem))]">
+							{playableConfigOptions.map((option) => (
+								<SelectItem key={option.id} value={option.id}>
+									{option.label}
+								</SelectItem>
+							))}
+						</SelectContent>
+					</Select>
+				) : (
+					<Input
+						id="wheelConfigId"
+						type="number"
+						step="1"
+						className="bg-background/55 h-11 rounded-2xl px-4"
+						value={value.configId}
+						onChange={(event) => onChange({ configId: event.target.value })}
+					/>
+				)}
+				<FieldDescription size="sm">
+					{selectedConfig ? (
+						selectedConfig.description
+					) : isConfigLoading ? (
+						<span className="inline-flex items-center gap-1.5">
+							<Spinner className="size-3.5" />
+							Loading Wheel configs from on-chain parameters
+						</span>
+					) : configError ? (
+						`Unable to load on-chain Wheel configs: ${configError}`
+					) : (
+						'Enter a wheel config id manually if on-chain configs are unavailable'
+					)}
+				</FieldDescription>
+			</Field>
+			<StandardGameFields
+				value={value}
+				onChange={onChange}
+				onStakeBlur={onStakeBlur}
+				description={stakeDescription}
+			/>
+		</div>
+	);
+}

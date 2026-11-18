@@ -1,0 +1,333 @@
+// Copyright (c) Sugar
+// SPDX-License-Identifier: Apache-2.0
+
+import { createSugarClient, type ToolTextResult } from '../../runtime/index.js';
+import { createQrCodeDataUrl, formatBaseUnitAmount, runSugarCommand } from '../../utils/index.js';
+import { optionalOptions } from '../../utils/options.js';
+import {
+	createSessionWalletSetup,
+	getExecutionStatus,
+	listSessionWallets,
+	loadCredentials,
+	loadSessionWallet,
+	resolveWebOrigin,
+} from '../../wallet/index.js';
+import type {
+	ConnectionInput,
+	GetExecutionStatusInput,
+	GetWalletBalancesInput,
+	ListWalletCoinsInput,
+	SessionWalletInput,
+} from '../schemas/index.js';
+import {
+	asTextResponse,
+	getConfigInput,
+	resolveCoinDisplayMetadata,
+	resolveWalletOwner,
+} from './shared.js';
+
+function connectionBridgeArgs(input: ConnectionInput): Array<string> {
+	const args: Array<string> = [];
+	if (input.webUrl) {
+		args.push('--web-url', input.webUrl);
+	}
+	if (input.timeoutMs !== undefined) {
+		args.push('--timeout-ms', String(input.timeoutMs));
+	}
+	if (input.maxBodyBytes !== undefined) {
+		args.push('--max-body-bytes', String(input.maxBodyBytes));
+	}
+	if (input.noOpen === true || input.open === false) {
+		args.push('--no-open');
+	}
+	return args;
+}
+
+export async function getWalletBalancesTool(
+	input: GetWalletBalancesInput,
+): Promise<ToolTextResult> {
+	const bundle = createSugarClient(getConfigInput(input));
+	const owner = await resolveWalletOwner({ input, bundle });
+	const balances = [];
+	let cursor: string | null = null;
+	let hasNextPage = false;
+	do {
+		const result = await bundle.client.core.listBalances({ owner, cursor });
+		balances.push(...result.balances);
+		cursor = result.cursor;
+		hasNextPage = result.hasNextPage;
+	} while (hasNextPage && cursor);
+
+	const metadata = new Map(
+		await Promise.all(
+			balances.map(
+				async (balance) =>
+					[
+						balance.coinType,
+						await resolveCoinDisplayMetadata({ coinType: balance.coinType, bundle }),
+					] as const,
+			),
+		),
+	);
+	return asTextResponse({
+		network: bundle.config.network,
+		config: bundle.config,
+		wallet: {
+			owner,
+			balances: balances.map((balance) => {
+				const coin = metadata.get(balance.coinType)!;
+				return {
+					...balance,
+					balanceDisplay: formatBaseUnitAmount({ value: balance.balance, decimals: coin.decimals }),
+					symbol: coin.symbol,
+				};
+			}),
+		},
+	});
+}
+
+export async function listWalletCoinsTool(input: ListWalletCoinsInput): Promise<ToolTextResult> {
+	const bundle = createSugarClient(getConfigInput(input));
+	const owner = await resolveWalletOwner({ input, bundle });
+
+	const result = await bundle.client.core.listCoins({
+		owner,
+		...optionalOptions({ coinType: input.coinType, cursor: input.cursor }),
+		limit: input.limit ?? 50,
+	});
+	const metadata = await resolveCoinDisplayMetadata({
+		coinType: input.coinType ?? bundle.config.sdk.coins.sui.coinType,
+		bundle,
+	});
+	return asTextResponse({
+		network: bundle.config.network,
+		config: bundle.config,
+		wallet: {
+			owner,
+			coins: result.objects.map((coin) => {
+				return {
+					...coin,
+					balanceDisplay: formatBaseUnitAmount({
+						value: coin.balance,
+						decimals: metadata.decimals,
+					}),
+					symbol: metadata.symbol,
+				};
+			}),
+			nextCursor: result.cursor,
+			hasNextPage: result.hasNextPage,
+		},
+	});
+}
+
+export async function getExecutionStatusTool(
+	input: GetExecutionStatusInput,
+): Promise<ToolTextResult> {
+	const execution = getExecutionStatus(input.requestId);
+	if (!execution) {
+		throw new Error('Unknown execution request. It may have expired or this MCP server restarted.');
+	}
+	const { config } = createSugarClient(getConfigInput(input));
+	return asTextResponse({ network: config.network, config, execution });
+}
+
+export async function getConnectionStatusTool(input: ConnectionInput): Promise<ToolTextResult> {
+	const { config } = createSugarClient(getConfigInput(input));
+	const {
+		profiles: { [config.network]: profile },
+	} = await loadCredentials();
+	return asTextResponse({
+		network: config.network,
+		config,
+		connection: profile
+			? {
+					connected: true,
+					address: profile.address,
+					walletType: profile.walletType,
+					status: 'connected',
+				}
+			: { connected: false, status: 'logged-out' },
+	});
+}
+
+export async function sugarLoginTool(input: ConnectionInput): Promise<ToolTextResult> {
+	const { config } = createSugarClient(getConfigInput(input));
+	const command = runSugarCommand(
+		'login',
+		'--network',
+		config.network,
+		...connectionBridgeArgs(input),
+	);
+	return asTextResponse({
+		network: config.network,
+		config,
+		connection: {
+			connected: false,
+			status: 'pending',
+			...command,
+			note: 'Started the local Sugar MCP CLI login flow. It opens the correct network in the default browser and writes the paired wallet credentials locally.',
+		},
+	});
+}
+
+export async function sugarLogoutTool(input: ConnectionInput): Promise<ToolTextResult> {
+	const { config } = createSugarClient(getConfigInput(input));
+	const command = runSugarCommand(
+		'logout',
+		'--network',
+		config.network,
+		...connectionBridgeArgs(input),
+	);
+	return asTextResponse({
+		network: config.network,
+		config,
+		connection: {
+			connected: false,
+			status: 'pending',
+			...command,
+			note: 'Started the local Sugar MCP CLI logout flow. It opens the correct network in the default browser and updates local wallet credentials after confirmation.',
+		},
+	});
+}
+
+export async function setupSessionWalletTool(input: SessionWalletInput): Promise<ToolTextResult> {
+	const { config } = createSugarClient(getConfigInput(input));
+	const setup = await createSessionWalletSetup({
+		accountUrl: new URL('/account', resolveWebOrigin({ network: config.network })).toString(),
+	});
+	return asTextResponse({
+		network: config.network,
+		config,
+		sessionWallet: {
+			status: 'setup-pending',
+			setupUrl: setup.setupUrl,
+			note: 'Open this local URL yourself to create or recover a named session wallet shared by mainnet and testnet. The recovery phrase is intentionally never returned through MCP.',
+		},
+	});
+}
+
+export async function getSessionWalletTool(input: SessionWalletInput): Promise<ToolTextResult> {
+	const bundle = createSugarClient(getConfigInput(input));
+	const [wallet, wallets, credentials] = await Promise.all([
+		loadSessionWallet(input.sessionWalletId),
+		listSessionWallets(),
+		loadCredentials(),
+	]);
+	if (!wallet) {
+		const setup = await createSessionWalletSetup({
+			accountUrl: new URL(
+				'/account',
+				resolveWebOrigin({ network: bundle.config.network }),
+			).toString(),
+		});
+		return asTextResponse({
+			network: bundle.config.network,
+			config: bundle.config,
+			sessionWallet: {
+				status: 'setup-required',
+				setupUrl: setup.setupUrl,
+				wallets,
+				note: input.sessionWalletId
+					? 'No local session wallet exists with that ID. Create or recover a named session wallet, or call get_session_wallet without sessionWalletId to use the first wallet.'
+					: 'Create or recover a named session wallet shared by mainnet and testnet. Its recovery phrase is shown only on the local setup page.',
+			},
+		});
+	}
+
+	const balances = [];
+	let cursor: string | null = null;
+	let hasNextPage = false;
+	do {
+		const result = await bundle.client.core.listBalances({
+			owner: wallet.address,
+			cursor,
+		});
+		balances.push(...result.balances);
+		cursor = result.cursor;
+		hasNextPage = result.hasNextPage;
+	} while (hasNextPage && cursor);
+
+	const metadata = new Map(
+		await Promise.all(
+			balances.map(
+				async (balance) =>
+					[
+						balance.coinType,
+						await resolveCoinDisplayMetadata({ coinType: balance.coinType, bundle }),
+					] as const,
+			),
+		),
+	);
+	const addressQrCodeDataUrl = createQrCodeDataUrl({ text: wallet.address });
+	const pairedWallet = credentials.profiles[bundle.config.network];
+	const fundingUrl = pairedWallet
+		? (() => {
+				const url = new URL(
+					'/fund-session-wallet',
+					resolveWebOrigin({ network: bundle.config.network }),
+				);
+				url.searchParams.set('destination', wallet.address);
+				url.searchParams.set('owner', pairedWallet.address);
+				url.searchParams.set('network', bundle.config.network);
+				return url.toString();
+			})()
+		: undefined;
+	return asTextResponse({
+		network: bundle.config.network,
+		config: bundle.config,
+		sessionWallet: {
+			status: 'ready',
+			selectedSessionWalletId: wallet.id,
+			wallets,
+			...wallet,
+			balances: balances.map((balance) => {
+				const coin = metadata.get(balance.coinType)!;
+				return {
+					...balance,
+					balanceDisplay: formatBaseUnitAmount({ value: balance.balance, decimals: coin.decimals }),
+					symbol: coin.symbol,
+				};
+			}),
+			funding: {
+				address: wallet.address,
+				addressQrCodeDataUrl,
+				...(fundingUrl ? { fundingUrl } : {}),
+				note: fundingUrl
+					? 'Open the funding URL to select a coin and amount from the paired wallet, then approve the transfer in the browser.'
+					: `Pair a wallet on ${bundle.config.network} with "sugar_login" before opening the funding flow.`,
+			},
+		},
+	});
+}
+
+export async function fundSessionWalletTool(input: SessionWalletInput): Promise<ToolTextResult> {
+	const { config } = createSugarClient(getConfigInput(input));
+	const [credentials, sessionWallet] = await Promise.all([
+		loadCredentials(),
+		loadSessionWallet(input.sessionWalletId),
+	]);
+	const profile = credentials.profiles[config.network];
+	if (!profile) {
+		throw new Error('No wallet is connected for this network. Call "sugar_login" first.');
+	}
+	if (!sessionWallet) {
+		throw new Error('No session wallet exists. Call "setup_session_wallet" first.');
+	}
+
+	const fundingUrl = new URL('/fund-session-wallet', resolveWebOrigin({ network: config.network }));
+	fundingUrl.searchParams.set('destination', sessionWallet.address);
+	fundingUrl.searchParams.set('owner', profile.address);
+	fundingUrl.searchParams.set('network', config.network);
+
+	return asTextResponse({
+		network: config.network,
+		config,
+		sessionWallet: {
+			id: sessionWallet.id,
+			name: sessionWallet.name,
+			address: sessionWallet.address,
+			fundingUrl: fundingUrl.toString(),
+			note: 'Open this URL to select a coin and amount from the connected wallet. The transfer is reviewed and signed in the browser.',
+		},
+	});
+}
