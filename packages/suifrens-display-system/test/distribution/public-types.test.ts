@@ -7,7 +7,7 @@ import type {
 	BullsharkAttributes,
 	CapyAttributes,
 	SuiFrenAppearance,
-} from '@sugar/suifrens-display-system/types';
+} from '@sugarcasino/suifrens-display-system/types';
 
 test('published appearance type contains the shared species fields', () => {
 	expectTypeOf<Omit<CapyAttributes, 'earShape'>>().toEqualTypeOf<SuiFrenAppearance>();

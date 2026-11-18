@@ -1,7 +1,7 @@
 import type { SuiClientTypes } from '@mysten/sui/client';
 import { fromBase64 } from '@mysten/sui/utils';
-import type { SugarClient } from '@sugar/sdk';
-import { fromMoveFloat, isMoveFloat, parseSugarEvent } from '@sugar/sdk/utils';
+import type { SugarClient } from '@sugarcasino/sdk';
+import { fromMoveFloat, isMoveFloat, parseSugarEvent } from '@sugarcasino/sdk/utils';
 import { bigintToString } from '@/lib/sugar-app';
 import type { EventLogRow } from '@/lib/sugar-types';
 

@@ -32,7 +32,7 @@ describe('runSugarCommand', () => {
 		});
 
 		const result = runSugarCommand('login', '--network', 'testnet');
-		const packageSpec = `@sugar/mcp@${packageJson.version}`;
+		const packageSpec = `@sugarcasino/mcp@${packageJson.version}`;
 
 		expect(mocks.spawn).toHaveBeenCalledWith(
 			'npx',

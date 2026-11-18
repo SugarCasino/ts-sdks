@@ -4,7 +4,7 @@ Applies to `packages/sdk/` and its descendants, in addition to the [workspace in
 
 ## Package and build
 
-`@sugar/sdk` is an ESM-only TypeScript SDK for Sugar v2 on Sui. Use `sugar()` on a `ClientWithCoreApi`, such as `SuiGrpcClient`, as the main integration point. `tsdown` emits ESM into `packages/sdk/dist/`; `sui-ts-codegen generate` regenerates `packages/sdk/src/contracts/`. Runtime code depends on the generated bindings, so keep them in sync with the current Sugar packages. Do not hand-edit generated contract files.
+`@sugarcasino/sdk` is an ESM-only TypeScript SDK for Sugar v2 on Sui. Use `sugar()` on a `ClientWithCoreApi`, such as `SuiGrpcClient`, as the main integration point. `tsdown` emits ESM into `packages/sdk/dist/`; `sui-ts-codegen generate` regenerates `packages/sdk/src/contracts/`. Runtime code depends on the generated bindings, so keep them in sync with the current Sugar packages. Do not hand-edit generated contract files.
 
 ```bash
 # Regenerate contract bindings and build
@@ -26,7 +26,7 @@ pnpm --dir packages/sdk exec vitest run -t "builds a coinflip transaction with a
 ## Public API and implementation patterns
 
 1. Integrate through `sugar()` on an existing `SuiGrpcClient` or another `ClientWithCoreApi` implementation.
-2. Import the extension, client, and network and coin types from `@sugar/sdk`. Use `@sugar/sdk/games` for game types and choices, and `@sugar/sdk/utils` for parsers, numeric helpers, and defaults. Reuse `SUGAR_COINS`, `SUPPORTED_SUI_NETWORKS`, `COIN_SIDES`, and `PVP_COINFLIP_ACTIONS` for validation and iteration. `DEFAULT_QUERY_LIMIT` is `50` and is the default for `getPvPCoinflipGames()`. Utility function behavior:
+2. Import the extension, client, and network and coin types from `@sugarcasino/sdk`. Use `@sugarcasino/sdk/games` for game types and choices, and `@sugarcasino/sdk/utils` for parsers, numeric helpers, and defaults. Reuse `SUGAR_COINS`, `SUPPORTED_SUI_NETWORKS`, `COIN_SIDES`, and `PVP_COINFLIP_ACTIONS` for validation and iteration. `DEFAULT_QUERY_LIMIT` is `50` and is the default for `getPvPCoinflipGames()`. Utility function behavior:
    - `toBigInt()` accepts `bigint`, finite `number`, non-negative integer `string`, and `boolean` values. It throws `TypeError` for invalid input shapes and `RangeError` for negatives.
    - `toU8()` accepts a finite integer `number` or plain integer `string` in the `0..255` range. It throws `TypeError` for non-numeric input and `RangeError` for non-integer or out-of-range values.
    - `toU16()` accepts a finite integer `number` or plain integer `string` in the `0..65535` range. It uses the same `TypeError` and `RangeError` split as `toU8()`.
@@ -111,7 +111,7 @@ Standard game transactions must fail clearly if the chosen coin type has no requ
 - Pass plain application values to supported bet transaction `metadata` and let the SDK encode them into byte arrays.
 - The extension-level `partner` option must be a partner wallet address. Labels and slugs are invalid.
 - When partner attribution is required, configure `sugar({ partner: '<wallet-address>' })` once during extension setup instead of passing partner data through transaction metadata.
-- Prefer importing public constants and numeric helpers from `@sugar/sdk/utils` instead of duplicating SDK defaults in downstream apps.
+- Prefer importing public constants and numeric helpers from `@sugarcasino/sdk/utils` instead of duplicating SDK defaults in downstream apps.
 
 ## TypeScript and tests
 
@@ -121,4 +121,4 @@ Standard game transactions must fail clearly if the chosen coin type has no requ
 - Keep tests in `packages/sdk/test/unit/`, grouped into `transactions/`, `helpers/`, and `utils/`, with client and public-export coverage alongside them. Reuse nearby fixtures and helpers.
 - Run the additional test-project typecheck whenever SDK tests change; the main package typecheck excludes tests.
 
-Follow the workspace release, documentation, and PR rules. SDK source changes require an `@sugar/sdk` entry in a branch changeset scoped to the relevant topic, with the release level matching any public type or behavior changes.
+Follow the workspace release, documentation, and PR rules. SDK source changes require an `@sugarcasino/sdk` entry in a branch changeset scoped to the relevant topic, with the release level matching any public type or behavior changes.

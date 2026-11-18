@@ -2,7 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { Transaction } from '@mysten/sui/transactions';
-import { COIN_SIDES, type Game, type PvPCoinflipAction, type StandardGame } from '@sugar/sdk/games';
+import {
+	COIN_SIDES,
+	type Game,
+	type PvPCoinflipAction,
+	type StandardGame,
+} from '@sugarcasino/sdk/games';
 import {
 	buildTransactionResult,
 	createSugarClient,
@@ -94,7 +99,7 @@ export async function buildLimboTransactionTool(input: LimboInput = {}): Promise
 				game: 'limbo',
 				requiredInputs: ['owner', 'stake', 'targetMultiplier'],
 				notes: [
-					'Target multiplier is encoded by @sugar/sdk using the public fixed-point utility defaults.',
+					'Target multiplier is encoded by @sugarcasino/sdk using the public fixed-point utility defaults.',
 				],
 			}),
 		);
@@ -195,7 +200,7 @@ export async function buildRangeTransactionTool(input: RangeInput = {}): Promise
 				input,
 				game: 'range',
 				requiredInputs: ['owner', 'stake', 'leftPoint', 'rightPoint'],
-				notes: ['Range points are normalized by @sugar/sdk before Move call construction.'],
+				notes: ['Range points are normalized by @sugarcasino/sdk before Move call construction.'],
 			}),
 		);
 	}

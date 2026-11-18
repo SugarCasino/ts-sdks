@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { ACCESSORIES } from '@sugar/suifrens-display-system/accessories';
+import { ACCESSORIES } from '@sugarcasino/suifrens-display-system/accessories';
 import { PRESET_CATALOG, type PresetCatalogEntry } from '../../animation/preset-catalog.js';
 import { CatalogueDocs } from '../CatalogueDocs.js';
 import { CataloguePreview } from './CataloguePreview.js';

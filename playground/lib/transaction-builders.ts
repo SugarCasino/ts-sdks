@@ -1,5 +1,5 @@
-import type { SugarClient } from '@sugar/sdk';
-import { COIN_SIDES } from '@sugar/sdk/games';
+import type { SugarClient } from '@sugarcasino/sdk';
+import { COIN_SIDES } from '@sugarcasino/sdk/games';
 import { parseOptionalNumber, toAtomicAmount } from '@/lib/sugar-app';
 import type {
 	PvPAction,

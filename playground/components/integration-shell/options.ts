@@ -1,7 +1,7 @@
 'use client';
 
 import { CirclePlus, ShieldX, Swords } from 'lucide-react';
-import { PVP_COINFLIP_ACTIONS } from '@sugar/sdk/games';
+import { PVP_COINFLIP_ACTIONS } from '@sugarcasino/sdk/games';
 import type { PvPAction, PvPGameId, StandardGameId } from '@/lib/sugar-types';
 
 export const STANDARD_GAME_OPTIONS = [

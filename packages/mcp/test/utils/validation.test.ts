@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { describe, expect, expectTypeOf, it } from 'vitest';
-import { COIN_SIDES, type CoinSide, type Game, GAMES } from '@sugar/sdk/games';
+import { COIN_SIDES, type CoinSide, type Game, GAMES } from '@sugarcasino/sdk/games';
 import { requireChoice, requireGame } from '../../src/utils/validation.js';
 
 describe('requireChoice', () => {

@@ -12,7 +12,7 @@
 	"packages": [
 		{
 			"registryType": "npm",
-			"identifier": "@sugar/mcp",
+			"identifier": "@sugarcasino/mcp",
 			"version": "0.0.0",
 			"runtimeHint": "npx",
 			"transport": {

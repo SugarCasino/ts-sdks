@@ -1,5 +1,5 @@
 import { formatAddress, parseToUnits } from '@mysten/sui/utils';
-import { DEFAULT_RANGE_SCALE, RANGE_POINT_LIMIT } from '@sugar/sdk/utils';
+import { DEFAULT_RANGE_SCALE, RANGE_POINT_LIMIT } from '@sugarcasino/sdk/utils';
 import type { PvPCoinflipForms, SharedFields, StandardForms } from '@/lib/sugar-types';
 import { DECIMAL_AMOUNT_PATTERN } from '@/lib/validation';
 

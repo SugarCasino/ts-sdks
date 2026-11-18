@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { expect, test } from 'vitest';
-import type { SuiFrenSpecies } from '@sugar/suifrens-display-system/types';
+import type { SuiFrenSpecies } from '@sugarcasino/suifrens-display-system/types';
 import { parseSuiFrenAttributes } from '../../../src/utils/attribute-utils.js';
 
 const APPEARANCE = ['basic', '6fbbee', 'e6fbff', 'happy'] as const;

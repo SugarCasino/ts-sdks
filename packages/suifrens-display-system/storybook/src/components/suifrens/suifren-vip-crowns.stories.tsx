@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { SuiFrenImage } from '@sugar/suifrens-display-system';
-import { VIP_CROWN_ACCESSORIES } from '@sugar/suifrens-display-system/accessories';
-import { SuiFrenImageInline } from '@sugar/suifrens-display-system/image-inline';
+import { SuiFrenImage } from '@sugarcasino/suifrens-display-system';
+import { VIP_CROWN_ACCESSORIES } from '@sugarcasino/suifrens-display-system/accessories';
+import { SuiFrenImageInline } from '@sugarcasino/suifrens-display-system/image-inline';
 import { accessoryLabel } from '../../utils/accessory-label.js';
 
 const LOOP = { iterations: 'infinite' as const };

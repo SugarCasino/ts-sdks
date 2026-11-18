@@ -4,7 +4,7 @@ Applies to `playground/` and its descendants, in addition to the [workspace inst
 
 ## Development
 
-`@sugar/sdk-playground` is a private Next.js app that demonstrates the public SDK. Its `tsconfig.json` inherits `tsconfig.shared.json` and keeps the Next.js settings for bundler resolution, DOM libraries and no emission. Keep the shared strict checks enabled. Optional app props can accept explicit `undefined` when passed between components. Preserve the types required by external APIs. See its [README](README.md) for the current pages and wallet flows.
+`@sugarcasino/sdk-playground` is a private Next.js app that demonstrates the public SDK. Its `tsconfig.json` inherits `tsconfig.shared.json` and keeps the Next.js settings for bundler resolution, DOM libraries and no emission. Keep the shared strict checks enabled. Optional app props can accept explicit `undefined` when passed between components. Preserve the types required by external APIs. See its [README](README.md) for the current pages and wallet flows.
 
 ```bash
 pnpm --dir playground run dev
@@ -15,7 +15,7 @@ pnpm --dir playground run lint
 
 ## SDK integration
 
-- Use `sugar()` on the existing client and the public `@sugar/sdk`, `@sugar/sdk/games`, and `@sugar/sdk/utils` entrypoints. Do not import SDK internals or copy transaction builders into the app.
+- Use `sugar()` on the existing client and the public `@sugarcasino/sdk`, `@sugarcasino/sdk/games`, and `@sugarcasino/sdk/utils` entrypoints. Do not import SDK internals or copy transaction builders into the app.
 - Standard bets go through `client.sugar.tx.createGameBet`; PvP flows use dedicated properties such as `client.sugar.tx.pvpCoinflip`.
 - Prefer SDK constants and numeric helpers over copied defaults. Use `bigint` for on-chain amounts, converting human-readable stake inputs to atomic units at the UI boundary.
 - Configure partner wallet attribution through `sugar({ partner })`, and pass plain application values as transaction metadata.

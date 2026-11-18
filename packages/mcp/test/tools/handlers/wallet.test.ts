@@ -106,7 +106,7 @@ describe('wallet tools', () => {
 	describe('sugar_login', () => {
 		it('starts the CLI login flow for the selected network', async () => {
 			mocks.runSugarCommand.mockReturnValue({
-				command: 'npx -y @sugar/mcp@test login --network mainnet',
+				command: 'npx -y @sugarcasino/mcp@test login --network mainnet',
 				pid: 1234,
 			});
 
@@ -119,7 +119,7 @@ describe('wallet tools', () => {
 
 			expect(mocks.runSugarCommand).toHaveBeenCalledWith('login', '--network', 'mainnet');
 			expect(content.connection).toMatchObject({
-				command: 'npx -y @sugar/mcp@test login --network mainnet',
+				command: 'npx -y @sugarcasino/mcp@test login --network mainnet',
 				pid: 1234,
 				status: 'pending',
 			});
@@ -128,7 +128,7 @@ describe('wallet tools', () => {
 		it('passes bridge options to the CLI login flow', async () => {
 			mocks.runSugarCommand.mockReturnValue({
 				command:
-					'npx -y @sugar/mcp@test login --network testnet --web-url http://localhost:5173 --timeout-ms 1000 --max-body-bytes 2048 --no-open',
+					'npx -y @sugarcasino/mcp@test login --network testnet --web-url http://localhost:5173 --timeout-ms 1000 --max-body-bytes 2048 --no-open',
 				pid: 1234,
 			});
 
@@ -181,7 +181,7 @@ describe('wallet tools', () => {
 	describe('sugar_logout', () => {
 		it('starts the CLI logout flow for the selected network', async () => {
 			mocks.runSugarCommand.mockReturnValue({
-				command: 'npx -y @sugar/mcp@test logout --network testnet',
+				command: 'npx -y @sugarcasino/mcp@test logout --network testnet',
 				pid: 5678,
 			});
 
@@ -194,7 +194,7 @@ describe('wallet tools', () => {
 
 			expect(mocks.runSugarCommand).toHaveBeenCalledWith('logout', '--network', 'testnet');
 			expect(content.connection).toMatchObject({
-				command: 'npx -y @sugar/mcp@test logout --network testnet',
+				command: 'npx -y @sugarcasino/mcp@test logout --network testnet',
 				pid: 5678,
 				status: 'pending',
 			});
@@ -203,7 +203,7 @@ describe('wallet tools', () => {
 		it('passes bridge options to the CLI logout flow', async () => {
 			mocks.runSugarCommand.mockReturnValue({
 				command:
-					'npx -y @sugar/mcp@test logout --network mainnet --web-url http://localhost:5173 --timeout-ms 1000 --max-body-bytes 2048 --no-open',
+					'npx -y @sugarcasino/mcp@test logout --network mainnet --web-url http://localhost:5173 --timeout-ms 1000 --max-body-bytes 2048 --no-open',
 				pid: 5678,
 			});
 

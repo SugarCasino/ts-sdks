@@ -1,7 +1,7 @@
 'use client';
 
 import type * as React from 'react';
-import { DEFAULT_LIMBO_MULTIPLIER_SCALE } from '@sugar/sdk/utils';
+import { DEFAULT_LIMBO_MULTIPLIER_SCALE } from '@sugarcasino/sdk/utils';
 import { StandardGameFields } from '@/components/forms/shared-game-fields';
 import { Field, FieldCode, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';

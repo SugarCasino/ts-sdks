@@ -1,5 +1,5 @@
 {
-	"name": "@sugar/mcp",
+	"name": "@sugarcasino/mcp",
 	"version": "0.0.0",
 	"description": "AI agent MCP server for Sugar provably fair on-chain Sui casino game, SweetHouse, NFT, and referral transactions.",
 	"keywords": [
@@ -100,7 +100,7 @@
 		"@napi-rs/keyring": "^2.1.2",
 		"@noble/ciphers": "^2.4.0",
 		"@scure/bip39": "^2.4.0",
-		"@sugar/sdk": "workspace:^",
+		"@sugarcasino/sdk": "workspace:^",
 		"clsx": "catalog:frontend",
 		"open": "^11.0.4",
 		"qr": "^0.7.2",

@@ -1,6 +1,6 @@
 import type { Transaction } from '@mysten/sui/transactions';
-import type { SugarClient, SugarCoin } from '@sugar/sdk';
-import type { CoinSide, PvPCoinflipAction, PvPGame, StandardGame } from '@sugar/sdk/games';
+import type { SugarClient, SugarCoin } from '@sugarcasino/sdk';
+import type { CoinSide, PvPCoinflipAction, PvPGame, StandardGame } from '@sugarcasino/sdk/games';
 
 export type StandardGameId = StandardGame;
 export type PvPGameId = PvPGame;

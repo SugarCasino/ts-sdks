@@ -1,5 +1,5 @@
 import { normalizeStructTag, parseStructTag } from '@mysten/sui/utils';
-import { SUGAR_COINS } from '@sugar/sdk';
+import { SUGAR_COINS } from '@sugarcasino/sdk';
 import type { SupportedCoinKey } from '@/lib/sugar-types';
 
 export type CoinBalanceState = {

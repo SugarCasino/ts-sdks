@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { SuiClientTypes } from '@mysten/sui/client';
-import type { sugar, SugarClient, SugarNetwork } from '@sugar/sdk';
-import type { Game, PvPCoinflipAction } from '@sugar/sdk/games';
+import type { sugar, SugarClient, SugarNetwork } from '@sugarcasino/sdk';
+import type { Game, PvPCoinflipAction } from '@sugarcasino/sdk/games';
 import type { FormattedAmount } from '../utils/index.js';
 
 export type SugarConfig = ReturnType<SugarClient['getConfig']>;

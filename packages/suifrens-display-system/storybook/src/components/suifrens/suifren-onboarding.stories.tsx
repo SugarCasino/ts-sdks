@@ -4,7 +4,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ArrowRight } from 'lucide-react';
 import { useState } from 'react';
-import { buildRunnerAccessories } from '@sugar/suifrens-display-system/kits';
+import { buildRunnerAccessories } from '@sugarcasino/suifrens-display-system/kits';
 import { CataloguePreview } from './CataloguePreview.js';
 
 const meta = {

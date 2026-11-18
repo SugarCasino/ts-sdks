@@ -3,8 +3,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { EAR_GENE_TO_EAR_SHAPE } from '@sugar/suifrens-display-system/attributes';
-import type { CapyAttributes } from '@sugar/suifrens-display-system/types';
+import { EAR_GENE_TO_EAR_SHAPE } from '@sugarcasino/suifrens-display-system/attributes';
+import type { CapyAttributes } from '@sugarcasino/suifrens-display-system/types';
 import { SuiLogo } from '../logos/SuiLogo.js';
 import { characterControls } from './character-controls.js';
 import {

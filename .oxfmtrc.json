@@ -28,7 +28,7 @@
 		"customGroups": [
 			{
 				"groupName": "sugar",
-				"elementNamePattern": ["@sugar/**"]
+				"elementNamePattern": ["@sugarcasino/**"]
 			},
 			{
 				"groupName": "app",

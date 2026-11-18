@@ -4,7 +4,7 @@ Read the [workspace instructions](../../AGENTS.md) too. These rules apply to `pa
 
 ## Build and checks
 
-`@sugar/suifrens-display-system` is an ESM-only React library. `tsdown` builds public entry points, declarations and SVG assets into `dist/`.
+`@sugarcasino/suifrens-display-system` is an ESM-only React library. `tsdown` builds public entry points, declarations and SVG assets into `dist/`.
 
 ```bash
 # Regenerate assets and presets, then build
@@ -52,10 +52,10 @@ Show visual changes enlarged and at the size consumers will display them.
 
 Storybook controls must affect the preview. Use `satisfies Meta<typeof Component>` and `StoryObj<typeof meta>` for component props, custom argument types for species previews, and `satisfies Meta` without a component for fixed demos. Hide Controls for fixed demos and catalogue docs.
 
-For browser tests, install Chromium with `pnpm --filter @sugar/suifrens-storybook exec playwright install --only-shell chromium`. Run interactions and accessibility checks from the testing widget, or `pnpm --filter @sugar/suifrens-storybook test:coverage` for the full suite, including portrait screenshots. Coverage is in `storybook/coverage/index.html`.
+For browser tests, install Chromium with `pnpm --filter @sugarcasino/suifrens-storybook exec playwright install --only-shell chromium`. Run interactions and accessibility checks from the testing widget, or `pnpm --filter @sugarcasino/suifrens-storybook test:coverage` for the full suite, including portrait screenshots. Coverage is in `storybook/coverage/index.html`.
 
 ## Release
 
-Follow the workspace changeset and PR rules. Consumer-visible changes need an `@sugar/suifrens-display-system` changeset, with one topic per note. Version through the workspace Changesets workflow.
+Follow the workspace changeset and PR rules. Consumer-visible changes need an `@sugarcasino/suifrens-display-system` changeset, with one topic per note. Version through the workspace Changesets workflow.
 
 Before committing, pushing or opening a PR, present the package contents, check results and relevant renders for explicit owner approval of the current revision and scope.

@@ -35,8 +35,9 @@ test.each(Object.entries(manifest.exports))(
 );
 
 test('built inline and asset renderers preserve custom kits for both species and sides', async () => {
-	const { ACCESSORIES: accessories } = await import('@sugar/suifrens-display-system/accessories');
-	const { resolveSoccerTeamKit } = await import('@sugar/suifrens-display-system/kits');
+	const { ACCESSORIES: accessories } =
+		await import('@sugarcasino/suifrens-display-system/accessories');
+	const { resolveSoccerTeamKit } = await import('@sugarcasino/suifrens-display-system/kits');
 	const kit = {
 		code: 'CLUB',
 		primary: '#123456',
@@ -46,10 +47,10 @@ test('built inline and asset renderers preserve custom kits for both species and
 	} as const;
 	for (const [SuiFrenImage, assertAssets] of [
 		[
-			(await import('@sugar/suifrens-display-system/image-inline')).SuiFrenImageInline,
+			(await import('@sugarcasino/suifrens-display-system/image-inline')).SuiFrenImageInline,
 			assertInlineAssets,
 		],
-		[(await import('@sugar/suifrens-display-system')).SuiFrenImage, assertExternalAssets],
+		[(await import('@sugarcasino/suifrens-display-system')).SuiFrenImage, assertExternalAssets],
 	] as const) {
 		for (const shape of [{ earShape: 'default' }, { finStyle: 'classic' }] as const) {
 			for (const side of ['home', 'away'] as const) {
@@ -85,14 +86,15 @@ test('built inline and asset renderers preserve custom kits for both species and
 });
 
 test('historical root species renderers remain exported', async () => {
-	const library = await import('@sugar/suifrens-display-system');
+	const library = await import('@sugarcasino/suifrens-display-system');
 	assert.equal(typeof library.CapyImage, 'function');
 	assert.equal(typeof library.BullsharkImage, 'function');
 });
 
 test('built goth boot assets contain only the selected boot without clipping', async () => {
-	const { ACCESSORIES: accessories } = await import('@sugar/suifrens-display-system/accessories');
-	const { SuiFrenImage } = await import('@sugar/suifrens-display-system');
+	const { ACCESSORIES: accessories } =
+		await import('@sugarcasino/suifrens-display-system/accessories');
+	const { SuiFrenImage } = await import('@sugarcasino/suifrens-display-system');
 	for (const side of ['left', 'right']) {
 		const svg = renderToStaticMarkup(
 			createElement(SuiFrenImage, {
@@ -120,10 +122,10 @@ test('built goth boot assets contain only the selected boot without clipping', a
 });
 
 test('built runner kits preserve configurable bibs and native limbs in every renderer and species', async () => {
-	const { buildRunnerAccessories } = await import('@sugar/suifrens-display-system/kits');
+	const { buildRunnerAccessories } = await import('@sugarcasino/suifrens-display-system/kits');
 	for (const SuiFrenImage of [
-		(await import('@sugar/suifrens-display-system/image-inline')).SuiFrenImageInline,
-		(await import('@sugar/suifrens-display-system')).SuiFrenImage,
+		(await import('@sugarcasino/suifrens-display-system/image-inline')).SuiFrenImageInline,
+		(await import('@sugarcasino/suifrens-display-system')).SuiFrenImage,
 	] as const) {
 		for (const shape of [{ earShape: 'default' }, { finStyle: 'classic' }] as const) {
 			const svg = renderToStaticMarkup(
@@ -149,9 +151,9 @@ test('built runner kits preserve configurable bibs and native limbs in every ren
 });
 
 test('published data catalogues use uppercase export names', async () => {
-	const catalogue = await import('@sugar/suifrens-display-system/accessories');
-	const palette = await import('@sugar/suifrens-display-system/colors');
-	const attributes = await import('@sugar/suifrens-display-system/attributes');
+	const catalogue = await import('@sugarcasino/suifrens-display-system/accessories');
+	const palette = await import('@sugarcasino/suifrens-display-system/colors');
+	const attributes = await import('@sugarcasino/suifrens-display-system/attributes');
 	assert.ok(catalogue.ACCESSORIES.length > 0);
 	assert.ok(catalogue.VIP_CROWN_ACCESSORIES.length > 0);
 	assert.equal(palette.COLORS.ffffff, 'White');

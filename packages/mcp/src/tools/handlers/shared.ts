@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { parseStructTag } from '@mysten/sui/utils';
-import { type Game, GAMES } from '@sugar/sdk/games';
+import { type Game, GAMES } from '@sugarcasino/sdk/games';
 import {
 	type BuilderMode,
 	type McpConfig,

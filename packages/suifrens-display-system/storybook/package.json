@@ -1,5 +1,5 @@
 {
-	"name": "@sugar/suifrens-storybook",
+	"name": "@sugarcasino/suifrens-storybook",
 	"private": true,
 	"type": "module",
 	"scripts": {
@@ -18,7 +18,7 @@
 		"@storybook/addon-vitest": "^10.6.7",
 		"@storybook/react": "^10.6.7",
 		"@storybook/react-vite": "^10.6.7",
-		"@sugar/suifrens-display-system": "workspace:*",
+		"@sugarcasino/suifrens-display-system": "workspace:*",
 		"@tailwindcss/postcss": "catalog:tooling",
 		"@types/node": "catalog:typescript",
 		"@types/react": "catalog:typescript",

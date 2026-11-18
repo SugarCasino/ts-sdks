@@ -9,7 +9,7 @@ Run these commands from the repository root with the Node.js version in `.node-v
 ```bash
 pnpm install
 pnpm --dir packages/suifrens-display-system run build
-pnpm --filter @sugar/suifrens-storybook dev
+pnpm --filter @sugarcasino/suifrens-storybook dev
 ```
 
 Open [http://localhost:6006](http://localhost:6006). If Storybook is already running there, use that instance.
@@ -19,7 +19,7 @@ Storybook uses the library's built public exports. Rebuild the library after edi
 ## Static build
 
 ```bash
-pnpm --filter @sugar/suifrens-storybook build
+pnpm --filter @sugarcasino/suifrens-storybook build
 ```
 
 The build writes the static site to `packages/suifrens-display-system/storybook/storybook-static/`.
@@ -29,22 +29,22 @@ The build writes the static site to `packages/suifrens-display-system/storybook/
 Run the typecheck and unit tests:
 
 ```bash
-pnpm --filter @sugar/suifrens-storybook typecheck
-pnpm --filter @sugar/suifrens-storybook test
+pnpm --filter @sugarcasino/suifrens-storybook typecheck
+pnpm --filter @sugarcasino/suifrens-storybook test
 ```
 
 Install Chromium before running browser tests:
 
 ```bash
-pnpm --filter @sugar/suifrens-storybook exec playwright install --only-shell chromium
-pnpm --filter @sugar/suifrens-storybook test:stories
-pnpm --filter @sugar/suifrens-storybook test:visual
+pnpm --filter @sugarcasino/suifrens-storybook exec playwright install --only-shell chromium
+pnpm --filter @sugarcasino/suifrens-storybook test:stories
+pnpm --filter @sugarcasino/suifrens-storybook test:visual
 ```
 
 Run every test project with coverage:
 
 ```bash
-pnpm --filter @sugar/suifrens-storybook test:coverage
+pnpm --filter @sugarcasino/suifrens-storybook test:coverage
 ```
 
 Open the coverage report at `packages/suifrens-display-system/storybook/coverage/index.html`.

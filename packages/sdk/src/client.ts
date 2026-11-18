@@ -119,7 +119,7 @@ export class SugarClient {
 
 		this.#client = client;
 		this.#partner = resolvePartnerAddress(options.partner);
-		this.#cache = client.cache.scope(`@sugar/sdk:${name}`);
+		this.#cache = client.cache.scope(`@sugarcasino/sdk:${name}`);
 		this.#cacheTtl = options.cacheTtl ?? DEFAULT_CACHE_TTL_MS;
 
 		this.#config = resolveSugarConfig({ ...options, network });

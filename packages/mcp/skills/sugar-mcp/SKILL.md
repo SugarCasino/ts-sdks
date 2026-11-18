@@ -1,9 +1,9 @@
 ---
 name: sugar-mcp
-description: Install, configure, operate or troubleshoot @sugar/mcp, its wallet flows, bundled MCP App and agent plugins.
+description: Install, configure, operate or troubleshoot @sugarcasino/mcp, its wallet flows, bundled MCP App and agent plugins.
 ---
 
-# @sugar/mcp
+# @sugarcasino/mcp
 
 This package ships only a pointer to the full Sugar skills, which live on GitHub to keep the npm package small.
 

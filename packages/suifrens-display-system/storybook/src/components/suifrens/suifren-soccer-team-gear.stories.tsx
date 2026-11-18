@@ -2,14 +2,17 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { ACCESSORIES } from '@sugar/suifrens-display-system/accessories';
-import { SuiFrenImageInline } from '@sugar/suifrens-display-system/image-inline';
-import { resolveSoccerCountryCode, SOCCER_TEAM_KITS } from '@sugar/suifrens-display-system/kits';
+import { ACCESSORIES } from '@sugarcasino/suifrens-display-system/accessories';
+import { SuiFrenImageInline } from '@sugarcasino/suifrens-display-system/image-inline';
+import {
+	resolveSoccerCountryCode,
+	SOCCER_TEAM_KITS,
+} from '@sugarcasino/suifrens-display-system/kits';
 import type {
 	AccessoryKit,
 	SoccerTeamCountryCode,
 	SoccerTeamSide,
-} from '@sugar/suifrens-display-system/types';
+} from '@sugarcasino/suifrens-display-system/types';
 import { KitRendererComparison } from './KitRendererComparison.js';
 
 const capyAttributes = {

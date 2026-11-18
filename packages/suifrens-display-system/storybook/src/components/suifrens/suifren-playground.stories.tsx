@@ -15,8 +15,8 @@ import {
 } from 'lucide-react';
 import { type PointerEvent, type RefObject, useEffect, useRef, useState } from 'react';
 import { expect } from 'storybook/test';
-import { SuiFrenImageInline } from '@sugar/suifrens-display-system/image-inline';
-import type { SuiFrenExpression } from '@sugar/suifrens-display-system/types';
+import { SuiFrenImageInline } from '@sugarcasino/suifrens-display-system/image-inline';
+import type { SuiFrenExpression } from '@sugarcasino/suifrens-display-system/types';
 import {
 	type SuiFrenActorPose,
 	type SuiFrenActorSnapshot,

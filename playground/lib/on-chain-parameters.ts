@@ -1,7 +1,7 @@
 'use client';
 
-import type { SugarClient } from '@sugar/sdk';
-import { toBigInt } from '@sugar/sdk/utils';
+import type { SugarClient } from '@sugarcasino/sdk';
+import { toBigInt } from '@sugarcasino/sdk/utils';
 import type {
 	GameConfigOption,
 	PvPGameId,

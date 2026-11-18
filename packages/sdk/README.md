@@ -1,4 +1,4 @@
-# `@sugar/sdk`
+# `@sugarcasino/sdk`
 
 Use this TypeScript SDK to build transactions for Sugar's provably fair casino games on Sui, SweetHouse pools, NFTs, and referral claims.
 
@@ -15,7 +15,7 @@ For Sui client, transaction and network APIs, see the [Sui TypeScript SDK docs](
 ## Installation
 
 ```bash
-npm install --save @sugar/sdk @mysten/sui @mysten/bcs
+npm install --save @sugarcasino/sdk @mysten/sui @mysten/bcs
 ```
 
 Requirements:
@@ -33,9 +33,9 @@ You can pass `undefined` for the optional extension fields `config`, `partner`, 
 
 The package has three public entrypoints:
 
-- `@sugar/sdk` for the extension factory, runtime client class, and core SDK types
-- `@sugar/sdk/games` for game-specific public types
-- `@sugar/sdk/utils` for public parser, constants, and numeric helpers
+- `@sugarcasino/sdk` for the extension factory, runtime client class, and core SDK types
+- `@sugarcasino/sdk/games` for game-specific public types
+- `@sugarcasino/sdk/utils` for public parser, constants, and numeric helpers
 
 Import the extension factory, client class, and core types from the package root.
 
@@ -47,7 +47,7 @@ import {
 	SUPPORTED_SUI_NETWORKS,
 	type SugarCoin,
 	type SugarNetwork,
-} from '@sugar/sdk';
+} from '@sugarcasino/sdk';
 ```
 
 `SUGAR_COINS` is the readonly list `['sui', 'usdc']`. `SugarCoin` is derived from its elements; use the list to iterate supported coin keys without duplicating them.
@@ -74,7 +74,7 @@ import {
 	toU8,
 	toU16,
 	toU32,
-} from '@sugar/sdk/utils';
+} from '@sugarcasino/sdk/utils';
 ```
 
 Numeric helper behavior:
@@ -94,7 +94,7 @@ Numeric helper behavior:
 Import game-specific types from the `games` subpath:
 
 ```ts
-import { COIN_SIDES, GAMES, PVP_COINFLIP_ACTIONS } from '@sugar/sdk/games';
+import { COIN_SIDES, GAMES, PVP_COINFLIP_ACTIONS } from '@sugarcasino/sdk/games';
 import type {
 	CoinflipTransactionOptions,
 	CoinSide,
@@ -103,10 +103,10 @@ import type {
 	PvPCoinflipAction,
 	PvPGame,
 	StandardGame,
-} from '@sugar/sdk/games';
+} from '@sugarcasino/sdk/games';
 ```
 
-The `@sugar/sdk/games` subpath exports `COIN_SIDES`, `GAMES`, `PVP_COINFLIP_ACTIONS`, `Game`, `StandardGame`, `PvPGame`, `CoinSide`, `PvPCoinflipAction`, `CreateGameBetOptions`, `CoinflipTransactionOptions`, `KenoTransactionOptions`, `LimboTransactionOptions`, `PlinkoTransactionOptions`, `RangeTransactionOptions`, `SoccerTransactionOptions`, `WheelTransactionOptions`, `CreatePvPCoinflipTransactionOptions`, `JoinPvPCoinflipTransactionOptions`, `CancelPvPCoinflipTransactionOptions`.
+The `@sugarcasino/sdk/games` subpath exports `COIN_SIDES`, `GAMES`, `PVP_COINFLIP_ACTIONS`, `Game`, `StandardGame`, `PvPGame`, `CoinSide`, `PvPCoinflipAction`, `CreateGameBetOptions`, `CoinflipTransactionOptions`, `KenoTransactionOptions`, `LimboTransactionOptions`, `PlinkoTransactionOptions`, `RangeTransactionOptions`, `SoccerTransactionOptions`, `WheelTransactionOptions`, `CreatePvPCoinflipTransactionOptions`, `JoinPvPCoinflipTransactionOptions`, `CancelPvPCoinflipTransactionOptions`.
 
 `COIN_SIDES` is the readonly list `['heads', 'tails']`; `CoinSide` is its element type. `PVP_COINFLIP_ACTIONS` lists `['create', 'join', 'cancel']` and defines `PvPCoinflipAction`. Reuse these lists for validation and selectors.
 
@@ -124,7 +124,7 @@ client.sugar.bcs;
 
 ```ts
 import { SuiGrpcClient } from '@mysten/sui/grpc';
-import { sugar } from '@sugar/sdk';
+import { sugar } from '@sugarcasino/sdk';
 
 const client = new SuiGrpcClient({
 	baseUrl: 'https://fullnode.testnet.sui.io:443',
@@ -301,7 +301,7 @@ Each returned entry includes the parsed game fields plus a derived `coin_type` s
 When called without options, this returns the first `DEFAULT_QUERY_LIMIT` entries (`50`). Pass supported `listDynamicFields()` options, such as `limit`, `cursor` or `signal`, through `options`. Include `limit: DEFAULT_QUERY_LIMIT` when you want the SDK default page size alongside another option.
 
 ```ts
-import { DEFAULT_QUERY_LIMIT } from '@sugar/sdk/utils';
+import { DEFAULT_QUERY_LIMIT } from '@sugarcasino/sdk/utils';
 
 const games = await client.sugar.getPvPCoinflipGames({
 	limit: DEFAULT_QUERY_LIMIT,
@@ -594,7 +594,7 @@ Available helpers:
 - `ReferrerClaimLevelUpUsdRewardsEvent`
 - `RedeemRequestCreatedEvent`
 
-These are generated Move event decoders. Use them to parse Sugar event payloads from transaction results. The `@sugar/sdk/utils` subpath also exposes parser helpers for generated BCS values:
+These are generated Move event decoders. Use them to parse Sugar event payloads from transaction results. The `@sugarcasino/sdk/utils` subpath also exposes parser helpers for generated BCS values:
 
 - `PvPCoinflipGame` parses a PvP Coinflip game object's `content`
 - `fromMoveI64(float.exp)` converts a generated Move `i64` exponent to a JavaScript number
@@ -676,10 +676,10 @@ Parsed fields include:
 - `game_details`
 - `metadata`
 
-`game_details` and `metadata` decode as `VecMap<string, vector<u8>>`-shaped data, so values come back as byte arrays. Use `parseSugarEvent(event)` from `@sugar/sdk/utils` to identify and decode supported Sugar events. For a `BetResultEvent`, it also returns decoded, game-specific `gameDetails`.
+`game_details` and `metadata` decode as `VecMap<string, vector<u8>>`-shaped data, so values come back as byte arrays. Use `parseSugarEvent(event)` from `@sugarcasino/sdk/utils` to identify and decode supported Sugar events. For a `BetResultEvent`, it also returns decoded, game-specific `gameDetails`.
 
 ```ts
-import { parseSugarEvent } from '@sugar/sdk/utils';
+import { parseSugarEvent } from '@sugarcasino/sdk/utils';
 
 const sugarEvent = parseSugarEvent(event);
 
