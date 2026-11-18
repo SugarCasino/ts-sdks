@@ -76,7 +76,8 @@ const PART_DEFINITIONS: Record<AnimationPart, PartDefinition> = {
 		autoDetectTransforms: ['matrix(2.9166107177734375,0,0,2.9166107177734375,1463.45,1961.9)'],
 	},
 	tail: {
-		pivot: { x: 468.15, y: 1761.65 },
+		// Native tail root (240, 150) overlaps the torso on the right edge of the tail.
+		pivot: { x: 1168.13657, y: 2199.14161 },
 		parent: 'body',
 		autoDetectTransforms: ['matrix(2.9166107177734375,0,0,2.9166107177734375,468.15,1761.65)'],
 	},

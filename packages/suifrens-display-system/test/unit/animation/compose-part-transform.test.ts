@@ -38,3 +38,21 @@ test('the fin rotates around its attachment point while inheriting head movement
 	expect(result[0] * 1008 + result[2] * 1486 + result[4]).toBeCloseTo(1020);
 	expect(result[1] * 1008 + result[3] * 1486 + result[5]).toBeCloseTo(1502);
 });
+
+test('the bullshark tail swings around its root as the torso moves', () => {
+	const scale = 2.9166107177734375;
+	const base = `matrix(${scale},0,0,${scale},468.15,1761.65)`;
+	const body = { rotate: 12, translate: { x: 6, y: -3 } };
+	const root = { x: 240, y: 150 };
+	const poses = new Map<AnimationPart, PartPose>([['body', body]]);
+	const position = () => {
+		const [a, b, c, d, e, f] = parseMatrix(composePartTransform('tail', base, poses))!;
+		return { x: a * root.x + c * root.y + e, y: b * root.x + d * root.y + f };
+	};
+	const neutral = position();
+	for (const rotate of [-10, -4, 3, 10]) {
+		poses.set('tail', { rotate });
+		expect(position().x).toBeCloseTo(neutral.x, 3);
+		expect(position().y).toBeCloseTo(neutral.y, 3);
+	}
+});
