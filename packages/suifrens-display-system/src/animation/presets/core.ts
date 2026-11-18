@@ -253,17 +253,17 @@ const GOALKEEPER_CRAB_SEQUENCE: AnimationSequence = {
 			keyframes: [
 				{
 					at: 0,
-					pose: { rotate: 8, translate: { x: 64, y: 5 }, scale: { x: -1 } },
+					pose: { rotate: 8, translate: { x: 76, y: 5 }, scale: { x: -1 } },
 					ease: 'easeInOut',
 				},
 				{
 					at: GOALKEEPER_CRAB_DURATION * 0.5,
-					pose: { rotate: -8, translate: { x: 74, y: 1 }, scale: { x: -1 } },
+					pose: { rotate: -8, translate: { x: 86, y: 1 }, scale: { x: -1 } },
 					ease: 'easeInOut',
 				},
 				{
 					at: GOALKEEPER_CRAB_DURATION,
-					pose: { rotate: 8, translate: { x: 64, y: 5 }, scale: { x: -1 } },
+					pose: { rotate: 8, translate: { x: 76, y: 5 }, scale: { x: -1 } },
 					ease: 'easeInOut',
 				},
 			],
