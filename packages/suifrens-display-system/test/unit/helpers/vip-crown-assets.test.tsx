@@ -7,10 +7,8 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { expect, test } from 'vitest';
 import { VIP_CROWN_ACCESSORIES } from '../../../src/constants/vip-crowns.js';
 import { SuiFrenImage as EmbeddedSuiFrenImage } from '../../../src/embed.js';
-import {
-	getVipCrownAssetSrc,
-	getVipCrownAssetViewport,
-} from '../../../src/helpers/accessories/vip-crown-assets.js';
+import { getVipCrownAssetSrc } from '../../../src/helpers/accessories/vip-crown-assets.js';
+import { getVipCrownAssetViewport } from '../../../src/helpers/accessories/vip-crown-viewport.js';
 import { SuiFrenImage } from '../../../src/index.js';
 
 const common = {
@@ -85,6 +83,23 @@ test.each([EmbeddedSuiFrenImage, SuiFrenImage])(
 		expect(container.querySelector('svg')?.hasAttribute('overflow')).toBe(false);
 	},
 );
+
+function imageMarkup(markup: string) {
+	const container = document.createElement('div');
+	container.innerHTML = markup;
+	return container.querySelector('image')!.outerHTML;
+}
+
+test('embedded rendering keeps the external VIP crown framing for an explicit built-in URL', () => {
+	const crown = VIP_CROWN_ACCESSORIES[0]!;
+	const assetSrc = getVipCrownAssetSrc(crown.name)!;
+	const override = { ...crown, renderOptions: { ...crown.renderOptions, assetSrc } };
+	const props = { attributes: species[0], accessories: [override] };
+
+	expect(imageMarkup(renderToStaticMarkup(<EmbeddedSuiFrenImage {...props} />))).toBe(
+		imageMarkup(renderToStaticMarkup(<SuiFrenImage {...props} />)),
+	);
+});
 
 test('custom asset URLs do not inherit the built-in crown viewport', () => {
 	expect(getVipCrownAssetViewport('https://example.com/custom-crown.svg')).toBeUndefined();

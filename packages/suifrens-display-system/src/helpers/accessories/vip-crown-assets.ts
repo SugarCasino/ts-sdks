@@ -19,16 +19,7 @@ import platinum3Url from '../../accessories/crowns/platinum-3.svg?url';
 import silver1Url from '../../accessories/crowns/silver-1.svg?url';
 import silver2Url from '../../accessories/crowns/silver-2.svg?url';
 import silver3Url from '../../accessories/crowns/silver-3.svg?url';
-
-// The authored crown paths extend above and left of their original 3009px artboard.
-// Match the padded SVG viewport at the original 3000 / 3009 rendering scale.
-const CROWN_SCALE = 3000 / 3009;
-export const VIP_CROWN_IMAGE_VIEWPORT = {
-	x: -200 * CROWN_SCALE,
-	y: -600 * CROWN_SCALE,
-	width: 3209 * CROWN_SCALE,
-	height: 3609 * CROWN_SCALE,
-};
+import { registerVipCrownAssetUrls } from './vip-crown-viewport.js';
 
 const VIP_CROWN_ASSET_BY_NAME: Record<string, string> = {
 	'bronze-1': bronze1Url,
@@ -51,14 +42,8 @@ const VIP_CROWN_ASSET_BY_NAME: Record<string, string> = {
 	legend: legendUrl,
 };
 
+registerVipCrownAssetUrls(Object.values(VIP_CROWN_ASSET_BY_NAME));
+
 export function getVipCrownAssetSrc(name: string): string | undefined {
 	return VIP_CROWN_ASSET_BY_NAME[name];
-}
-
-const VIP_CROWN_ASSET_SOURCES = new Set(Object.values(VIP_CROWN_ASSET_BY_NAME));
-
-export function getVipCrownAssetViewport(
-	assetSrc: string,
-): typeof VIP_CROWN_IMAGE_VIEWPORT | undefined {
-	return VIP_CROWN_ASSET_SOURCES.has(assetSrc) ? VIP_CROWN_IMAGE_VIEWPORT : undefined;
 }

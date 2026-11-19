@@ -7,7 +7,7 @@ import { EMBEDDED_ACCESSORY_LAYERS } from '../../generated/accessory-assets/embe
 import {
 	getVipCrownAssetViewport,
 	VIP_CROWN_IMAGE_VIEWPORT,
-} from '../../helpers/accessories/vip-crown-assets.js';
+} from '../../helpers/accessories/vip-crown-viewport.js';
 import { resolveAccessoryAnimationPart } from '../../helpers/animation/accessory-animation-part.js';
 import { isKitAccessory } from '../../helpers/kits/kit-accessory.js';
 import type { AccessoryRendererProps } from '../../types/accessory.type.js';
