@@ -14,7 +14,7 @@ Use ESM imports and install React and React DOM `^18.2.0 || ^19.0.0` as peer dep
 
 ## Quick start
 
-Pass the character's appearance to `SuiFrenImage`. A capy has `earShape`; a bullshark has `finStyle`.
+The same `SuiFrenImage` component renders both species. It recognizes a capy by its `earShape` and a bullshark by its `finStyle`.
 
 ```tsx
 import { SuiFrenImage } from '@sugarcasino/suifrens-display-system';
@@ -37,7 +37,7 @@ Colors are lowercase palette keys without a leading `#`. For a bullshark, use `B
 
 ## Rendering and animation
 
-Both entry points export `SuiFrenImage`. Import it from the package root for cacheable external SVG accessories, or from `/embed` to embed catalogue artwork and VIP crowns in the SVG.
+The root `SuiFrenImage` loads accessory SVGs as separate files the browser can cache. For an SVG that includes the catalogue artwork, import the same component from `/embed`. That includes VIP crowns, so an app using only this renderer ships no separate crown SVG files.
 
 ```tsx
 import { SuiFrenImage } from '@sugarcasino/suifrens-display-system/embed';
@@ -49,11 +49,11 @@ Both renderers accept the same props. Set `detail="head"` for a portrait and pas
 
 For ordinary accessories, set `renderOptions.assetSrc` to replace the catalogue artwork. The embedded renderer uses that source directly, so use an SVG data URL when the export needs to stand alone.
 
-Both entries accept `renderOptions.viewport`, for example `{ x: -100, y: 0, width: 3200, height: 3000 }`, in character SVG units. An explicit viewport takes precedence. Accessories in the `crowns` category with a VIP catalogue name retain the VIP framing even with a custom `assetSrc`. Other accessories use their usual framing.
+To adjust the framing in either renderer, set `renderOptions.viewport` in the character's SVG coordinates, for example `{ x: -100, y: 0, width: 3200, height: 3000 }`. Leave it unset to use the accessory's default framing. For a crown in the `crowns` category with a VIP catalogue name, that includes the padding around the artwork, even if you supply your own `assetSrc`.
 
-Use `AnimationPresetName` from `/animation` to validate built-in preset names, for example `const preset = 'walk' satisfies AnimationPresetName`. It covers every registered catalogue. The renderer can play core presets immediately and loads each deferred catalogue the first time you use one of its presets. The synchronous helpers in `/animation` use the full catalogue.
+Core presets are ready to play immediately. The renderer loads other catalogues the first time you use one of their presets. To check a preset name in TypeScript, import `AnimationPresetName` from `/animation` and write `const preset = 'walk' satisfies AnimationPresetName`. Both the type and the synchronous helpers in `/animation` cover the full catalogue.
 
-Choose one animation source, `preset` or `sequence`:
+Pass either a built-in `preset` or your own `sequence`. This capy walks on a loop.
 
 ```tsx
 <SuiFrenImage
@@ -74,8 +74,6 @@ Enable `shadow` on the image to display its ground shadow. On an `AnimationSeque
 Omit `animation` or pass `null` for a static image. Animations play once at their original speed by default. Set `playState` to control playback and change `trigger` to restart it. Import `AnimationConfig` and `PlaybackOptions` from `/animation`.
 
 ## Public exports
-
-Use `SuiFrenImage` for both species. Import `SuiFrenImageProps` from the root and feature types from their respective entries.
 
 | Entry point | Exports |
 | --- | --- |

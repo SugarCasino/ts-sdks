@@ -1,6 +1,6 @@
 # Suifrens Storybook
 
-Try characters, accessories and outfits in Storybook. The story controls let you change gestures and animations.
+Preview capys and bullsharks with different accessories and outfits. Use the story controls to try a gesture or play an animation.
 
 ## Setup
 
@@ -12,9 +12,9 @@ pnpm --dir packages/suifrens-display-system run build
 pnpm --filter @sugarcasino/suifrens-storybook dev
 ```
 
-Open [http://localhost:6006](http://localhost:6006). If Storybook is already running there, use that instance.
+Open [http://localhost:6006](http://localhost:6006). If you already have Storybook running on that port, you can use it directly.
 
-Storybook uses the library's built public exports. Rebuild the library after editing its source to update the preview.
+Storybook imports the built library. After editing the library source, rerun the build command above to see your changes in the preview.
 
 ## Static build
 
