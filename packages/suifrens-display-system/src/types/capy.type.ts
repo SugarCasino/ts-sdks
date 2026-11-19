@@ -3,17 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { SVGProps } from 'react';
-import type { AccessorySlots } from './accessory.type.js';
 import type { SuiFrenAppearance } from './appearance.type.js';
-import type { SuiFrenGestureProps } from './gesture.type.js';
-
-export type CapyImageProps = SuiFrenGestureProps & {
-	attributes: CapyAttributes;
-	accessoriesByType?: AccessorySlots;
-	detail?: 'full' | 'head';
-	incognito?: boolean;
-	renderMicrophoneArmInForeground?: boolean;
-};
 
 export type CapyEarShape = 'default' | 'quiet' | 'wild' | 'mischievous';
 

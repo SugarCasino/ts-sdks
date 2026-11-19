@@ -5,7 +5,8 @@
 import { AnimatedAccessory } from '../../animation/AnimatedAccessory.js';
 import { getAccessoryLayers } from '../../helpers/accessories/accessory-layers.js';
 import { getThemeFromSkin } from '../../helpers/appearance/bullshark-theme.js';
-import type { BullsharkImageProps } from '../../types/bullshark.type.js';
+import type { BullsharkAttributes } from '../../types/bullshark.type.js';
+import type { SpeciesImageProps } from '../../types/suifren.type.js';
 import { EMPTY_ACCESSORY_SLOTS } from '../../utils/accessories.js';
 import { AccessorySlot } from '../accessories/AccessorySlot.js';
 import { GestureArm } from '../shared/arms/left/GestureArm.js';
@@ -26,6 +27,8 @@ import { RightLeg } from './legs/right/RightLeg.js';
 import { RightLegPattern } from './legs/right/RightLegPattern.js';
 import { Tail } from './tail/Tail.js';
 import { TailPattern } from './tail/TailPattern.js';
+
+type BullsharkImageProps = SpeciesImageProps<BullsharkAttributes>;
 
 function BullsharkHead({
 	attributes,
