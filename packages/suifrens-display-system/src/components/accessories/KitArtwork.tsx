@@ -77,5 +77,11 @@ export function KitArtwork({
 			id,
 		);
 	}
-	return <SvgArtwork source={source} fallbackPart={fallbackPart} />;
+	return (
+		<SvgArtwork
+			viewport={accessory.renderOptions.viewport}
+			source={source}
+			fallbackPart={fallbackPart}
+		/>
+	);
 }

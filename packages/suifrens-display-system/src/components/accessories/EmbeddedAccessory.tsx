@@ -4,10 +4,7 @@
 import { AnimatedAccessory } from '../../animation/AnimatedAccessory.js';
 import { CROWN_DATA_URLS } from '../../generated/accessory-assets/crown-data-urls.js';
 import { EMBEDDED_ACCESSORY_LAYERS } from '../../generated/accessory-assets/embedded-layers.js';
-import {
-	getVipCrownAssetViewport,
-	VIP_CROWN_IMAGE_VIEWPORT,
-} from '../../helpers/accessories/vip-crown-viewport.js';
+import { getAccessoryViewport } from '../../helpers/accessories/accessory-viewport.js';
 import { resolveAccessoryAnimationPart } from '../../helpers/animation/accessory-animation-part.js';
 import { isKitAccessory } from '../../helpers/kits/kit-accessory.js';
 import type { AccessoryRendererProps } from '../../types/accessory.type.js';
@@ -32,7 +29,13 @@ export function EmbeddedAccessory(props: AccessoryRendererProps) {
 		return <KitArtwork {...props} fallbackPart={fallbackPart} />;
 	}
 	if ((assetSrc == null || assetSrc === '') && source != null && source !== '') {
-		return <SvgArtwork source={source} fallbackPart={fallbackPart} />;
+		return (
+			<SvgArtwork
+				viewport={props.accessory.renderOptions.viewport}
+				source={source}
+				fallbackPart={fallbackPart}
+			/>
+		);
 	}
 	if (assetSrc == null || assetSrc === '') {
 		return null;
@@ -41,9 +44,7 @@ export function EmbeddedAccessory(props: AccessoryRendererProps) {
 		<AnimatedAccessory fallbackPart={fallbackPart}>
 			<SvgAccessory
 				assetSrc={assetSrc}
-				viewport={
-					assetSrc === crownDataUrl ? VIP_CROWN_IMAGE_VIEWPORT : getVipCrownAssetViewport(assetSrc)
-				}
+				viewport={getAccessoryViewport(props.accessory)}
 				species={props.species}
 				placement={props.accessory.renderOptions.placement}
 			/>

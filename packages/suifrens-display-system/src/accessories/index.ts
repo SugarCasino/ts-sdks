@@ -12,5 +12,6 @@ export type {
 	SuiFrenAccessory,
 	AccessoryPlacement,
 	AccessoryRenderOptions,
+	AccessoryViewport,
 } from '../types/accessory.type.js';
 export type { VipCrownAccessoryName } from '../constants/vip-crowns.js';

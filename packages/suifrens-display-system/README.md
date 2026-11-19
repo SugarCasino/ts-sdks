@@ -49,6 +49,8 @@ Both renderers accept the same props. Set `detail="head"` for a portrait and pas
 
 For ordinary accessories, set `renderOptions.assetSrc` to replace the catalogue artwork. The embedded renderer uses that source directly, so use an SVG data URL when the export needs to stand alone.
 
+Both entries accept `renderOptions.viewport`, for example `{ x: -100, y: 0, width: 3200, height: 3000 }`, in character SVG units. An explicit viewport takes precedence. Accessories in the `crowns` category with a VIP catalogue name retain the VIP framing even with a custom `assetSrc`. Other accessories use their usual framing.
+
 Use `AnimationPresetName` from `/animation` to validate built-in preset names, for example `const preset = 'walk' satisfies AnimationPresetName`. It covers every registered catalogue. The renderer can play core presets immediately and loads each deferred catalogue the first time you use one of its presets. The synchronous helpers in `/animation` use the full catalogue.
 
 Choose one animation source, `preset` or `sequence`:

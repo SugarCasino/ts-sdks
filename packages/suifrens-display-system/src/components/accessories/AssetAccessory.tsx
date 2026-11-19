@@ -6,8 +6,8 @@ import {
 	ACCESSORY_ASSET_MANIFEST,
 	SPLIT_LIMB_ASSET_NAMES,
 } from '../../generated/accessory-assets/manifest.js';
+import { getAccessoryViewport } from '../../helpers/accessories/accessory-viewport.js';
 import { getVipCrownAssetSrc } from '../../helpers/accessories/vip-crown-assets.js';
-import { getVipCrownAssetViewport } from '../../helpers/accessories/vip-crown-viewport.js';
 import { resolveAccessoryAnimationPart } from '../../helpers/animation/accessory-animation-part.js';
 import { isKitAccessory } from '../../helpers/kits/kit-accessory.js';
 import type { AccessoryAssetVariant, AccessoryRendererProps } from '../../types/accessory.type.js';
@@ -37,6 +37,7 @@ export function AssetAccessory(props: AccessoryRendererProps) {
 		return <KitArtwork {...props} fallbackPart={resolveAccessoryAnimationPart(props)} />;
 	}
 
+	const viewport = getAccessoryViewport(props.accessory);
 	const asset = resolveAssetSrc(props);
 	if (!asset) {
 		return null;
@@ -54,6 +55,7 @@ export function AssetAccessory(props: AccessoryRendererProps) {
 						<SvgAccessory
 							assetSrc={asset.assetSrc}
 							symbolId={part}
+							viewport={viewport}
 							species={props.species}
 							placement={props.accessory.renderOptions.placement}
 						/>
@@ -70,7 +72,7 @@ export function AssetAccessory(props: AccessoryRendererProps) {
 			<SvgAccessory
 				assetSrc={asset.assetSrc}
 				symbolId={asset.symbolId}
-				viewport={getVipCrownAssetViewport(asset.assetSrc)}
+				viewport={viewport}
 				species={props.species}
 				placement={props.accessory.renderOptions.placement}
 			/>

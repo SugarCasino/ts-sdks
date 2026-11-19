@@ -4,6 +4,7 @@
 
 import { useMemo } from 'react';
 import { AnimationProvider } from '../animation/AnimationContext.js';
+import { SUIFREN_CANVAS_SIZE } from '../constants/viewport.js';
 import { shouldRenderMicrophoneArmInForeground } from '../helpers/accessories/accessory-layers.js';
 import type { AccessoryRenderer } from '../types/accessory.type.js';
 import type { SpeciesImageProps, SuiFrenImageProps } from '../types/suifren.type.js';
@@ -72,7 +73,7 @@ export function SuiFrenImageView({
 			y="0px"
 			width={resolvedSize?.width}
 			height={resolvedSize?.height}
-			viewBox="0 -200 3000 3000"
+			viewBox={`0 -200 ${SUIFREN_CANVAS_SIZE} ${SUIFREN_CANVAS_SIZE}`}
 			overflow={accessoriesByType?.['head']?.category === 'crowns' ? 'visible' : undefined}
 			className={['suifren-image', className].filter(Boolean).join(' ')}
 			style={style}
