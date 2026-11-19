@@ -27,7 +27,7 @@ const steps = [
 	{
 		title: 'Find an animation',
 		description:
-			'Open the sidebar search with ⌘K on Mac or Ctrl+K on Windows and Linux. Search for “Goalkeeper Crab” or “goalkeeperCrab” to open this animation.',
+			'Open the sidebar search with ⌘K on Mac or Ctrl+K on Windows and Linux. Search for "Goalkeeper Crab" or "goalkeeperCrab" to open this animation.',
 		preview: (
 			<CataloguePreview
 				title="Goalkeeper Crab"
@@ -40,7 +40,7 @@ const steps = [
 	{
 		title: 'Explore a release',
 		description:
-			'Choose v1.1.0 in the sidebar tag filter to see features available by that release, including the Runner Kit. Each story’s version badge shows when its feature first appeared.',
+			'Choose v1.1.0 in the sidebar tag filter to see features available by that release, including the Runner Kit. The version badge on each story shows when its feature first appeared.',
 		preview: (
 			<CataloguePreview
 				title="Runner Kit"

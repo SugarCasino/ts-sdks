@@ -24,7 +24,7 @@ const meta = {
 		docs: {
 			description: {
 				component:
-					'Use `renderOptions.viewport` to position and size an accessory in the 3000 × 3000 SVG coordinate system. The left portrait uses the default Legend crown framing. Adjust the viewport controls to position and size the crown on the right.',
+					'Use `renderOptions.viewport` to position and size an accessory in the 3000 x 3000 SVG coordinate system. The left portrait uses the default Legend crown framing. Adjust the viewport controls to position and size the crown on the right.',
 			},
 		},
 	},
