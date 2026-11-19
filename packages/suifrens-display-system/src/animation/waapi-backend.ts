@@ -3,11 +3,11 @@
 
 import { airborneShadowStyle } from '../helpers/animation/airborne-shadow.js';
 import { composePartTransform } from '../helpers/animation/compose-part-transform.js';
+import { normalizePlayback } from '../helpers/animation/normalize-playback.js';
 import {
 	interpolatePose,
 	interpolateSequencePoses,
-} from '../helpers/animation/interpolate-sequence-poses.js';
-import { normalizePlayback } from '../helpers/animation/normalize-playback.js';
+} from '../helpers/animation/pose-interpolation.js';
 import type {
 	AnimationConfig,
 	AnimationSequence,

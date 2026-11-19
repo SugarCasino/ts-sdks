@@ -4,7 +4,7 @@
 
 import { AnimatedAccessory } from '../../animation/AnimatedAccessory.js';
 import { getAccessoryLayers } from '../../helpers/accessories/accessory-layers.js';
-import { getThemeFromSkin } from '../../helpers/appearance/bullshark-theme.js';
+import { getBullsharkTheme } from '../../helpers/appearance/skin-theme.js';
 import type { BullsharkAttributes } from '../../types/bullshark.type.js';
 import type { SpeciesImageProps } from '../../types/suifren.type.js';
 import { EMPTY_ACCESSORY_SLOTS } from '../../utils/accessories.js';
@@ -36,7 +36,7 @@ function BullsharkHead({
 	incognito = false,
 	colorTheme,
 }: Pick<BullsharkImageProps, 'attributes' | 'accessoriesByType' | 'incognito'> & {
-	colorTheme: ReturnType<typeof getThemeFromSkin>;
+	colorTheme: ReturnType<typeof getBullsharkTheme>;
 }) {
 	const { skin, expression } = attributes;
 	return (
@@ -56,7 +56,7 @@ function BullsharkFin({
 	incognito = false,
 	colorTheme,
 }: Pick<BullsharkImageProps, 'attributes' | 'accessoriesByType' | 'incognito'> & {
-	colorTheme: ReturnType<typeof getThemeFromSkin>;
+	colorTheme: ReturnType<typeof getBullsharkTheme>;
 }) {
 	const headAccessory = accessoriesByType['head'];
 	if (headAccessory && headAccessory.renderOptions.showFin !== true) {
@@ -79,7 +79,7 @@ export function BullsharkImage({
 	renderMicrophoneArmInForeground = false,
 }: BullsharkImageProps) {
 	const { mainColor, secondaryColor, skin } = attributes;
-	const colorTheme = getThemeFromSkin(skin, `#${mainColor}`, `#${secondaryColor}`);
+	const colorTheme = getBullsharkTheme(skin, `#${mainColor}`, `#${secondaryColor}`);
 	const layers = getAccessoryLayers(accessoriesByType);
 	// Held objects retain their native grip and take precedence over a free-hand gesture.
 	const freeHandGesture = accessoriesByType['object'] ? undefined : gesture;

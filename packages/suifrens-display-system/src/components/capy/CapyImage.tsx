@@ -4,7 +4,7 @@
 
 import { AnimatedAccessory } from '../../animation/AnimatedAccessory.js';
 import { getAccessoryLayers } from '../../helpers/accessories/accessory-layers.js';
-import { getThemeFromSkin } from '../../helpers/appearance/capy-theme.js';
+import { getCapyTheme } from '../../helpers/appearance/skin-theme.js';
 import type { CapyAttributes } from '../../types/capy.type.js';
 import type { SpeciesImageProps } from '../../types/suifren.type.js';
 import { EMPTY_ACCESSORY_SLOTS } from '../../utils/accessories.js';
@@ -35,7 +35,7 @@ function CapyHead({
 	incognito = false,
 	colorTheme,
 }: Pick<CapyImageProps, 'attributes' | 'accessoriesByType' | 'incognito'> & {
-	colorTheme: ReturnType<typeof getThemeFromSkin>;
+	colorTheme: ReturnType<typeof getCapyTheme>;
 }) {
 	const { skin, earShape, expression } = attributes;
 	const headAccessory = accessoriesByType['head'];
@@ -90,7 +90,7 @@ export function CapyImage({
 	renderMicrophoneArmInForeground = false,
 }: CapyImageProps) {
 	const { mainColor, secondaryColor, skin } = attributes;
-	const colorTheme = getThemeFromSkin(skin, `#${mainColor}`, `#${secondaryColor}`, incognito);
+	const colorTheme = getCapyTheme(skin, `#${mainColor}`, `#${secondaryColor}`, incognito);
 	const layers = getAccessoryLayers(accessoriesByType);
 
 	// Held objects retain their native grip and take precedence over a free-hand gesture.

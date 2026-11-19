@@ -4,7 +4,7 @@
 
 import { useMemo } from 'react';
 import { AnimationProvider } from '../animation/AnimationContext.js';
-import { shouldRenderMicrophoneArmInForeground } from '../helpers/accessories/foreground-layering.js';
+import { shouldRenderMicrophoneArmInForeground } from '../helpers/accessories/accessory-layers.js';
 import type { AccessoryRenderer } from '../types/accessory.type.js';
 import type { SpeciesImageProps, SuiFrenImageProps } from '../types/suifren.type.js';
 import { getAccessoriesByType } from '../utils/accessories.js';

@@ -6,7 +6,7 @@ import {
 	ACCESSORY_ASSET_MANIFEST,
 	SPLIT_LIMB_ASSET_NAMES,
 } from '../../generated/accessory-assets/manifest.js';
-import { resolveAccessoryAssetOverride } from '../../helpers/accessories/accessory-asset-override.js';
+import { getVipCrownAssetSrc } from '../../helpers/accessories/vip-crown-assets.js';
 import { getVipCrownAssetViewport } from '../../helpers/accessories/vip-crown-viewport.js';
 import { resolveAccessoryAnimationPart } from '../../helpers/animation/accessory-animation-part.js';
 import { isKitAccessory } from '../../helpers/kits/kit-accessory.js';
@@ -17,13 +17,16 @@ import { SvgAccessory } from './SvgAccessory.js';
 function resolveAssetSrc(
 	props: AccessoryRendererProps,
 ): { assetSrc: string; symbolId?: AccessoryAssetVariant } | undefined {
-	const explicitAsset = resolveAccessoryAssetOverride(props.accessory);
+	const { accessory } = props;
+	const explicitAsset =
+		accessory.renderOptions.assetSrc ??
+		(accessory.category === 'crowns' ? getVipCrownAssetSrc(accessory.name) : undefined);
 	if (explicitAsset != null && explicitAsset !== '') {
 		return { assetSrc: explicitAsset };
 	}
 
 	const assets: Readonly<Record<string, string>> = ACCESSORY_ASSET_MANIFEST;
-	const assetSrc = assets[props.accessory.name];
+	const assetSrc = assets[accessory.name];
 	return assetSrc != null && assetSrc !== ''
 		? { assetSrc, symbolId: props.layer ?? 'default' }
 		: undefined;
