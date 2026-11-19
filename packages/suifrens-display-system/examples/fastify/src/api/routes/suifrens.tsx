@@ -7,7 +7,7 @@ import { ObjectError } from '@mysten/sui/client';
 import type { FastifyPluginCallback } from 'fastify';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { Type } from 'typebox';
-import { SuiFrenImageInline } from '@sugarcasino/suifrens-display-system/image-inline';
+import { SuiFrenImage } from '@sugarcasino/suifrens-display-system/embed';
 import { getSuiFrenAttributesAndAccessories } from '../client/sui-client.js';
 import { IMAGE_LOGO_SCHEMA, renderImageLogo } from '../lib/image-logo.js';
 import { renderImage } from '../lib/render-image.js';
@@ -48,7 +48,7 @@ export const suifrens: FastifyPluginCallback = (fastify, _options, done) => {
 					const { attributes, equippedAccessories } =
 						await getSuiFrenAttributesAndAccessories(suifrenId);
 					const renderedSvg = renderToStaticMarkup(
-						<SuiFrenImageInline
+						<SuiFrenImage
 							attributes={attributes}
 							accessories={equippedAccessories}
 							logo={renderImageLogo(request.query.logo)}

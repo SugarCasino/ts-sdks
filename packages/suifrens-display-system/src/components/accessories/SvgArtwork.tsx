@@ -3,10 +3,11 @@
 
 import { useMemo } from 'react';
 import { AnimatedAccessory } from '../../animation/AnimatedAccessory.js';
-import { BETWEEN_TAGS_WHITESPACE_PATTERN } from '../../constants/svg-patterns.js';
+import {
+	BETWEEN_TAGS_WHITESPACE_PATTERN,
+	SVG_ATTRIBUTE_PATTERN,
+} from '../../constants/patterns.js';
 import type { AnimationPart } from '../../types/animation.type.js';
-
-const SVG_ATTRIBUTE_PATTERN: RegExp = / ([\w:-]+)="([^"]*)"/gu;
 
 // Only package-owned SVG files reach this renderer. Keep the original viewport and
 // expose the groups to the animation store, including during server-side rendering.

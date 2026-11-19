@@ -4,8 +4,11 @@
 
 import type { SuiClientTypes } from '@mysten/sui/client';
 import { SuiGrpcClient } from '@mysten/sui/grpc';
-import { ACCESSORIES } from '@sugarcasino/suifrens-display-system/accessories';
-import type { AccessoryMetadata, SuiFrenSpecies } from '@sugarcasino/suifrens-display-system/types';
+import {
+	ACCESSORIES,
+	type AccessoryMetadata,
+} from '@sugarcasino/suifrens-display-system/accessories';
+import type { SuiFrenSpecies } from '@sugarcasino/suifrens-display-system/attributes';
 import { parseSuiFrenAttributes } from '../../utils/attribute-utils.js';
 import {
 	ACCESSORIES_KEY_TYPE,

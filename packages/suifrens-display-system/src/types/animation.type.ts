@@ -1,14 +1,6 @@
 // Copyright (c) Sugar
 // SPDX-License-Identifier: Apache-2.0
 
-import type { CORE_PRESET_SEQUENCES } from '../animation/presets/core.js';
-import type { DEFERRED_PRESETS } from '../generated/presets/catalogues.js';
-
-/** Names of the built-in core and deferred animation presets. */
-export type AnimationPresetName =
-	| keyof typeof CORE_PRESET_SEQUENCES
-	| keyof typeof DEFERRED_PRESETS;
-
 export type AnimationRegistration = {
 	getBaseTransform: () => string | undefined;
 	setTransform: (value: string) => void;

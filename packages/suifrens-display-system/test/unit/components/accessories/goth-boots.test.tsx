@@ -6,12 +6,12 @@ import { readFileSync } from 'node:fs';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { expect, test } from 'vitest';
 import { ACCESSORIES } from '../../../../src/accessories/index.js';
-import { InlineAccessory } from '../../../../src/components/accessories/index.js';
+import { EmbeddedAccessory } from '../../../../src/components/accessories/EmbeddedAccessory.js';
 
 test('individual goth boots contain only the requested geometry, without clipping', () => {
 	const both = document.createElement('div');
 	both.innerHTML = renderToStaticMarkup(
-		<InlineAccessory
+		<EmbeddedAccessory
 			species="capy"
 			accessory={ACCESSORIES.find((item) => item.name === 'goth boots')!}
 		/>,
@@ -24,7 +24,7 @@ test('individual goth boots contain only the requested geometry, without clippin
 	] as const) {
 		const container = document.createElement('div');
 		container.innerHTML = renderToStaticMarkup(
-			<InlineAccessory
+			<EmbeddedAccessory
 				species="capy"
 				accessory={ACCESSORIES.find((item) => item.name === side + ' goth boot')!}
 			/>,

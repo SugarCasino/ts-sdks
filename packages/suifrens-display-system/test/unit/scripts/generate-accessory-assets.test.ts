@@ -88,11 +88,11 @@ test('preserves nested role groups for independently animated body and legs', ()
 });
 
 test('ignores colocated TypeScript and imports SVG sources directly from accessories', () => {
-	const inline = readFileSync(
-		join(directory, 'src/generated/accessory-assets/inline-layers.ts'),
+	const embedded = readFileSync(
+		join(directory, 'src/generated/accessory-assets/embedded-layers.ts'),
 		'utf8',
 	);
-	expect(inline).toContain("from '../../accessories/fixture.svg'");
-	expect(inline).not.toContain('index.ts');
-	expect(inline).not.toContain('artwork/');
+	expect(embedded).toContain("from '../../accessories/fixture.svg'");
+	expect(embedded).not.toContain('index.ts');
+	expect(embedded).not.toContain('artwork/');
 });

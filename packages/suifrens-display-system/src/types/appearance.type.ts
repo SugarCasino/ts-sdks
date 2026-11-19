@@ -2,7 +2,7 @@
 // Copyright (c) Sugar (modifications)
 // SPDX-License-Identifier: Apache-2.0
 
-import type { COLORS } from '../colors/index.js';
+import type { COLORS } from '../colors.js';
 import type { ALL_EXPRESSIONS } from '../constants/expressions.js';
 import type { SUIFREN_SKINS } from '../constants/skins.js';
 

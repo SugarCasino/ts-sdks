@@ -1,13 +1,12 @@
 // Copyright (c) Sugar
 // SPDX-License-Identifier: Apache-2.0
 
-import { SuiFrenImage } from '@sugarcasino/suifrens-display-system';
-import { SuiFrenImageInline } from '@sugarcasino/suifrens-display-system/image-inline';
-import type { SuiFrenImageProps } from '@sugarcasino/suifrens-display-system/types';
+import { SuiFrenImage, type SuiFrenImageProps } from '@sugarcasino/suifrens-display-system';
+import { SuiFrenImage as EmbeddedSuiFrenImage } from '@sugarcasino/suifrens-display-system/embed';
 
 const renderers = [
-	{ label: 'Inline SVG', Renderer: SuiFrenImageInline },
-	{ label: 'SVG assets', Renderer: SuiFrenImage },
+	{ label: 'Embedded accessories', Renderer: EmbeddedSuiFrenImage },
+	{ label: 'External accessories', Renderer: SuiFrenImage },
 ];
 
 export function KitRendererComparison(props: SuiFrenImageProps) {

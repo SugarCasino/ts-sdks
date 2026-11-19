@@ -2,19 +2,19 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useId } from 'react';
-import { RUNNER_ACCESSORY_NAMES } from '../../constants/runner-kit.js';
-import { SVG_WRAPPER_PATTERN } from '../../constants/svg-patterns.js';
+import {
+	PATTERN_SLOT_PATTERN,
+	SVG_WRAPPER_PATTERN,
+	TEMPLATE_VARIABLE_PATTERN,
+	UNSAFE_ID_CHARACTER_PATTERN,
+} from '../../constants/patterns.js';
 import { KIT_TEMPLATES } from '../../generated/accessory-assets/kit-templates.js';
-import { resolveRunnerKit } from '../../helpers/kits/runner-kit.js';
+import { resolveRunnerKit, RUNNER_ACCESSORY_NAMES } from '../../helpers/kits/runner-kit.js';
 import { contrastColor, resolveSoccerTeamKit } from '../../helpers/kits/soccer-team-kit.js';
 import type { AccessoryRendererProps } from '../../types/accessory.type.js';
 import type { AnimationPart } from '../../types/animation.type.js';
 import type { SoccerTeamKit } from '../../types/soccer-kit.type.js';
 import { SvgArtwork } from './SvgArtwork.js';
-
-const TEMPLATE_VARIABLE_PATTERN: RegExp = /\{\{(\w+)\}\}/gu;
-const PATTERN_SLOT_PATTERN: RegExp = /<g data-pattern-slot="(\w+)">\s*<\/g>/gu;
-const UNSAFE_ID_CHARACTER_PATTERN: RegExp = /[^\w-]/gu;
 
 function applyValues(source: string, values: Record<string, string | number>): string {
 	// Only validated colors, codes, numbers and internal SVG transforms are substituted.

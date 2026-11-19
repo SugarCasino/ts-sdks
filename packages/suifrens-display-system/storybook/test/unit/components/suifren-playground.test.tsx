@@ -33,8 +33,8 @@ const useActor = vi.hoisted(() =>
 	vi.fn<({ onPose }: { onPose: (pose: SuiFrenActorPose) => void }) => typeof actor>(),
 );
 vi.mock('../../../src/utils/use-suifren-actor.js', () => ({ useSuiFrenActor: useActor }));
-vi.mock('@sugarcasino/suifrens-display-system/image-inline', () => ({
-	SuiFrenImageInline: () => <svg />,
+vi.mock('@sugarcasino/suifrens-display-system/embed', () => ({
+	SuiFrenImage: () => <svg />,
 }));
 const Playground = composeStory(ControlPadPlayground, meta);
 let view: ReturnType<typeof createTestRoot>;

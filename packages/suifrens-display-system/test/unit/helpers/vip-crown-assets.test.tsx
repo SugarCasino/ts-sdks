@@ -6,11 +6,11 @@ import { readFileSync } from 'node:fs';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { expect, test } from 'vitest';
 import { VIP_CROWN_ACCESSORIES } from '../../../src/constants/vip-crowns.js';
+import { SuiFrenImage as EmbeddedSuiFrenImage } from '../../../src/embed.js';
 import {
 	getVipCrownAssetSrc,
 	getVipCrownAssetViewport,
-} from '../../../src/helpers/accessories/crown-assets.js';
-import { SuiFrenImageInline } from '../../../src/image-inline/index.js';
+} from '../../../src/helpers/accessories/vip-crown-assets.js';
 import { SuiFrenImage } from '../../../src/index.js';
 
 const common = {
@@ -36,7 +36,7 @@ test.each(VIP_CROWN_ACCESSORIES)(
 );
 
 test.each([
-	['inline', SuiFrenImageInline],
+	['embedded', EmbeddedSuiFrenImage],
 	['assets', SuiFrenImage],
 ] as const)(
 	'%s preserves avatar framing and crown scale while letting unframed crowns overflow',
@@ -56,7 +56,7 @@ test.each([
 				expect.assert(typeof asset === 'string', `Missing crown: ${accessory.name}`);
 				expect(asset).not.toBe('');
 				const expectedHref = {
-					inline:
+					embedded:
 						'data:image/svg+xml;base64,' +
 						readFileSync(`src/accessories/crowns/${accessory.name}.svg`).toString('base64'),
 					assets: asset,
@@ -76,7 +76,7 @@ test.each([
 	},
 );
 
-test.each([SuiFrenImageInline, SuiFrenImage])(
+test.each([EmbeddedSuiFrenImage, SuiFrenImage])(
 	'uncrowned portraits retain their framing',
 	(Renderer) => {
 		const container = document.createElement('div');
@@ -90,7 +90,7 @@ test('custom asset URLs do not inherit the built-in crown viewport', () => {
 	expect(getVipCrownAssetViewport('https://example.com/custom-crown.svg')).toBeUndefined();
 });
 
-test.each([SuiFrenImageInline, SuiFrenImage])(
+test.each([EmbeddedSuiFrenImage, SuiFrenImage])(
 	'adding a crown preserves the native body, head and facial coordinate systems',
 	(Renderer) => {
 		for (const attributes of species) {

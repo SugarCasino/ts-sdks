@@ -1,11 +1,9 @@
 // Copyright (c) Sugar
 // SPDX-License-Identifier: Apache-2.0
 
-import { SuiFrenImageInline } from '@sugarcasino/suifrens-display-system/image-inline';
-import type {
-	SuiFrenExpression,
-	SuiFrenImageProps,
-} from '@sugarcasino/suifrens-display-system/types';
+import type { SuiFrenImageProps } from '@sugarcasino/suifrens-display-system';
+import { SuiFrenImage } from '@sugarcasino/suifrens-display-system/embed';
+import type { SuiFrenExpression } from '@sugarcasino/suifrens-display-system/expressions';
 
 const species = [
 	{ label: 'Bullshark', traits: { finStyle: 'classic' } },
@@ -33,7 +31,7 @@ export function CataloguePreview({ title, subtitle, expression = 'happy', ...pro
 				{species.map(({ label, traits }) => (
 					<figure key={label} className="flex flex-col items-center gap-2">
 						<div className="aspect-square w-full max-w-44">
-							<SuiFrenImageInline
+							<SuiFrenImage
 								{...props}
 								attributes={{
 									...traits,

@@ -2,14 +2,16 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useEffect, useState } from 'react';
-import { ALL_EXPRESSIONS } from '@sugarcasino/suifrens-display-system/expressions';
-import { SuiFrenImageInline } from '@sugarcasino/suifrens-display-system/image-inline';
+import type { SuiFrenImageProps } from '@sugarcasino/suifrens-display-system';
 import type {
 	BullsharkAttributes,
 	CapyAttributes,
-	SuiFrenExpression,
-	SuiFrenImageProps,
-} from '@sugarcasino/suifrens-display-system/types';
+} from '@sugarcasino/suifrens-display-system/attributes';
+import { SuiFrenImage } from '@sugarcasino/suifrens-display-system/embed';
+import {
+	ALL_EXPRESSIONS,
+	type SuiFrenExpression,
+} from '@sugarcasino/suifrens-display-system/expressions';
 
 export type ExpressionGalleryProps = Omit<SuiFrenImageProps, 'attributes'> & {
 	attributes: Omit<CapyAttributes, 'expression'> | Omit<BullsharkAttributes, 'expression'>;
@@ -19,7 +21,7 @@ export function ExpressionCard(props: SuiFrenImageProps) {
 	return (
 		<figure className="story-tile grid aspect-square w-full max-w-44 grid-rows-[minmax(0,1fr)_auto] justify-items-center gap-2 p-3">
 			<div className="flex size-full min-h-0 justify-center [&>svg]:max-h-full [&>svg]:max-w-full">
-				<SuiFrenImageInline {...props} />
+				<SuiFrenImage {...props} />
 			</div>
 			<figcaption className="text-xs font-semibold text-slate-700 dark:text-slate-200">
 				{props.attributes.expression}

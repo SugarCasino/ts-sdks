@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { AccessoryMetadata, AccessoryPlacement } from '../types/accessory.type.js';
-import type { VipCrownAccessoryName } from '../types/vip-crown.type.js';
 
 export const VIP_CROWN_ACCESSORY_NAMES = [
 	'bronze-1',
@@ -24,6 +23,8 @@ export const VIP_CROWN_ACCESSORY_NAMES = [
 	'master-2',
 	'legend',
 ] as const;
+
+export type VipCrownAccessoryName = (typeof VIP_CROWN_ACCESSORY_NAMES)[number];
 
 const DEFAULT_PLACEMENT: AccessoryPlacement = {
 	x: 0,

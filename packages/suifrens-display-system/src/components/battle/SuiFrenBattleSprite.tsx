@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useEffect, useRef, useState } from 'react';
-import { SuiFrenImageInline } from '../../image-inline/index.js';
+import { SuiFrenImage } from '../../embed.js';
 import type { SuiFrenBattleSpriteProps } from '../../types/battle.type.js';
 import { MinecraftHealthBar } from './MinecraftHealthBar.js';
 
@@ -117,7 +117,7 @@ export function SuiFrenBattleSprite({
 				}}
 			>
 				<div style={{ width: '100%', height: '100%', ...resolvedImageStyle }}>
-					<SuiFrenImageInline
+					<SuiFrenImage
 						attributes={attributes}
 						shadow={shadow}
 						style={{ width: '100%', height: '100%' }}

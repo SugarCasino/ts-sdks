@@ -5,7 +5,7 @@ import type {
 	SOCCER_TEAM_COUNTRY_CODES,
 	SOCCER_TEAM_PATTERNS,
 	SOCCER_TEAM_SIDES,
-} from '../constants/soccer-team-kit.js';
+} from '../constants/soccer-team-options.js';
 
 export type SoccerTeamCountryCode = (typeof SOCCER_TEAM_COUNTRY_CODES)[number];
 

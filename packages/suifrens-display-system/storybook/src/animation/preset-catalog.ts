@@ -1,7 +1,7 @@
 // Copyright (c) Sugar
 // SPDX-License-Identifier: Apache-2.0
 
-import type { AnimationConfig } from '@sugarcasino/suifrens-display-system/types';
+import type { AnimationConfig } from '@sugarcasino/suifrens-display-system/animation';
 
 export type PresetCatalogEntry = {
 	label: string;

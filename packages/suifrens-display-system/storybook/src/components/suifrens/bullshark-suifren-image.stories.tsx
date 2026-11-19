@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import type { BullsharkAttributes } from '@sugarcasino/suifrens-display-system/types';
+import type { BullsharkAttributes } from '@sugarcasino/suifrens-display-system/attributes';
 import { SuiLogo } from '../logos/SuiLogo.js';
 import { characterControls } from './character-controls.js';
 import {

@@ -2,11 +2,20 @@
 // SPDX-License-Identifier: Apache-2.0
 
 export {
-	AnimationProvider,
-	useAnimationController,
-	useAnimationStore,
-} from './AnimationContext.js';
-export { AnimatedAccessory } from './AnimatedAccessory.js';
-export { useAnimatedPartTransform } from '../hooks/use-animated-part-transform.js';
-export { normalizePlayback } from '../helpers/animation/normalize-playback.js';
-export { getPresetDurationMs, getPresetSequence } from './presets/index.js';
+	type AnimationPresetName,
+	getPresetDurationMs,
+	getPresetSequence,
+} from './presets/index.js';
+export type {
+	AnimationConfig,
+	AnimationDirection,
+	AnimationKeyframe,
+	AnimationPart,
+	AnimationSequence,
+	AnimationShadow,
+	AnimationTrack,
+	EasingName,
+	PartPose,
+	PlayState,
+	PlaybackOptions,
+} from '../types/animation.type.js';

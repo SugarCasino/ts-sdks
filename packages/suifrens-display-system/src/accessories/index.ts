@@ -5,3 +5,12 @@ export { ACCESSORIES } from '../constants/accessories.js';
 export { VIP_CROWN_ACCESSORY_NAMES, VIP_CROWN_ACCESSORIES } from '../constants/vip-crowns.js';
 
 export { getAccessoriesByType } from '../utils/accessories.js';
+export type {
+	AccessoryKit,
+	AccessoryMetadata,
+	AccessorySlots,
+	SuiFrenAccessory,
+	AccessoryPlacement,
+	AccessoryRenderOptions,
+} from '../types/accessory.type.js';
+export type { VipCrownAccessoryName } from '../constants/vip-crowns.js';

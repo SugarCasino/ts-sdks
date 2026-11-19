@@ -4,6 +4,8 @@
 
 import type { AccessorySlots, SuiFrenAccessory } from '../types/accessory.type.js';
 
+export const EMPTY_ACCESSORY_SLOTS: Readonly<AccessorySlots> = Object.freeze({});
+
 function getAccessorySlotKey(accessory: SuiFrenAccessory): string {
 	if (accessory.type === 'feet') {
 		if (accessory.renderOptions.animationPart === 'leftLeg') {

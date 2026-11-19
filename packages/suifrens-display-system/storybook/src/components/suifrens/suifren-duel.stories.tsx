@@ -3,16 +3,21 @@
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { getPresetDurationMs } from '@sugarcasino/suifrens-display-system/animation';
-import { SuiFrenBattleSprite, useDuelScript } from '@sugarcasino/suifrens-display-system/battle';
+import {
+	type AnimationConfig,
+	getPresetDurationMs,
+} from '@sugarcasino/suifrens-display-system/animation';
 import type {
-	AnimationConfig,
 	BullsharkAttributes,
 	CapyAttributes,
-	DuelScript,
-	DuelSide,
-	SuiFrenExpression,
-} from '@sugarcasino/suifrens-display-system/types';
+} from '@sugarcasino/suifrens-display-system/attributes';
+import {
+	type DuelScript,
+	type DuelSide,
+	SuiFrenBattleSprite,
+	useDuelScript,
+} from '@sugarcasino/suifrens-display-system/battle';
+import type { SuiFrenExpression } from '@sugarcasino/suifrens-display-system/expressions';
 
 const SPRITE_SIZE = 240;
 const STAGE_PADDING_X = 0;

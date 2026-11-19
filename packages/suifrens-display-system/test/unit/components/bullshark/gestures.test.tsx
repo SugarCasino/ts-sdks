@@ -4,7 +4,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, test } from 'vitest';
 import { ACCESSORIES } from '../../../../src/constants/accessories.js';
-import { SuiFrenImageInline } from '../../../../src/image-inline/index.js';
+import { SuiFrenImage as EmbeddedSuiFrenImage } from '../../../../src/embed.js';
 import { SuiFrenImage } from '../../../../src/index.js';
 import type { AnimationConfig } from '../../../../src/types/animation.type.js';
 import { parseMatrix } from '../../../../src/utils/matrix.js';
@@ -18,7 +18,7 @@ const shark = {
 } as const;
 
 describe.each([
-	['inline', SuiFrenImageInline],
+	['embedded', EmbeddedSuiFrenImage],
 	['asset', SuiFrenImage],
 ] as const)('%s bullshark gestures', (_name, Image) => {
 	test('draws point on the foreground arm only when free', () => {

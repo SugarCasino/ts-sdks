@@ -3,7 +3,7 @@
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import type { ComponentProps } from 'react';
-import { SuiFrenImageInline } from '@sugarcasino/suifrens-display-system/image-inline';
+import { SuiFrenImage } from '@sugarcasino/suifrens-display-system/embed';
 import { buildRunnerAccessories } from '@sugarcasino/suifrens-display-system/kits';
 import { imageControls } from './character-controls.js';
 import { KitRendererComparison } from './KitRendererComparison.js';
@@ -42,13 +42,13 @@ const runners = [
 ] as const;
 
 function RunnerKitPreview(
-	props: Omit<ComponentProps<typeof SuiFrenImageInline>, 'attributes' | 'accessories'>,
+	props: Omit<ComponentProps<typeof SuiFrenImage>, 'attributes' | 'accessories'>,
 ) {
 	return (
 		<div className="story-panel grid max-w-2xl grid-cols-2 gap-3">
 			{runners.map(({ label, attributes, accessories }) => (
 				<figure key={label} className="story-tile grid justify-items-center gap-2 p-3">
-					<SuiFrenImageInline
+					<SuiFrenImage
 						{...props}
 						attributes={attributes}
 						accessories={accessories}

@@ -7,7 +7,7 @@ import {
 	SPLIT_LIMB_ASSET_NAMES,
 } from '../../generated/accessory-assets/manifest.js';
 import { resolveAccessoryAssetOverride } from '../../helpers/accessories/accessory-asset-override.js';
-import { getVipCrownAssetViewport } from '../../helpers/accessories/crown-assets.js';
+import { getVipCrownAssetViewport } from '../../helpers/accessories/vip-crown-assets.js';
 import { resolveAccessoryAnimationPart } from '../../helpers/animation/accessory-animation-part.js';
 import { isKitAccessory } from '../../helpers/kits/kit-accessory.js';
 import type { AccessoryAssetVariant, AccessoryRendererProps } from '../../types/accessory.type.js';
