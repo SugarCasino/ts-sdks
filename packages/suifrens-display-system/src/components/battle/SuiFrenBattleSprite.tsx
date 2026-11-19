@@ -36,12 +36,12 @@ export function SuiFrenBattleSprite({
 		});
 	}
 	const flashTimeoutRef = useRef<number | null>(null);
-	const baseFilter =
-		typeof imageStyle?.filter === 'string' && imageStyle.filter !== 'none' ? imageStyle.filter : '';
+	const filter = imageStyle?.filter;
+	const baseFilter = typeof filter === 'string' && filter !== 'none' ? filter : '';
 	const hitFlashFilter = `url(#${HIT_FLASH_FILTER_ID})`;
 	const combinedFilter = flash.active
 		? [baseFilter, hitFlashFilter].filter(Boolean).join(' ')
-		: (imageStyle?.filter ?? '');
+		: (filter ?? '');
 	const resolvedImageStyle = {
 		...imageStyle,
 		...(combinedFilter ? { filter: combinedFilter } : {}),

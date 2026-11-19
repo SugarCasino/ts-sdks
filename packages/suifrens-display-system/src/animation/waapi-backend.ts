@@ -68,21 +68,21 @@ function playbackDirection(
 	return alternate ? 'alternate' : 'normal';
 }
 
-function buildOffsets(sequence: AnimationSequence): Array<number> {
-	const offsets = new Set<number>([0, sequence.duration]);
-	for (let time = SAMPLE_INTERVAL_MS; time < sequence.duration; time += SAMPLE_INTERVAL_MS) {
-		offsets.add(Math.min(sequence.duration, time));
+function buildOffsets({ duration, tracks }: AnimationSequence): Array<number> {
+	const offsets = new Set<number>([0, duration]);
+	for (let time = SAMPLE_INTERVAL_MS; time < duration; time += SAMPLE_INTERVAL_MS) {
+		offsets.add(Math.min(duration, time));
 	}
-	for (const track of sequence.tracks) {
+	for (const track of tracks) {
 		for (const frame of track.keyframes) {
-			offsets.add(Math.min(Math.max(frame.at, 0), sequence.duration));
+			offsets.add(Math.min(Math.max(frame.at, 0), duration));
 		}
 	}
 	return Array.from(offsets).toSorted((a, b) => a - b);
 }
 
 function buildTargetKeyframes(
-	target: WaapiTarget,
+	{ part, baseTransform, pivotOverride }: WaapiTarget,
 	sequence: AnimationSequence,
 	offsets: Array<number>,
 ): Array<Keyframe> {
@@ -92,10 +92,10 @@ function buildTargetKeyframes(
 		transform: matrixToAnimationTransform(
 			parseMatrix(
 				composePartTransform(
-					target.part,
-					target.baseTransform,
+					part,
+					baseTransform,
 					interpolateSequencePoses(sequence, time),
-					target.pivotOverride,
+					pivotOverride,
 				),
 			)!,
 		),
@@ -115,8 +115,8 @@ function getTargetKeyframes(
 		cache = new Map();
 		SEQUENCE_KEYFRAME_CACHE.set(sequence, cache);
 	}
-	const pivot = target.pivotOverride;
-	const key = `${target.part}|${target.baseTransform ?? ''}|${pivot?.x ?? ''}|${pivot?.y ?? ''}`;
+	const { part, baseTransform, pivotOverride: pivot } = target;
+	const key = `${part}|${baseTransform ?? ''}|${pivot?.x ?? ''}|${pivot?.y ?? ''}`;
 	const cached = cache.get(key);
 	if (cached) {
 		return cached;
@@ -127,11 +127,11 @@ function getTargetKeyframes(
 }
 
 function setBaseTransforms(targets: Array<WaapiTarget>): void {
-	for (const target of targets) {
-		if (target.baseTransform != null && target.baseTransform !== '') {
-			target.element.setAttribute('transform', target.baseTransform);
+	for (const { element, baseTransform } of targets) {
+		if (baseTransform != null && baseTransform !== '') {
+			element.setAttribute('transform', baseTransform);
 		} else {
-			target.element.removeAttribute('transform');
+			element.removeAttribute('transform');
 		}
 	}
 }

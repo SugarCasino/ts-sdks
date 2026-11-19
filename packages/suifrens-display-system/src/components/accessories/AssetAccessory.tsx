@@ -14,50 +14,57 @@ import type { AccessoryAssetVariant, AccessoryRendererProps } from '../../types/
 import { KitArtwork } from './KitArtwork.js';
 import { SvgAccessory } from './SvgAccessory.js';
 
-function resolveAssetSrc(
-	props: AccessoryRendererProps,
-): { assetSrc: string; symbolId?: AccessoryAssetVariant } | undefined {
-	const { accessory } = props;
+function resolveAssetSrc({
+	accessory: { name, category, renderOptions },
+	layer,
+}: AccessoryRendererProps): { assetSrc: string; symbolId?: AccessoryAssetVariant } | undefined {
 	const explicitAsset =
-		accessory.renderOptions.assetSrc ??
-		(accessory.category === 'crowns' ? getVipCrownAssetSrc(accessory.name) : undefined);
+		renderOptions.assetSrc ?? (category === 'crowns' ? getVipCrownAssetSrc(name) : undefined);
 	if (explicitAsset != null && explicitAsset !== '') {
 		return { assetSrc: explicitAsset };
 	}
 
 	const assets: Readonly<Record<string, string>> = ACCESSORY_ASSET_MANIFEST;
-	const assetSrc = assets[accessory.name];
+	const assetSrc = assets[name];
 	return assetSrc != null && assetSrc !== ''
-		? { assetSrc, symbolId: props.layer ?? 'default' }
+		? { assetSrc, symbolId: layer ?? 'default' }
 		: undefined;
 }
 
 export function AssetAccessory(props: AccessoryRendererProps) {
-	if (isKitAccessory(props.accessory.name)) {
+	const { accessory, species, layer } = props;
+	const {
+		name,
+		type,
+		renderOptions: { placement },
+	} = accessory;
+
+	if (isKitAccessory(name)) {
 		return <KitArtwork {...props} fallbackPart={resolveAccessoryAnimationPart(props)} />;
 	}
 
-	const viewport = getAccessoryViewport(props.accessory);
+	const viewport = getAccessoryViewport(accessory);
 	const asset = resolveAssetSrc(props);
 	if (!asset) {
 		return null;
 	}
 
+	const { assetSrc, symbolId } = asset;
 	if (
-		asset.symbolId &&
-		SPLIT_LIMB_ASSET_NAMES.has(props.accessory.name) &&
-		(props.accessory.type === 'feet' || (props.accessory.type === 'legs' && props.layer !== 'body'))
+		symbolId &&
+		SPLIT_LIMB_ASSET_NAMES.has(name) &&
+		(type === 'feet' || (type === 'legs' && layer !== 'body'))
 	) {
 		return (
 			<>
 				{(['rightLeg', 'leftLeg'] as const).map((part) => (
 					<AnimatedAccessory key={part} fallbackPart={part}>
 						<SvgAccessory
-							assetSrc={asset.assetSrc}
+							assetSrc={assetSrc}
 							symbolId={part}
 							viewport={viewport}
-							species={props.species}
-							placement={props.accessory.renderOptions.placement}
+							species={species}
+							placement={placement}
 						/>
 					</AnimatedAccessory>
 				))}
@@ -70,11 +77,11 @@ export function AssetAccessory(props: AccessoryRendererProps) {
 	return (
 		<AnimatedAccessory fallbackPart={fallbackPart}>
 			<SvgAccessory
-				assetSrc={asset.assetSrc}
-				symbolId={asset.symbolId}
+				assetSrc={assetSrc}
+				symbolId={symbolId}
 				viewport={viewport}
-				species={props.species}
-				placement={props.accessory.renderOptions.placement}
+				species={species}
+				placement={placement}
 			/>
 		</AnimatedAccessory>
 	);

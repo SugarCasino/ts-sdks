@@ -15,12 +15,14 @@ function buildPlacementTransform(placement?: AccessoryPlacement): string | undef
 	}
 
 	const transforms: Array<string> = [];
-	const x = placement.x ?? 0;
-	const y = placement.y ?? 0;
-	const rotation = placement.rotation ?? 0;
-	const scale = placement.scale ?? 1;
-	const originX = placement.originX ?? DEFAULT_ORIGIN;
-	const originY = placement.originY ?? DEFAULT_ORIGIN;
+	const {
+		x = 0,
+		y = 0,
+		rotation = 0,
+		scale = 1,
+		originX = DEFAULT_ORIGIN,
+		originY = DEFAULT_ORIGIN,
+	} = placement;
 
 	if (x !== 0 || y !== 0) {
 		transforms.push(`translate(${x} ${y})`);
@@ -44,7 +46,7 @@ export function SvgAccessory({
 	symbolId = '',
 	species,
 	placement,
-	viewport = DEFAULT_VIEWPORT,
+	viewport: { x, y, width, height } = DEFAULT_VIEWPORT,
 }: SvgAccessoryProps) {
 	const resolvedPlacement = placement?.[species];
 	const transform = buildPlacementTransform(resolvedPlacement);
@@ -60,20 +62,14 @@ export function SvgAccessory({
 			{imageSrc ? (
 				<image
 					href={imageSrc}
-					x={viewport.x}
-					y={viewport.y}
-					width={viewport.width}
-					height={viewport.height}
+					x={x}
+					y={y}
+					width={width}
+					height={height}
 					preserveAspectRatio="xMidYMid meet"
 				/>
 			) : fragmentSrc ? (
-				<use
-					href={fragmentSrc}
-					x={viewport.x}
-					y={viewport.y}
-					width={viewport.width}
-					height={viewport.height}
-				/>
+				<use href={fragmentSrc} x={x} y={y} width={width} height={height} />
 			) : null}
 		</g>
 	);

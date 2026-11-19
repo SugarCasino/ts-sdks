@@ -62,20 +62,20 @@ export function interpolatePartPose(
 	return pose;
 }
 
-export function interpolatePose(track: AnimationTrack, time: number): PartPose | undefined {
-	if (track.keyframes.length === 0) {
+export function interpolatePose({ keyframes }: AnimationTrack, time: number): PartPose | undefined {
+	if (keyframes.length === 0) {
 		return undefined;
 	}
 
-	const duration = track.keyframes.at(-1)?.at ?? 0;
-	if (duration <= 0) {
-		return track.keyframes.at(-1)?.pose;
+	const lastFrame = keyframes.at(-1);
+	if ((lastFrame?.at ?? 0) <= 0) {
+		return lastFrame?.pose;
 	}
 
-	let previous = track.keyframes[0];
-	let next = track.keyframes.at(-1);
+	let previous = keyframes[0];
+	let next = lastFrame;
 
-	for (const frame of track.keyframes) {
+	for (const frame of keyframes) {
 		if (frame.at <= time) {
 			previous = frame;
 		}

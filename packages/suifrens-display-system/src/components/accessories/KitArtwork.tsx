@@ -43,7 +43,7 @@ function renderSoccerArtwork(source: string, kit: SoccerTeamKit, id: string): st
 }
 
 export function KitArtwork({
-	accessory,
+	accessory: { name, renderOptions },
 	species,
 	layer,
 	fallbackPart,
@@ -52,7 +52,7 @@ export function KitArtwork({
 		UNSAFE_ID_CHARACTER_PATTERN,
 		(c) => '-' + c.codePointAt(0)!.toString(16) + '-',
 	);
-	const layers = KIT_TEMPLATES[accessory.name];
+	const layers = KIT_TEMPLATES[name];
 	if (!layers) {
 		return null;
 	}
@@ -60,8 +60,8 @@ export function KitArtwork({
 	if (source == null) {
 		return null;
 	}
-	const options = accessory.renderOptions.kit;
-	if (RUNNER_ACCESSORY_NAMES.has(accessory.name)) {
+	const options = renderOptions.kit;
+	if (RUNNER_ACCESSORY_NAMES.has(name)) {
 		const kit = resolveRunnerKit(options?.type === 'runner' ? options : undefined);
 		source = applyValues(layers[species] ?? source, {
 			id,
@@ -78,10 +78,6 @@ export function KitArtwork({
 		);
 	}
 	return (
-		<SvgArtwork
-			viewport={accessory.renderOptions.viewport}
-			source={source}
-			fallbackPart={fallbackPart}
-		/>
+		<SvgArtwork viewport={renderOptions.viewport} source={source} fallbackPart={fallbackPart} />
 	);
 }

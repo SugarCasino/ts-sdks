@@ -13,17 +13,21 @@ export const RUNNER_ACCESSORY_NAMES = new Set([
 ]);
 
 export function resolveRunnerKit(value: unknown): Required<RunnerKitOptions> {
-	const options = value != null && typeof value === 'object' ? (value as RunnerKitOptions) : {};
+	const {
+		color,
+		number: bibNumber,
+		mirrorBib,
+	} = value != null && typeof value === 'object' ? (value as RunnerKitOptions) : {};
 	return {
-		color:
-			typeof options.color === 'string' && HEX_COLOR_PATTERN.test(options.color)
-				? options.color
-				: '#ef8fae',
+		color: typeof color === 'string' && HEX_COLOR_PATTERN.test(color) ? color : '#ef8fae',
 		number:
-			Number.isInteger(options.number) && options.number! >= 1 && options.number! <= 99
-				? options.number!
+			typeof bibNumber === 'number' &&
+			Number.isInteger(bibNumber) &&
+			bibNumber >= 1 &&
+			bibNumber <= 99
+				? bibNumber
 				: 1,
-		mirrorBib: options.mirrorBib === true,
+		mirrorBib: mirrorBib === true,
 	};
 }
 export function buildRunnerAccessories(options: RunnerKitOptions = {}): Array<AccessoryMetadata> {

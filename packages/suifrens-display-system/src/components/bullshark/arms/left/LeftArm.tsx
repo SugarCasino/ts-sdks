@@ -7,7 +7,7 @@ import { useAnimatedPartTransform } from '../../../../hooks/use-animated-part-tr
 
 type LeftArmProps = SVGProps<SVGPathElement>;
 
-export function LeftArm({ ...props }: LeftArmProps) {
+export function LeftArm(props: LeftArmProps) {
 	const baseTransform = 'matrix(2.9166107177734375, 0, 0, 2.9166107177734375, 1002.9,1719.3)';
 	const transform = useAnimatedPartTransform('leftArm', baseTransform);
 
