@@ -16,6 +16,7 @@ import {
 import { toBaseUnits, toCurrencyAmountText } from '../../utils/index.js';
 import { requireString } from '../../utils/validation.js';
 import {
+	assertHostedApprovalSupport,
 	createExecutionBridge,
 	loadSessionSigner,
 	loadSessionWallet,
@@ -141,6 +142,9 @@ async function buildSweetHouseTransactionTool({
 	}
 
 	const bundle = createSugarClient(getConfigInput(input));
+	if (mode === 'execute' && input.executionWallet !== 'session') {
+		assertHostedApprovalSupport(bundle.config.network);
+	}
 	const transaction = await createTransaction(bundle);
 	const summaryContext = context(bundle);
 	if (mode === 'execute') {

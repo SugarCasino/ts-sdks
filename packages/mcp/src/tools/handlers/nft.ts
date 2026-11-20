@@ -9,7 +9,11 @@ import {
 	type ToolTextResult,
 } from '../../runtime/index.js';
 import { requireString } from '../../utils/validation.js';
-import { createExecutionBridge, resolveWebOrigin } from '../../wallet/index.js';
+import {
+	assertHostedApprovalSupport,
+	createExecutionBridge,
+	resolveWebOrigin,
+} from '../../wallet/index.js';
 import type { BuildNftV1MintTransactionInput } from '../schemas/index.js';
 import { asTextResponse, getConfigInput, getMode, getSugarPackageId } from './shared.js';
 
@@ -41,6 +45,9 @@ export async function buildNftV1MintTransactionTool(
 	}
 
 	const bundle = createSugarClient(getConfigInput(input));
+	if (mode === 'execute') {
+		assertHostedApprovalSupport(bundle.config.network);
+	}
 	const owner = await resolveOwnerAddress({
 		owner: requireString({ value: input.owner, fieldName: 'owner' }),
 		bundle,
