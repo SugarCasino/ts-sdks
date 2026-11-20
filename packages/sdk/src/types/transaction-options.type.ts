@@ -101,6 +101,7 @@ export type CreatePvPCoinflipTransactionOptions = Pick<StakeTransactionOptions, 
 	};
 
 export type JoinPvPCoinflipTransactionOptions = SharedPvPCoinflipBetTransactionOptions & {
+	maxStake?: bigint | undefined;
 	gameId: string;
 };
 
@@ -125,6 +126,7 @@ export type ClaimReferralLevelUpUsdRewardsOptions = TransactionSenderOptions;
 
 export type MintNftV1Options = TransactionSenderOptions &
 	Pick<CoinTransactionOptions, 'useGasCoin'> & {
+		maxPrice?: bigint | undefined;
 		specId: string;
 	};
 

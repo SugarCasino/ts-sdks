@@ -5,6 +5,7 @@ import type { Transaction, TransactionArgument } from '@mysten/sui/transactions'
 import { normalizeSuiAddress } from '@mysten/sui/utils';
 import { Factory, mintToSender } from '../contracts/nft-v1/nft.js';
 import { optionalOptions } from '../helpers/options.js';
+import { checkSpendingLimit } from '../helpers/spending-limit.js';
 import type { MintNftV1Options, WithClient, WithConfig } from '../types/index.js';
 import { createBaseTransaction } from './shared.js';
 
@@ -12,8 +13,11 @@ function buildMintNftV1PaymentCoin({
 	client,
 	config,
 	specId,
+	maxPrice,
 	useGasCoin,
-}: WithClient<WithConfig<Pick<MintNftV1Options, 'specId' | 'useGasCoin'>>>): TransactionArgument {
+}: WithClient<
+	WithConfig<Pick<MintNftV1Options, 'specId' | 'useGasCoin' | 'maxPrice'>>
+>): TransactionArgument {
 	return async (tx) => {
 		const { json: factory } = await Factory.get({
 			client,
@@ -30,7 +34,7 @@ function buildMintNftV1PaymentCoin({
 
 		return tx.coin({
 			type: config.coins.sui.coinType,
-			balance: BigInt(spec.price),
+			balance: checkSpendingLimit(BigInt(spec.price), maxPrice),
 			...optionalOptions({ useGasCoin }),
 		});
 	};

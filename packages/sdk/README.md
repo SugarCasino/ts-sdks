@@ -448,6 +448,7 @@ Join:
 
 ```ts
 const tx = client.sugar.tx.pvpCoinflip.joinGame({
+	maxStake: 1_000_000_000n, // Optional maximum in coin base units, excluding gas.
 	owner: '0x123',
 	coinType: '0x2::sui::SUI',
 	gameId: '0xGAME_ID',
@@ -575,6 +576,7 @@ Mint an NFT V1 directly to the transaction sender with a factory specification I
 
 ```ts
 const transaction = client.sugar.tx.nftV1.mint({
+	maxPrice: 1_000_000_000n, // Optional maximum in MIST, excluding gas.
 	owner: accountAddress,
 	specId: '0xNFT_SPEC_ID',
 });
