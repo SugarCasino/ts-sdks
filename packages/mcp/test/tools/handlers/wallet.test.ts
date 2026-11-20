@@ -155,8 +155,6 @@ describe('wallet tools', () => {
 
 	describe('setup_session_wallet', () => {
 		it('opens setup in the local browser for the selected network', async () => {
-			mocks.createSessionWalletSetup.mockResolvedValue(undefined);
-
 			const result = await setupSessionWalletTool({
 				network: 'testnet',
 			});
@@ -271,8 +269,6 @@ describe('wallet tools', () => {
 		it('returns a setup view model when no wallet exists', async () => {
 			mocks.loadSessionWallet.mockResolvedValue(null);
 			mocks.loadCredentials.mockResolvedValue({ profiles: {} });
-			mocks.createSessionWalletSetup.mockResolvedValue(undefined);
-
 			const result = await getSessionWalletTool({ network: 'testnet' });
 			expect(mocks.createSessionWalletSetup).not.toHaveBeenCalled();
 			expect(JSON.stringify(result)).not.toContain('setupUrl');
