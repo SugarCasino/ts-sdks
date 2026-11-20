@@ -22,8 +22,7 @@ import type {
 	WithClient,
 	WithPartner,
 } from '../types/index.js';
-import { toBigInt } from '../utils/numeric.js';
-import { createBaseTransaction } from './shared.js';
+import { createBaseTransaction, transactionAmount } from './shared.js';
 
 type BuildPvPCoinflipTransactionOptions<TAction extends PvPCoinflipAction = PvPCoinflipAction> = {
 	[Action in PvPCoinflipAction]: (Action extends 'join'
@@ -70,7 +69,7 @@ export function buildPvPCoinflipTransaction(
 
 	switch (options.action) {
 		case 'create': {
-			const stake = toBigInt(options.stake);
+			const stake = transactionAmount(options.stake);
 			const encodedMetadata = encodeBetMetadata(options);
 
 			tx.add(

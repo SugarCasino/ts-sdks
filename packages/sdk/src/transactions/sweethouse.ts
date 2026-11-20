@@ -16,8 +16,7 @@ import type {
 	RedeemSweetHouseRequestOptions,
 	WithConfig,
 } from '../types/index.js';
-import { toBigInt } from '../utils/numeric.js';
-import { createBaseTransaction } from './shared.js';
+import { createBaseTransaction, transactionAmount } from './shared.js';
 
 export function buildDepositSweetHouseTransaction(
 	options: WithConfig<DepositSweetHouseOptions>,
@@ -34,7 +33,7 @@ export function buildDepositSweetHouseTransaction(
 				config.objectIds.sweetHouse,
 				coinWithBalance({
 					type: normalizedCoinType,
-					balance: toBigInt(amount),
+					balance: transactionAmount(amount),
 					...optionalOptions({ useGasCoin }),
 				}),
 			],
@@ -64,7 +63,7 @@ export function buildRedeemSweetHouseRequestTransaction(
 						...optionalOptions({ package: config.packageIds.core }),
 						typeArguments: [normalizedCoinType],
 					}),
-					balance: toBigInt(amount),
+					balance: transactionAmount(amount),
 					useGasCoin: false,
 				}),
 			],

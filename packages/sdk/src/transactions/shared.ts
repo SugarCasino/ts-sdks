@@ -44,6 +44,14 @@ type StandardGameBetTransactionOptions = WithPartner<
 	}
 >;
 
+/** Convert a transaction amount in base units without rounding JavaScript numbers. */
+export function transactionAmount(value: number | bigint): bigint {
+	if (typeof value === 'number' && !Number.isSafeInteger(value)) {
+		throw new RangeError('Transaction amounts must use safe integer numbers or bigint.');
+	}
+	return toBigInt(value);
+}
+
 /** Creates a transaction with its sender and default gas budget configured. */
 export function createBaseTransaction({ owner, gasBudget }: TransactionSenderOptions): Transaction {
 	const tx = new Transaction();
@@ -60,9 +68,9 @@ export function buildSharedStandardGameBetTransaction(
 	const tx = createBaseTransaction(options);
 	const normalizedOwner = normalizeSuiAddress(owner);
 	const normalizedCoinType = normalizeStructTag(coinType);
-	const resolvedStake = toBigInt(stake);
-	const resolvedCashStake = toBigInt(cashStake ?? stake);
-	const resolvedBetCount = toBigInt(betCount ?? 1);
+	const resolvedStake = transactionAmount(stake);
+	const resolvedCashStake = transactionAmount(cashStake ?? stake);
+	const resolvedBetCount = transactionAmount(betCount ?? 1);
 	const encodedMetadata = encodeBetMetadata(options);
 	const priceInfoObjectId = resolvePriceInfoObjectId({
 		config,

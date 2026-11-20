@@ -23,6 +23,14 @@ const SWEETHOUSE_CONFIG = {
 	},
 };
 
+import { transactionAmount } from '../../../src/transactions/shared.js';
+
+it('requires exact base units for transaction amounts', () => {
+	expect(() => transactionAmount(0.5)).toThrow(RangeError);
+	expect(() => transactionAmount(Number.MAX_SAFE_INTEGER + 1)).toThrow(RangeError);
+	expect(transactionAmount(9007199254740993n)).toBe(9007199254740993n);
+});
+
 describe('SweetHouse transaction builder', () => {
 	it('builds a public pool deposit and transfers returned staked coins to the owner', () => {
 		const tx = buildDepositSweetHouseTransaction({
