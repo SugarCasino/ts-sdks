@@ -40,6 +40,7 @@ test('built embedded and asset renderers preserve custom kits for both species a
 	const { resolveSoccerTeamKit } = await import('@sugarcasino/suifrens-display-system/kits');
 	const kit = {
 		code: 'CLUB',
+		id: 'caller-supplied-marker',
 		primary: '#123456',
 		secondary: '#fedcba',
 		accent: '#abcdef',
@@ -75,6 +76,7 @@ test('built embedded and asset renderers preserve custom kits for both species a
 					}),
 				);
 				assert.ok(svg.includes('shirt-body-CLUB'), 'custom team identity must survive bundling');
+				assert.ok(!svg.includes(kit.id));
 				assert.ok(svg.includes(kit.primary));
 				assert.ok(svg.includes(kit.secondary));
 				assertAssets(svg);

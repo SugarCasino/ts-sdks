@@ -33,7 +33,11 @@ function renderSoccerArtwork(source: string, kit: SoccerTeamKit, id: string): st
 	});
 	return applyValues(source, {
 		id,
-		...kit,
+		code: kit.code,
+		primary: kit.primary,
+		secondary: kit.secondary,
+		accent: kit.accent,
+		pattern: kit.pattern,
 		label: code,
 		fontSize: (code.length > 2 ? 28 : 35) * 1.24,
 		textLength: 56 * 1.24 * (code.length > 2 ? 0.74 : 0.68),

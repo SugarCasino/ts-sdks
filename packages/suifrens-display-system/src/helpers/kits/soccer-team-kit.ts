@@ -52,16 +52,14 @@ export function resolveSoccerTeamKit(country?: unknown, side?: unknown): SoccerT
 	const kit = isSoccerTeamKit(country)
 		? country
 		: SOCCER_TEAM_KITS[resolveSoccerCountryCode(country)];
-	if (resolveSoccerTeamSide(side) === 'away') {
-		return {
-			code: kit.code,
-			primary: kit.secondary,
-			secondary: kit.primary,
-			accent: kit.accent,
-			pattern: kit.pattern,
-		};
-	}
-	return kit;
+	const away = resolveSoccerTeamSide(side) === 'away';
+	return {
+		code: kit.code,
+		primary: away ? kit.secondary : kit.primary,
+		secondary: away ? kit.primary : kit.secondary,
+		accent: kit.accent,
+		pattern: kit.pattern,
+	};
 }
 
 export function isLightHex(value: string): boolean {
