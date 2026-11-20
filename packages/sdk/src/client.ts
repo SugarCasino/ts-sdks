@@ -131,10 +131,12 @@ export class SugarClient {
 	 * This is primarily useful for debugging or inspecting which package ids, object ids, supported
 	 * coin metadata, and price info object ids the SDK resolved for the current client network.
 	 *
-	 * @returns Network-resolved Sugar configuration.
+	 * @returns An independent snapshot of the network-resolved Sugar configuration.
 	 */
 	getConfig(): SugarConfig {
-		return this.#config;
+		const snapshot = structuredClone(this.#config);
+		Object.setPrototypeOf(snapshot.coins, null);
+		return snapshot;
 	}
 
 	/**

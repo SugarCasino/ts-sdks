@@ -633,6 +633,16 @@ function createSugarTestClient({
 }
 
 describe('SugarClient', () => {
+	it('isolates nested configuration returned for inspection', () => {
+		const client = createSugarTestClient().sugar;
+		const before = client.getConfig();
+		const inspected = client.getConfig();
+		inspected.packageIds.core = '0x123';
+		inspected.objectIds.sweetHouse = '0x123';
+		inspected.coins.sui.decimals = 0;
+		expect(client.getConfig()).toEqual(before);
+		expect(Object.getPrototypeOf(inspected.coins)).toBeNull();
+	});
 	it('treats explicit undefined extension and bet options like omitted options', () => {
 		const defaultClient = new TestClient().$extend(
 			sugar({ config: undefined, partner: undefined, cacheTtl: undefined }),
