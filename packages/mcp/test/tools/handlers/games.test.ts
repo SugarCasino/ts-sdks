@@ -59,6 +59,20 @@ afterEach(() => {
 });
 
 describe('game transaction tools', () => {
+	it.each([{ config: {} }, { providerUrl: 'https://example.test' }])(
+		'rejects session overrides before wallet access or network activity',
+		async (override) => {
+			await expect(
+				buildCoinflipTransactionTool({
+					side: 'heads',
+					stake: '1',
+					mode: 'execute',
+					executionWallet: 'session',
+					...override,
+				}),
+			).rejects.toThrow(/configuration/u);
+		},
+	);
 	it('accepts one MoveCall to the selected game package and module', () => {
 		const packageId = getSugarPackageId({ config: testConfig, pkg: 'coinflip' });
 
