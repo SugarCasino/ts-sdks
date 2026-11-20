@@ -199,7 +199,7 @@ export function sugarLogoutTool(input: ConnectionInput): Promise<ToolTextResult>
 
 export async function setupSessionWalletTool(input: SessionWalletInput): Promise<ToolTextResult> {
 	const { config } = createSugarClient(getConfigInput(input));
-	const setup = await createSessionWalletSetup({
+	await createSessionWalletSetup({
 		accountUrl: new URL('/account', resolveWebOrigin({ network: config.network })).toString(),
 	});
 	return asTextResponse({
@@ -207,8 +207,7 @@ export async function setupSessionWalletTool(input: SessionWalletInput): Promise
 		config,
 		sessionWallet: {
 			status: 'setup-pending',
-			setupUrl: setup.setupUrl,
-			note: 'Open this local URL yourself to create or recover a named session wallet shared by mainnet and testnet. The recovery phrase is intentionally never returned through MCP.',
+			note: 'Continue in the local browser to create or recover a named session wallet shared by mainnet and testnet. The recovery phrase is intentionally never returned through MCP.',
 		},
 	});
 }
@@ -221,23 +220,16 @@ export async function getSessionWalletTool(input: SessionWalletInput): Promise<T
 		loadCredentials(),
 	]);
 	if (!wallet) {
-		const setup = await createSessionWalletSetup({
-			accountUrl: new URL(
-				'/account',
-				resolveWebOrigin({ network: bundle.config.network }),
-			).toString(),
-		});
 		return asTextResponse({
 			network: bundle.config.network,
 			config: bundle.config,
 			sessionWallet: {
 				status: 'setup-required',
-				setupUrl: setup.setupUrl,
 				wallets,
 				note:
 					input.sessionWalletId != null && input.sessionWalletId !== ''
 						? 'No local session wallet exists with that ID. Create or recover a named session wallet, or call get_session_wallet without sessionWalletId to use the first wallet.'
-						: 'Create or recover a named session wallet shared by mainnet and testnet. Its recovery phrase is shown only on the local setup page.',
+						: 'Call setup_session_wallet to create or recover a named wallet shared by mainnet and testnet.',
 			},
 		});
 	}

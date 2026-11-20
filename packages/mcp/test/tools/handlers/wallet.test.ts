@@ -5,7 +5,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 import { toolOutputSchema } from '../../../src/tools/schemas/output.js';
 import type * as McpUtils from '../../../src/utils/index.js';
-import { loopbackOrigin } from '../../../src/wallet/loopback.js';
 
 const mocks = vi.hoisted(() => ({
 	createSessionWalletSetup: vi.fn<(options?: unknown) => Promise<unknown>>(),
@@ -83,7 +82,6 @@ const sessionWallet = {
 	name: 'Daily bets',
 	address: sessionAddress,
 };
-const sessionSetupUrl = `${loopbackOrigin(12345)}/`;
 
 describe('wallet tools', () => {
 	beforeEach(() => {
@@ -156,10 +154,8 @@ describe('wallet tools', () => {
 	});
 
 	describe('setup_session_wallet', () => {
-		it('creates a local setup URL for the selected network', async () => {
-			mocks.createSessionWalletSetup.mockResolvedValue({
-				setupUrl: sessionSetupUrl,
-			});
+		it('opens setup in the local browser for the selected network', async () => {
+			mocks.createSessionWalletSetup.mockResolvedValue(undefined);
 
 			const result = await setupSessionWalletTool({
 				network: 'testnet',
@@ -172,7 +168,6 @@ describe('wallet tools', () => {
 				network: 'testnet',
 				sessionWallet: {
 					status: 'setup-pending',
-					setupUrl: sessionSetupUrl,
 				},
 			});
 		});
@@ -276,16 +271,14 @@ describe('wallet tools', () => {
 		it('returns a setup view model when no wallet exists', async () => {
 			mocks.loadSessionWallet.mockResolvedValue(null);
 			mocks.loadCredentials.mockResolvedValue({ profiles: {} });
-			mocks.createSessionWalletSetup.mockResolvedValue({
-				setupUrl: sessionSetupUrl,
-			});
+			mocks.createSessionWalletSetup.mockResolvedValue(undefined);
 
 			const result = await getSessionWalletTool({ network: 'testnet' });
-
+			expect(mocks.createSessionWalletSetup).not.toHaveBeenCalled();
+			expect(JSON.stringify(result)).not.toContain('setupUrl');
 			expect(result.structuredContent).toMatchObject({
 				sessionWallet: {
 					status: 'setup-required',
-					setupUrl: sessionSetupUrl,
 					wallets: [sessionWallet],
 					note: expect.stringContaining('shared by mainnet and testnet') as unknown,
 				},

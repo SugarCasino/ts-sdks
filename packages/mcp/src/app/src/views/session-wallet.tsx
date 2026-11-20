@@ -12,9 +12,8 @@ export function SessionWalletView({ payload }: { payload: unknown }) {
 		typeof funding['addressQrCodeDataUrl'] === 'string' ? funding['addressQrCodeDataUrl'] : '';
 	const balances = Array.isArray(sessionWallet['balances']) ? sessionWallet['balances'] : [];
 	const fundingUrl = typeof funding['fundingUrl'] === 'string' ? funding['fundingUrl'] : '';
-	const setupUrl = typeof sessionWallet['setupUrl'] === 'string' ? sessionWallet['setupUrl'] : '';
 
-	if (setupUrl.length > 0) {
+	if (sessionWallet['status'] === 'setup-required') {
 		return (
 			<section className="grid grid-cols-1 gap-3.5">
 				<Panel title="Set up your session wallet">
@@ -23,9 +22,6 @@ export function SessionWalletView({ payload }: { payload: unknown }) {
 							? sessionWallet['note']
 							: 'Create or recover the session wallet shared by mainnet and testnet.'}
 					</p>
-					<div className="grid justify-items-center">
-						<ActionLink href={setupUrl}>Open local setup page</ActionLink>
-					</div>
 				</Panel>
 			</section>
 		);

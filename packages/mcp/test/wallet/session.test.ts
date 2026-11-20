@@ -11,6 +11,8 @@ const testHome = vi.hoisted(
 const keychainEntries = vi.hoisted(() => new Map<string, string>());
 const keychainUnavailable = vi.hoisted(() => ({ value: false }));
 
+const openBrowser = vi.hoisted(() => vi.fn<(url: string) => Promise<void>>());
+vi.mock('open', () => ({ default: openBrowser }));
 vi.mock('node:os', () => ({ homedir: () => testHome }));
 vi.mock('@napi-rs/keyring', () => ({
 	Entry: class Entry {
@@ -35,6 +37,23 @@ vi.mock('@napi-rs/keyring', () => ({
 
 const session = await import('../../src/wallet/session.js');
 const crypto = await import('../../src/utils/crypto.js');
+
+async function startSetup() {
+	await session.createSessionWalletSetup();
+	const launch = new URL(openBrowser.mock.lastCall![0]);
+	return { setupUrl: launch.origin + '/', token: launch.hash.slice(1) };
+}
+
+function beginSetup(
+	{ setupUrl, token }: Awaited<ReturnType<typeof startSetup>>,
+	origin = new URL(setupUrl).origin,
+) {
+	return fetch(new URL('begin', setupUrl), {
+		method: 'POST',
+		headers: { origin },
+		body: new URLSearchParams({ token }),
+	});
+}
 
 beforeEach(async () => {
 	keychainEntries.clear();
@@ -75,10 +94,15 @@ describe('stored session wallets', () => {
 
 describe('session wallet setup', () => {
 	it('stores a newly created wallet in the OS keychain after local confirmation', async () => {
-		const { setupUrl } = await session.createSessionWalletSetup();
-		const page = await (await fetch(setupUrl)).text();
+		const setup = await startSetup();
+		const { setupUrl } = setup;
+		const landing = await fetch(setupUrl);
+		expect(await landing.text()).not.toContain('<code class="recovery">');
+		expect((await beginSetup(setup, 'https://example.test')).status).toBe(403);
+		const page = await (await beginSetup(setup)).text();
+		expect((await beginSetup(setup)).status).toBe(403);
 		const state = page.match(/name="state" value="([0-9a-f]+)"/u)?.[1];
-		const mnemonic = page.match(/name="mnemonic" value="([^"]+)"/u)?.[1];
+		const mnemonic = page.match(/<code class="recovery">([^<]+)<\/code>/u)?.[1];
 
 		expect(state).toMatch(crypto.HEX_32_BYTE_PATTERN);
 		expect(mnemonic?.split(' ')).toHaveLength(24);
@@ -89,7 +113,7 @@ describe('session wallet setup', () => {
 
 		const response = await fetch(`${setupUrl}save`, {
 			method: 'POST',
-			headers: { 'content-type': 'application/x-www-form-urlencoded' },
+			headers: { origin: new URL(setupUrl).origin },
 			body: new URLSearchParams({
 				state: state!,
 				mnemonic: mnemonic!,
@@ -119,8 +143,9 @@ describe('session wallet setup', () => {
 
 	it('imports a standard Sui private key through the local setup page', async () => {
 		const signer = Ed25519Keypair.generate();
-		const { setupUrl } = await session.createSessionWalletSetup();
-		const page = await (await fetch(setupUrl)).text();
+		const setup = await startSetup();
+		const { setupUrl } = setup;
+		const page = await (await beginSetup(setup)).text();
 		const state = page.match(/name="state" value="([0-9a-f]+)"/u)?.[1];
 
 		expect(page).toContain('Import a Sui private key');
@@ -128,7 +153,7 @@ describe('session wallet setup', () => {
 
 		const response = await fetch(`${setupUrl}import-private-key`, {
 			method: 'POST',
-			headers: { 'content-type': 'application/x-www-form-urlencoded' },
+			headers: { origin: new URL(setupUrl).origin },
 			body: new URLSearchParams({
 				state: state!,
 				privateKey: signer.getSecretKey(),
@@ -150,12 +175,12 @@ describe('session wallet setup', () => {
 	it('keeps multiple named wallets and selects each signer by ID', async () => {
 		const firstSigner = Ed25519Keypair.generate();
 		const secondSigner = Ed25519Keypair.generate();
-		const firstSetup = await session.createSessionWalletSetup();
-		const firstPage = await (await fetch(firstSetup.setupUrl)).text();
+		const firstSetup = await startSetup();
+		const firstPage = await (await beginSetup(firstSetup)).text();
 		const firstState = firstPage.match(/name="state" value="([0-9a-f]+)"/u)?.[1];
 		await fetch(`${firstSetup.setupUrl}import-private-key`, {
 			method: 'POST',
-			headers: { 'content-type': 'application/x-www-form-urlencoded' },
+			headers: { origin: new URL(firstSetup.setupUrl).origin },
 			body: new URLSearchParams({
 				state: firstState!,
 				privateKey: firstSigner.getSecretKey(),
@@ -163,15 +188,15 @@ describe('session wallet setup', () => {
 			}),
 		});
 
-		const secondSetup = await session.createSessionWalletSetup();
-		const secondPage = await (await fetch(secondSetup.setupUrl)).text();
+		const secondSetup = await startSetup();
+		const secondPage = await (await beginSetup(secondSetup)).text();
 		const secondState = secondPage.match(/name="state" value="([0-9a-f]+)"/u)?.[1];
 		expect(secondPage).toContain(firstSigner.toSuiAddress());
 		expect(secondPage).toContain('adds it to your local wallet list');
 
 		const secondResponse = await fetch(`${secondSetup.setupUrl}import-private-key`, {
 			method: 'POST',
-			headers: { 'content-type': 'application/x-www-form-urlencoded' },
+			headers: { origin: new URL(secondSetup.setupUrl).origin },
 			body: new URLSearchParams({
 				state: secondState!,
 				privateKey: secondSigner.getSecretKey(),
@@ -203,8 +228,9 @@ describe('session wallet setup', () => {
 	it('uses the setup timeout environment value', async () => {
 		vi.stubEnv(session.SESSION_SETUP_TIMEOUT_MS_ENV, '1234');
 		const setTimeoutSpy = vi.spyOn(globalThis, 'setTimeout');
-		const { setupUrl } = await session.createSessionWalletSetup();
-		const page = await (await fetch(setupUrl)).text();
+		const setup = await startSetup();
+		const { setupUrl } = setup;
+		const page = await (await beginSetup(setup)).text();
 		const state = page.match(/name="state" value="([0-9a-f]+)"/u)?.[1];
 		const privateKey = Ed25519Keypair.generate().getSecretKey();
 
@@ -212,7 +238,7 @@ describe('session wallet setup', () => {
 
 		await fetch(`${setupUrl}import-private-key`, {
 			method: 'POST',
-			headers: { 'content-type': 'application/x-www-form-urlencoded' },
+			headers: { origin: new URL(setupUrl).origin },
 			body: new URLSearchParams({
 				state: state!,
 				privateKey,
@@ -232,14 +258,15 @@ describe('session wallet setup', () => {
 	it('reports unavailable secure storage when keyring cannot be loaded', async () => {
 		keychainUnavailable.value = true;
 
-		const { setupUrl } = await session.createSessionWalletSetup();
-		const page = await (await fetch(setupUrl)).text();
+		const setup = await startSetup();
+		const { setupUrl } = setup;
+		const page = await (await beginSetup(setup)).text();
 		const state = page.match(/name="state" value="([0-9a-f]+)"/u)?.[1];
 		const privateKey = Ed25519Keypair.generate().getSecretKey();
 
 		const response = await fetch(`${setupUrl}import-private-key`, {
 			method: 'POST',
-			headers: { 'content-type': 'application/x-www-form-urlencoded' },
+			headers: { origin: new URL(setupUrl).origin },
 			body: new URLSearchParams({
 				state: state!,
 				privateKey,

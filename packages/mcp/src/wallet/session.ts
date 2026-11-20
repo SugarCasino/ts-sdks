@@ -12,6 +12,7 @@ import { Secp256r1Keypair } from '@mysten/sui/keypairs/secp256r1';
 import type { Entry } from '@napi-rs/keyring';
 import { generateMnemonic, validateMnemonic } from '@scure/bip39';
 import { wordlist } from '@scure/bip39/wordlists/english.js';
+import open from 'open';
 import { randomHex, randomUuid, sameState } from '../utils/crypto.js';
 import { isNonArrayRecord } from '../utils/record.js';
 import {
@@ -212,7 +213,7 @@ function page({
 <p class="lead">Each wallet is shared by Sugar mainnet and testnet. Save the phrase offline, then confirm it. You can later import it into a compatible Sui wallet to recover the session-wallet funds.</p>${existingWallets}
 <code class="recovery">${escapeHtml(mnemonic)}</code>
 
-<form method="post" action="/save"><input type="hidden" name="state" value="${escapeHtml(state)}"><input type="hidden" name="mnemonic" value="${escapeHtml(mnemonic)}"><label>Name <input required name="name" maxlength="80" placeholder="My session wallet" aria-label="Session wallet name"></label><label class="confirmation"><input required type="checkbox" name="confirmed"> <span>I saved this recovery phrase somewhere private.</span></label><div class="actions"><button>Create session wallet</button></div></form>
+<form method="post" action="/save"><input type="hidden" name="state" value="${escapeHtml(state)}"><label>Name <input required name="name" maxlength="80" placeholder="My session wallet" aria-label="Session wallet name"></label><label class="confirmation"><input required type="checkbox" name="confirmed"> <span>I saved this recovery phrase somewhere private.</span></label><div class="actions"><button>Create session wallet</button></div></form>
 <hr><h2>Recover an existing session wallet</h2><p class="lead">Use a recovery phrase you already saved. It stays on this local page.</p><form method="post" action="/recover"><input type="hidden" name="state" value="${escapeHtml(state)}"><label>Name <input required name="name" maxlength="80" placeholder="My recovered wallet" aria-label="Session wallet name"></label><textarea required name="mnemonic" placeholder="Enter the recovery phrase locally" aria-label="Recovery phrase"></textarea><div class="actions"><button class="secondary">Recover session wallet</button></div></form>
 <hr><h2>Import a Sui private key</h2><p class="lead">Paste a standard <code class="inline">suiprivkey...</code> export only if you intentionally want this MCP to sign directly for that wallet. The key stays on this local page and is stored only in your operating-system keychain.</p><form method="post" action="/import-private-key" autocomplete="off"><input type="hidden" name="state" value="${escapeHtml(state)}"><label>Name <input required name="name" maxlength="80" placeholder="My imported wallet" aria-label="Session wallet name"></label><textarea required name="privateKey" placeholder="suiprivkey..." aria-label="Sui private key" autocomplete="off" spellcheck="false"></textarea><div class="actions"><button class="secondary">Import private key</button></div></form>`,
 	});
@@ -269,38 +270,75 @@ function readForm(request: IncomingMessage): Promise<URLSearchParams> {
 
 export async function createSessionWalletSetup({
 	accountUrl,
-}: SessionWalletSetupOptions = {}): Promise<{ setupUrl: string }> {
+}: SessionWalletSetupOptions = {}): Promise<void> {
 	const resolvedTimeoutMs = resolvePositiveInteger({
 		value: process.env[SESSION_SETUP_TIMEOUT_MS_ENV],
 		name: 'Session wallet setup timeout',
 		defaultValue: DEFAULT_SESSION_SETUP_TIMEOUT_MS,
 	});
 	const state = randomHex(32);
-	const mnemonic = generateMnemonic(wordlist, 256);
+	const launchToken = randomHex(32);
+	let phase: 'launch' | 'form' | 'closed' = 'launch';
+	let mnemonic = '';
+	const deadline = Date.now() + resolvedTimeoutMs;
 	const currentWallet = await loadSessionWallet();
 	const server = createServer(
 		asyncRequestListener(async (request, response) => {
+			const origin = loopbackOrigin(getLoopbackServerPort(server));
+			response.setHeader('cache-control', 'no-store');
+			response.setHeader('referrer-policy', 'no-referrer');
+			response.setHeader(
+				'content-security-policy',
+				"default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
+			);
+			if (
+				request.headers.host !== new URL(origin).host ||
+				(request.method === 'POST' && request.headers.origin !== origin)
+			) {
+				response.writeHead(403).end();
+				return;
+			}
 			const url = new URL(request.url ?? '/', LOOPBACK_ORIGIN);
 			if (request.method === 'GET' && url.pathname === '/') {
 				response.writeHead(200, {
 					'content-type': 'text/html; charset=utf-8',
 					'cache-control': 'no-store',
 				});
-				response.end(page({ state, mnemonic, currentWallet }));
+				response.end(
+					layout({
+						title: 'Set up session wallet',
+						children: `<form method="post" action="/begin"><input type="hidden" name="token"><button>Continue to wallet setup</button></form><script>document.forms[0].elements.token.value=location.hash.slice(1);history.replaceState(null,'','/')</script>`,
+					}),
+				);
 				return;
 			}
 			if (
 				request.method !== 'POST' ||
-				!['/save', '/recover', '/import-private-key'].includes(url.pathname)
+				!['/begin', '/save', '/recover', '/import-private-key'].includes(url.pathname)
 			) {
 				response.writeHead(404).end();
 				return;
 			}
 			try {
 				const form = await readForm(request);
-				if (!(await sameState(form.get('state') ?? '', state))) {
-					throw new Error('Invalid setup state.');
+				if (url.pathname === '/begin') {
+					const authorized = await sameState(form.get('token') ?? '', launchToken);
+					if (!authorized || phase !== 'launch' || Date.now() >= deadline) {
+						response.writeHead(403).end();
+						return;
+					}
+					phase = 'form';
+					mnemonic = generateMnemonic(wordlist, 256);
+					response.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
+					response.end(page({ state, mnemonic, currentWallet }));
+					return;
 				}
+				const authorized = await sameState(form.get('state') ?? '', state);
+				if (!authorized || phase !== 'form' || Date.now() >= deadline) {
+					response.writeHead(403).end();
+					return;
+				}
+				phase = 'closed';
 				const wallet =
 					url.pathname === '/import-private-key'
 						? await persistSessionWallet({
@@ -309,7 +347,10 @@ export async function createSessionWalletSetup({
 								name: form.get('name')?.trim() ?? '',
 							})
 						: await (async () => {
-								const phrase = form.get('mnemonic')?.trim().replaceAll(/\s+/gu, ' ') ?? '';
+								const phrase =
+									url.pathname === '/save'
+										? mnemonic
+										: (form.get('mnemonic')?.trim().replaceAll(/\s+/gu, ' ') ?? '');
 								if (!validateMnemonic(phrase, wordlist)) {
 									throw new TypeError('Invalid recovery phrase.');
 								}
@@ -341,17 +382,27 @@ export async function createSessionWalletSetup({
 			}
 		}),
 	);
-	await new Promise<void>((resolve) => {
+	await new Promise<void>((resolve, reject) => {
+		server.once('error', reject);
 		server.listen(0, LOOPBACK_HOST, resolve);
 	});
 	const port = getLoopbackServerPort(server);
 	const timeout = setTimeout(() => {
+		phase = 'closed';
 		server.close();
 	}, resolvedTimeoutMs).unref();
 	server.once('close', () => {
 		clearTimeout(timeout);
 	});
-	return { setupUrl: `${loopbackOrigin(port)}/` };
+	try {
+		await open(`${loopbackOrigin(port)}/#${launchToken}`);
+	} catch {
+		phase = 'closed';
+		server.close();
+		throw new Error(
+			'Unable to open the local setup browser. Start setup again on a desktop with a default browser.',
+		);
+	}
 }
 
 function isSessionWallet(value: unknown): value is SessionWallet {
