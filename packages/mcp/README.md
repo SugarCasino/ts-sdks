@@ -148,7 +148,7 @@ Hosts that support MCP Apps can display config, live game parameters, the NFT ca
   - `sugar_login` and `sugar_logout` start the same local `npx -y @sugarcasino/mcp ...` CLI flows used for command-line wallet management, so the pairing page for mainnet or testnet opens in the default browser without copying and pasting a URL.
   - `sugar_login` and `sugar_logout` accept `webUrl`, `timeoutMs`, `maxBodyBytes`, `open`, and `noOpen` inputs matching the CLI bridge options.
   - `get_wallet_balances` and `list_wallet_coins` read aggregate balances or paginated coin objects. Both also accept an explicit address.
-  - `get_execution_status` checks an `execute`-mode transaction's browser approval result.
+  - `get_execution_status` reports approval after the selected network confirms the requested transaction digest, sender and successful execution. Requests without confirmation expire.
 - Local session wallet
   - `setup_session_wallet` opens a local, one-time setup page to create or recover one persistent session wallet shared by mainnet and testnet.
   - Set `SUGAR_MCP_SESSION_SETUP_TIMEOUT_MS` to control how long local setup pages remain available. The built-in default is `600000`.
