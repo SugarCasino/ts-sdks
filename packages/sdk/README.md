@@ -80,7 +80,6 @@ import {
 Numeric helper behavior:
 
 - `DEFAULT_QUERY_LIMIT` is `50`, the reusable SDK default page size for paginated queries; `getPvPCoinflipGames()` currently uses it when called without options
-- Set `maxPrice` on NFT mints or `maxStake` on PvP joins to limit the payment at build time. Both limits use `bigint` base units and exclude gas.
 - `toBigInt(value)` accepts `bigint`, finite `number`, non-negative integer `string`, and `boolean` inputs and returns a normalized non-negative `bigint` while throwing `TypeError` for invalid input shapes and `RangeError` for negative values
 - `toU8(value)` accepts a finite integer `number` or plain integer `string` in the inclusive `0..255` range, throwing `TypeError` for non-numeric input and `RangeError` for booleans, fractional values, or out-of-range integers
 - `toU16(value)` accepts a finite integer `number` or plain integer `string` in the inclusive `0..65535` range, throwing `TypeError` for non-numeric input and `RangeError` for booleans, fractional values, or out-of-range integers
@@ -448,6 +447,7 @@ Join:
 
 ```ts
 const tx = client.sugar.tx.pvpCoinflip.joinGame({
+	maxStake: 1_000_000_000n, // Optional maximum in coin base units, excluding gas.
 	owner: '0x123',
 	coinType: '0x2::sui::SUI',
 	gameId: '0xGAME_ID',
@@ -575,6 +575,7 @@ Mint an NFT V1 directly to the transaction sender with a factory specification I
 
 ```ts
 const transaction = client.sugar.tx.nftV1.mint({
+	maxPrice: 1_000_000_000n, // Optional maximum in MIST, excluding gas.
 	owner: accountAddress,
 	specId: '0xNFT_SPEC_ID',
 });
