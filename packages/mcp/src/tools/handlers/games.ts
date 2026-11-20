@@ -33,6 +33,7 @@ import {
 	loadSessionWallet,
 	resolveWebOrigin,
 } from '../../wallet/index.js';
+import { verifiedSessionBytes } from '../../wallet/session-transaction.js';
 import type {
 	CoinflipInput,
 	ConfigIdInput,
@@ -603,6 +604,13 @@ async function stakeOptions({
 	};
 }
 
+function pvpFunction(action: PvPCoinflipAction | undefined): string {
+	if (!action) {
+		throw new Error('Missing PvP session action.');
+	}
+	return { create: 'create_game', join: 'join_game_v2', cancel: 'cancel_game' }[action];
+}
+
 export function assertSessionGameTransaction({
 	transaction,
 	config,
@@ -651,9 +659,13 @@ async function buildTransactionTool({
 		throw new Error('read-only mode must be handled before transaction execution.');
 	}
 
-	if (mode === 'execute' && input.executionWallet === 'session' && input.config) {
+	if (
+		mode === 'execute' &&
+		input.executionWallet === 'session' &&
+		(input.config != null || input.providerUrl != null)
+	) {
 		throw new Error(
-			'Session execution uses the trusted Sugar SDK configuration; custom config overrides are not allowed.',
+			'Session execution uses the trusted Sugar SDK configuration; custom configuration and provider overrides are not allowed.',
 		);
 	}
 	const bundle = createSugarClient(getConfigInput(input));
@@ -685,10 +697,21 @@ async function buildTransactionTool({
 				client: bundle.client,
 				context,
 			});
+			const signer = await loadSessionSigner(input.sessionWalletId);
+			const bytes = await verifiedSessionBytes({
+				encoded: built.transactionBytesBase64,
+				bundle,
+				sender: signer.toSuiAddress(),
+				packageName: getSugarPackageId({ config: bundle.config, pkg: game }),
+				module: game.replaceAll('-', '_'),
+				functionName: game === 'pvp-coinflip' ? pvpFunction(action) : 'play_v2',
+				houseArgument: game === 'pvp-coinflip' && action !== 'create' ? 1 : 0,
+				transferResult: game !== 'pvp-coinflip',
+			});
 			const execution = await executeSessionTransaction({
-				transaction,
+				transaction: bytes,
 				client: bundle.client,
-				signer: await loadSessionSigner(input.sessionWalletId),
+				signer,
 			});
 			return asTextResponse({
 				mode: 'execute',

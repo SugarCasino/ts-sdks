@@ -296,7 +296,7 @@ export async function executeSessionTransaction({
 	client,
 	signer,
 }: {
-	transaction: Transaction;
+	transaction: Transaction | Uint8Array;
 	client: SugarClientBundle['client'];
 	signer: Signer;
 }): Promise<{
