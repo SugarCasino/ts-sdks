@@ -97,7 +97,10 @@ describe('session wallet setup', () => {
 		const setup = await startSetup();
 		const { setupUrl } = setup;
 		const landing = await fetch(setupUrl);
-		expect(await landing.text()).not.toContain('<code class="recovery">');
+		expect(landing.headers.get('referrer-policy')).toBe('same-origin');
+		const landingHtml = await landing.text();
+		expect(landingHtml).not.toContain('<meta name="referrer"');
+		expect(landingHtml).not.toContain('<code class="recovery">');
 		expect((await beginSetup(setup, 'https://example.test')).status).toBe(403);
 		const page = await (await beginSetup(setup)).text();
 		expect((await beginSetup(setup)).status).toBe(403);

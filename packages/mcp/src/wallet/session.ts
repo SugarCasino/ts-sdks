@@ -182,7 +182,7 @@ const styles = `<style>
 
 function layout({ title, children }: { title: string; children: string }): string {
 	return `<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="referrer" content="no-referrer"><title>${title}</title>${styles}</head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${title}</title>${styles}</head>
 <body><main class="shell"><section class="card">${children}</section></main></body></html>`;
 }
 
@@ -286,7 +286,7 @@ export async function createSessionWalletSetup({
 		asyncRequestListener(async (request, response) => {
 			const origin = loopbackOrigin(getLoopbackServerPort(server));
 			response.setHeader('cache-control', 'no-store');
-			response.setHeader('referrer-policy', 'no-referrer');
+			response.setHeader('referrer-policy', 'same-origin');
 			response.setHeader(
 				'content-security-policy',
 				"default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
