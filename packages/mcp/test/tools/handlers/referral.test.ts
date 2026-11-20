@@ -35,6 +35,11 @@ afterEach(() => {
 });
 
 describe('referral transaction tools', () => {
+	it('reports hosted approval support before accessing the network or wallet', async () => {
+		await expect(
+			buildReferralCommissionClaimTransactionTool({ network: 'testnet', mode: 'execute' }),
+		).rejects.toThrow(/hosted approval site/u);
+	});
 	it.each([
 		['commission claim', () => buildReferralCommissionClaimTransactionTool({ mode: 'read-only' })],
 		[

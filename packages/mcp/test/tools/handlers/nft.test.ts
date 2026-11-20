@@ -7,6 +7,11 @@ import { buildNftV1MintTransactionTool, listNftsTool } from '../../../src/tools/
 import { getReadOnlyPlan } from '../../result-assertions.js';
 
 describe('list_nfts', () => {
+	it('reports hosted approval support before accessing the network or wallet', async () => {
+		await expect(
+			buildNftV1MintTransactionTool({ network: 'testnet', mode: 'execute' }),
+		).rejects.toThrow(/hosted approval site/u);
+	});
 	it('requires an owner when listing NFTs', async () => {
 		await expect(listNftsTool({})).rejects.toThrow('Missing required field: owner.');
 	});

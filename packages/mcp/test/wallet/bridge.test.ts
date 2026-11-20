@@ -3,15 +3,22 @@
 
 import { rm } from 'node:fs/promises';
 import { request as httpRequest } from 'node:http';
+import { TransactionDataBuilder } from '@mysten/sui/transactions';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const testHome = vi.hoisted(
 	() => `${process.env['TMPDIR'] ?? '/tmp'}/sugar-mcp-bridge-${process.pid}`,
 );
 const mocks = vi.hoisted(() => ({
+	waitForTransaction: vi.fn<(input: unknown) => Promise<unknown>>(),
 	open: vi.fn<() => Promise<void>>(() => Promise.resolve()),
 }));
 
+vi.mock('@mysten/sui/grpc', () => ({
+	SuiGrpcClient: class {
+		core = { waitForTransaction: mocks.waitForTransaction };
+	},
+}));
 vi.mock('node:os', () => ({ homedir: () => testHome }));
 vi.mock('open', () => ({ default: mocks.open }));
 
@@ -170,6 +177,43 @@ describe('wallet loopback bridges', () => {
 		expect(bridge.getExecutionStatus(approval.requestId)).toEqual({
 			requestId: approval.requestId,
 			status: 'rejected',
+		});
+	});
+
+	it('confirms only a matching successful on-chain receipt', async () => {
+		await credentials.saveProfile({
+			network: 'testnet',
+			profile: {
+				address,
+				walletType: 'wallet',
+				frontendOrigin: webOrigin,
+				connectedAt: '2026-01-01T00:00:00Z',
+			},
+		});
+		const approval = await bridge.createExecutionBridge({
+			network: 'testnet',
+			webOrigin,
+			transactionBytesBase64: 'AA==',
+			summary: {},
+			open: false,
+		});
+		const url = bridgeOrigin(approval.approvalUrl, 'port') + '/callback';
+		const state = new URL(approval.approvalUrl).searchParams.get('state');
+		const digest = TransactionDataBuilder.getDigestFromBytes(Uint8Array.of(0));
+		expect((await postJson(url, { state, address, digest: 'unrelated' })).status).toBe(400);
+		expect(mocks.waitForTransaction).not.toHaveBeenCalled();
+		const receipt = Promise.withResolvers<unknown>();
+		mocks.waitForTransaction.mockReturnValueOnce(receipt.promise);
+		expect((await postJson(url, { state, address, digest })).ok).toBe(true);
+		expect(bridge.getExecutionStatus(approval.requestId)?.status).toBe('pending');
+		receipt.resolve({
+			Transaction: { digest, transaction: { sender: address }, status: { success: true } },
+		});
+		await vi.waitFor(() => {
+			expect(bridge.getExecutionStatus(approval.requestId)).toMatchObject({
+				status: 'approved',
+				digest,
+			});
 		});
 	});
 

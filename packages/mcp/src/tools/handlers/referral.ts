@@ -13,7 +13,11 @@ import {
 } from '../../runtime/index.js';
 import { formatBaseUnitAmount } from '../../utils/index.js';
 import { requireString } from '../../utils/validation.js';
-import { createExecutionBridge, resolveWebOrigin } from '../../wallet/index.js';
+import {
+	assertHostedApprovalSupport,
+	createExecutionBridge,
+	resolveWebOrigin,
+} from '../../wallet/index.js';
 import type {
 	BuildReferralCommissionClaimTransactionInput,
 	BuildReferralLevelUpUsdRewardsClaimTransactionInput,
@@ -144,6 +148,9 @@ async function buildReferralClaimTransactionTool({
 	}
 
 	const bundle = createSugarClient(getConfigInput(input));
+	if (mode === 'execute') {
+		assertHostedApprovalSupport(bundle.config.network);
+	}
 	const owner = await resolveOwnerAddress({
 		owner: requireString({ value: input.owner, fieldName: 'owner' }),
 		bundle,

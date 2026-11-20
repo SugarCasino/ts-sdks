@@ -148,7 +148,7 @@ Hosts that support MCP Apps can display config, live game parameters, the NFT ca
   - `sugar_login` and `sugar_logout` start the same local `npx -y @sugarcasino/mcp ...` CLI flows used for command-line wallet management, so the pairing page for mainnet or testnet opens in the default browser without copying and pasting a URL.
   - `sugar_login` and `sugar_logout` use the locally configured browser origin and accept `timeoutMs`, `maxBodyBytes`, `open`, and `noOpen` inputs matching the CLI bridge options.
   - `get_wallet_balances` and `list_wallet_coins` read aggregate balances or paginated coin objects. Both also accept an explicit address.
-  - `get_execution_status` checks an `execute`-mode transaction's browser approval result.
+  - `get_execution_status` reports approval after the selected network confirms the requested transaction digest, sender and successful execution. Requests without confirmation expire.
 - Local session wallet
   - `setup_session_wallet` opens a local, one-time setup page to create or recover one persistent session wallet shared by mainnet and testnet.
   - Set `SUGAR_MCP_SESSION_SETUP_TIMEOUT_MS` to control how long local setup pages remain available. The built-in default is `600000`.
@@ -202,6 +202,8 @@ Dry-run summaries include:
 ### Shared transaction inputs
 
 For `build`, `dry-run`, and paired-wallet `execute`, provide `owner`, a raw Sui address, SuiNS name such as `name.sui`, or SuiNS subname such as `sub.name.sui`. The server resolves SuiNS owners through the configured network before building or dry-running the unsigned transaction. In session execution (`mode: "execute", executionWallet: "session"`), MCP uses the local session-wallet address and no owner is required. `read-only` can be used to inspect a tool's requirements before providing an owner.
+
+The hosted approval site supports games. For SweetHouse, NFT minting and referral claims, use build or dry-run, or configure a compatible approval site. SweetHouse also supports session execution.
 
 `coinType` defaults to configured SUI. Transaction `stake`, `cashStake`, and SweetHouse `amount` inputs are currency amounts in the chosen coin, not base-unit integers. For example, `stake: 1` or `amount: 1` means `1` SUI or `1` USDC depending on the resolved coin type. The server converts these amounts to base units using the configured coin `decimals` before calling the SDK transaction builders.
 

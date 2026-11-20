@@ -112,4 +112,10 @@ describe('SweetHouse transaction tools', () => {
 		expect(claimSummary.commands).toEqual([]);
 		expect(mocks.buildTransactionBytes).toHaveBeenCalledTimes(3);
 	});
+
+	it('reports hosted approval support before accessing the network or wallet', async () => {
+		await expect(
+			buildSweetHouseDepositTransactionTool({ network: 'testnet', mode: 'execute' }),
+		).rejects.toThrow(/hosted approval site/u);
+	});
 });

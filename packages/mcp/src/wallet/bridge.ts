@@ -2,8 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
+import { SuiGrpcClient } from '@mysten/sui/grpc';
+import { TransactionDataBuilder } from '@mysten/sui/transactions';
+import { fromBase64 } from '@mysten/sui/utils';
 import open from 'open';
 import type { SugarNetwork } from '@sugarcasino/sdk';
+import { getProviderUrl } from '../runtime/client.js';
 import { randomHex, sameState } from '../utils/crypto.js';
 import { isNonArrayRecord } from '../utils/record.js';
 import {
@@ -287,10 +291,15 @@ export async function createExecutionBridge({
 		throw new Error(`No wallet is connected for ${network}. Call "sugar_login" first.`);
 	}
 	const state = randomHex(32);
+	const expectedDigest = TransactionDataBuilder.getDigestFromBytes(
+		fromBase64(transactionBytesBase64),
+	);
 	const requestId = randomHex(16);
 	EXECUTIONS.set(requestId, { requestId, status: 'pending' });
 	const loopback = await createLoopbackServer(webOrigin);
 	const { server, port, close } = loopback;
+	let confirming = false;
+	const deadline = Date.now() + options.timeoutMs;
 	const expire = setTimeout(() => {
 		EXECUTIONS.set(requestId, { requestId, status: 'expired' });
 		close();
@@ -346,19 +355,59 @@ export async function createExecutionBridge({
 					respond({ response, status: 403, body: { error: 'Invalid approval callback' } });
 					return;
 				}
+				if (confirming || getExecutionStatus(requestId)?.status !== 'pending') {
+					respond({ response, status: 409, body: { error: 'Approval already processed' } });
+					return;
+				}
+				if (typeof payload['digest'] === 'string' && payload['rejected'] !== true) {
+					if (payload['digest'] !== expectedDigest) {
+						respond({ response, status: 400, body: { error: 'Transaction digest mismatch' } });
+						return;
+					}
+					confirming = true;
+					respond({ response, status: 200, body: { ok: true } });
+					const client = new SuiGrpcClient({ network, baseUrl: getProviderUrl({ network }) });
+					try {
+						const result = await client.core.waitForTransaction({
+							digest: expectedDigest,
+							timeout: Math.max(1, deadline - Date.now()),
+							include: { transaction: true },
+						});
+						if (getExecutionStatus(requestId)?.status === 'pending' && Date.now() < deadline) {
+							const tx = result.Transaction ?? result.FailedTransaction;
+							const confirmed =
+								tx.digest === expectedDigest &&
+								tx.transaction.sender === profile.address &&
+								tx.status.success;
+							EXECUTIONS.set(
+								requestId,
+								confirmed
+									? { requestId, status: 'approved', digest: expectedDigest }
+									: {
+											requestId,
+											status: 'failed',
+											error: 'On-chain execution did not confirm the requested wallet transaction.',
+										},
+							);
+							clearTimeout(expire);
+							close();
+						}
+					} catch {
+						// The bridge deadline expires requests without a confirmed receipt.
+					}
+					return;
+				}
 				const status: ExecutionStatus =
 					payload['rejected'] === true
 						? { requestId, status: 'rejected' }
-						: typeof payload['digest'] === 'string'
-							? { requestId, status: 'approved', digest: payload['digest'] }
-							: {
-									requestId,
-									status: 'failed',
-									error:
-										typeof payload['error'] === 'string'
-											? payload['error']
-											: 'Wallet approval failed',
-								};
+						: {
+								requestId,
+								status: 'failed',
+								error:
+									typeof payload['error'] === 'string'
+										? payload['error']
+										: 'Wallet approval failed',
+							};
 				EXECUTIONS.set(requestId, status);
 				clearTimeout(expire);
 				respond({ response, status: 200, body: { ok: true } });
