@@ -118,6 +118,10 @@ describe('MCP tool registration', () => {
 		expect([...appToolNames, ...nonAppToolNames].toSorted()).toEqual(
 			registeredToolNames.toSorted(),
 		);
+		expect(registeredTools['sugar_login']).toMatchObject({ annotations: { readOnlyHint: false } });
+		expect(registeredTools['sugar_logout']).toMatchObject({
+			annotations: { readOnlyHint: false, destructiveHint: true },
+		});
 		expect(registeredTools['read_config']).toMatchObject({
 			title: 'Read Sugar Config',
 			annotations: readOnlyToolAnnotations,

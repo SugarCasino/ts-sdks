@@ -146,7 +146,7 @@ Hosts that support MCP Apps can display config, live game parameters, the NFT ca
 - Paired browser wallet
   - `sugar_login`, `sugar_logout`, and `get_connection_status` manage the paired browser wallet.
   - `sugar_login` and `sugar_logout` start the same local `npx -y @sugarcasino/mcp ...` CLI flows used for command-line wallet management, so the pairing page for mainnet or testnet opens in the default browser without copying and pasting a URL.
-  - `sugar_login` and `sugar_logout` accept `webUrl`, `timeoutMs`, `maxBodyBytes`, `open`, and `noOpen` inputs matching the CLI bridge options.
+  - `sugar_login` and `sugar_logout` use the locally configured browser origin and accept `timeoutMs`, `maxBodyBytes`, `open`, and `noOpen` inputs matching the CLI bridge options.
   - `get_wallet_balances` and `list_wallet_coins` read aggregate balances or paginated coin objects. Both also accept an explicit address.
   - `get_execution_status` checks an `execute`-mode transaction's browser approval result.
 - Local session wallet

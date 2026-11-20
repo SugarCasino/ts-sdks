@@ -28,9 +28,6 @@ import {
 
 function connectionBridgeArgs(input: ConnectionInput): Array<string> {
 	const args: Array<string> = [];
-	if (input.webUrl != null && input.webUrl !== '') {
-		args.push('--web-url', input.webUrl);
-	}
 	if (input.timeoutMs != null) {
 		args.push('--timeout-ms', String(input.timeoutMs));
 	}

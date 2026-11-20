@@ -41,12 +41,6 @@ export const getExecutionStatusInputSchema = configInputSchema
 
 export const connectionInputSchema = configInputSchema
 	.extend({
-		webUrl: z
-			.url()
-			.optional()
-			.describe(
-				'Browser app origin for wallet pairing and approval pages. Mirrors the login/logout CLI --web-url option.',
-			),
 		timeoutMs: z
 			.number()
 			.int()

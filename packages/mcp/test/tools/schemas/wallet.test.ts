@@ -10,14 +10,12 @@ describe('wallet input schemas', () => {
 			'all bridge options',
 			{
 				network: 'mainnet',
-				webUrl: 'http://localhost:5173',
 				timeoutMs: 1000,
 				maxBodyBytes: 2048,
 				noOpen: true,
 			},
 			{
 				network: 'mainnet',
-				webUrl: 'http://localhost:5173',
 				timeoutMs: 1000,
 				maxBodyBytes: 2048,
 				noOpen: true,
@@ -30,7 +28,7 @@ describe('wallet input schemas', () => {
 	});
 
 	it.each([
-		['invalid web URL', { webUrl: 'not-a-url' }, /Invalid URL/u],
+		['caller-selected web origin', { webUrl: 'https://example.com' }, /Unrecognized key/u],
 		['non-positive timeout', { timeoutMs: 0 }, /Too small/u],
 		['non-integer body size', { maxBodyBytes: 1.5 }, /expected int/u],
 	])('rejects %s for connection tools', (_name, input, error) => {

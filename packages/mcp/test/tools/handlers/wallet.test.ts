@@ -128,13 +128,12 @@ describe('wallet tools', () => {
 		it('passes bridge options to the CLI login flow', async () => {
 			mocks.runSugarCommand.mockReturnValue({
 				command:
-					'npx -y @sugarcasino/mcp@test login --network testnet --web-url http://localhost:5173 --timeout-ms 1000 --max-body-bytes 2048 --no-open',
+					'npx -y @sugarcasino/mcp@test login --network testnet --timeout-ms 1000 --max-body-bytes 2048 --no-open',
 				pid: 1234,
 			});
 
 			await sugarLoginTool({
 				network: 'testnet',
-				webUrl: 'http://localhost:5173',
 				timeoutMs: 1000,
 				maxBodyBytes: 2048,
 				noOpen: true,
@@ -144,8 +143,6 @@ describe('wallet tools', () => {
 				'login',
 				'--network',
 				'testnet',
-				'--web-url',
-				'http://localhost:5173',
 				'--timeout-ms',
 				'1000',
 				'--max-body-bytes',
@@ -203,13 +200,12 @@ describe('wallet tools', () => {
 		it('passes bridge options to the CLI logout flow', async () => {
 			mocks.runSugarCommand.mockReturnValue({
 				command:
-					'npx -y @sugarcasino/mcp@test logout --network mainnet --web-url http://localhost:5173 --timeout-ms 1000 --max-body-bytes 2048 --no-open',
+					'npx -y @sugarcasino/mcp@test logout --network mainnet --timeout-ms 1000 --max-body-bytes 2048 --no-open',
 				pid: 5678,
 			});
 
 			await sugarLogoutTool({
 				network: 'mainnet',
-				webUrl: 'http://localhost:5173',
 				timeoutMs: 1000,
 				maxBodyBytes: 2048,
 				open: false,
@@ -219,8 +215,6 @@ describe('wallet tools', () => {
 				'logout',
 				'--network',
 				'mainnet',
-				'--web-url',
-				'http://localhost:5173',
 				'--timeout-ms',
 				'1000',
 				'--max-body-bytes',
