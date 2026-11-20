@@ -21,6 +21,7 @@ import {
 	loadSessionWallet,
 	resolveWebOrigin,
 } from '../../wallet/index.js';
+import { verifiedSessionBytes } from '../../wallet/session-transaction.js';
 import type {
 	BuildSweetHouseClaimOwnRedeemRequestAfterDelayTransactionInput,
 	BuildSweetHouseDepositTransactionInput,
@@ -40,6 +41,12 @@ type SweetHouseInput =
 	| BuildSweetHouseRedeemRequestTransactionInput
 	| BuildSweetHouseClaimOwnRedeemRequestAfterDelayTransactionInput;
 
+const SWEETHOUSE_FUNCTIONS = {
+	deposit: 'deposit_public_pool_and_mint_staked_coins',
+	'redeem-request': 'redeem_request',
+	'claim-own-redeem-request-after-delay': 'claim_own_redeem_request_after_delay',
+} as const satisfies Record<SweetHouseAction, string>;
+
 function sweetHouseTarget({
 	config,
 	action,
@@ -47,12 +54,7 @@ function sweetHouseTarget({
 	config: McpConfig;
 	action: SweetHouseAction;
 }): string {
-	const functionName =
-		action === 'deposit'
-			? 'deposit_public_pool_and_mint_staked_coins'
-			: action === 'redeem-request'
-				? 'redeem_request'
-				: 'claim_own_redeem_request_after_delay';
+	const functionName = SWEETHOUSE_FUNCTIONS[action];
 	return `${getSugarPackageId({ config, pkg: 'core' })}::sweethouse::${functionName}`;
 }
 
@@ -127,10 +129,12 @@ async function resolveTransactionOwner({
 }
 
 async function buildSweetHouseTransactionTool({
+	action,
 	input,
 	createTransaction,
 	context,
 }: {
+	action: SweetHouseAction;
 	input: SweetHouseInput;
 	createTransaction: (bundle: SugarClientBundle) => Promise<Transaction>;
 	context: (bundle: SugarClientBundle) => TransactionSummaryContext;
@@ -140,6 +144,15 @@ async function buildSweetHouseTransactionTool({
 		throw new Error('read-only mode must be handled before transaction execution.');
 	}
 
+	if (
+		mode === 'execute' &&
+		input.executionWallet === 'session' &&
+		(input.config != null || input.providerUrl != null)
+	) {
+		throw new Error(
+			'SweetHouse session execution requires the default SDK configuration and network provider.',
+		);
+	}
 	const bundle = createSugarClient(getConfigInput(input));
 	const transaction = await createTransaction(bundle);
 	const summaryContext = context(bundle);
@@ -152,10 +165,21 @@ async function buildSweetHouseTransactionTool({
 				client: bundle.client,
 				context: summaryContext,
 			});
+			const signer = await loadSessionSigner(input.sessionWalletId);
+			const bytes = await verifiedSessionBytes({
+				encoded: built.transactionBytesBase64,
+				bundle,
+				sender: signer.toSuiAddress(),
+				packageName: getSugarPackageId({ config: bundle.config, pkg: 'core' }),
+				module: 'sweethouse',
+				functionName: SWEETHOUSE_FUNCTIONS[action],
+				houseArgument: 0,
+				transferResult: action === 'deposit',
+			});
 			const execution = await executeSessionTransaction({
-				transaction,
+				transaction: bytes,
 				client: bundle.client,
-				signer: await loadSessionSigner(input.sessionWalletId),
+				signer,
 			});
 			return asTextResponse({
 				mode: 'execute',
@@ -238,6 +262,7 @@ export async function buildSweetHouseDepositTransactionTool(
 	}
 
 	return buildSweetHouseTransactionTool({
+		action: 'deposit',
 		input,
 		createTransaction: async (bundle) => {
 			const coin = coinMetadataForAmount({ config: bundle.config, coinType: input.coinType });
@@ -283,6 +308,7 @@ export async function buildSweetHouseRedeemRequestTransactionTool(
 	}
 
 	return buildSweetHouseTransactionTool({
+		action: 'redeem-request',
 		input,
 		createTransaction: async (bundle) => {
 			const coin = coinMetadataForAmount({ config: bundle.config, coinType: input.coinType });
@@ -330,6 +356,7 @@ export async function buildSweetHouseClaimOwnRedeemRequestAfterDelayTransactionT
 
 	const requestId = requireString({ value: input.requestId, fieldName: 'requestId' });
 	return buildSweetHouseTransactionTool({
+		action: 'claim-own-redeem-request-after-delay',
 		input,
 		createTransaction: async (bundle) => {
 			const coinType = resolveDefaultCoinType({ config: bundle.config, coinType: input.coinType });

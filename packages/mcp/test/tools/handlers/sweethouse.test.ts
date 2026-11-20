@@ -39,6 +39,18 @@ afterEach(() => {
 });
 
 describe('SweetHouse transaction tools', () => {
+	it.each([{ config: {} }, { providerUrl: 'https://example.test' }])(
+		'rejects session overrides before wallet access or network activity',
+		async (override) => {
+			await expect(
+				buildSweetHouseDepositTransactionTool({
+					mode: 'execute',
+					executionWallet: 'session',
+					...override,
+				}),
+			).rejects.toThrow(/configuration/u);
+		},
+	);
 	it.each([
 		[
 			'deposit',

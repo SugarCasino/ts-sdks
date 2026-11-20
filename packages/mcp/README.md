@@ -229,6 +229,8 @@ When `betCount` is provided for Keno, Limbo, Plinko, Range, Soccer, or Wheel, th
 | SweetHouse Redeem Request | `owner`, `amount` | `coinType` | Spends staked coins from `owner` and creates a redeem request. |
 | SweetHouse Delayed Redeem Claim | `owner`, `requestId` | `coinType` | Must be signed by the address that created the redeem request. |
 
+SweetHouse session execution uses the default provider and SDK configuration. The MCP verifies the resolved action and SweetHouse object before signing the exact transaction bytes.
+
 ## Config
 
 `network` defaults to `testnet`. Only `mainnet` and `testnet` are supported.
