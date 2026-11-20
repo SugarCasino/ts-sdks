@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { CSSProperties, ReactNode } from 'react';
-import type { AccessoryMetadata, SuiFrenAccessory } from './accessory.type.js';
+import type { AccessoryMetadata, AccessorySlots, SuiFrenAccessory } from './accessory.type.js';
 import type { AnimationConfig } from './animation.type.js';
 import type { BullsharkAttributes } from './bullshark.type.js';
 import type { CapyAttributes } from './capy.type.js';
@@ -30,3 +30,12 @@ export type SuiFrenImageProps = SuiFrenGestureProps & {
 };
 
 export type SuiFrenAttributes = CapyAttributes | BullsharkAttributes;
+
+export type SpeciesImageProps<Attributes extends SuiFrenAttributes = SuiFrenAttributes> = Pick<
+	SuiFrenImageProps,
+	'detail' | 'gesture' | 'incognito'
+> & {
+	attributes: Attributes;
+	accessoriesByType?: AccessorySlots;
+	renderMicrophoneArmInForeground?: boolean;
+};

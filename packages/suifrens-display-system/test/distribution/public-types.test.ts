@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { expectTypeOf, test } from 'vitest';
+import type { AnimationPresetName } from '@sugarcasino/suifrens-display-system/animation';
 import type {
-	AnimationPresetName,
 	BullsharkAttributes,
 	CapyAttributes,
 	SuiFrenAppearance,
-} from '@sugarcasino/suifrens-display-system/types';
+} from '@sugarcasino/suifrens-display-system/attributes';
 
 test('published appearance type contains the shared species fields', () => {
 	expectTypeOf<Omit<CapyAttributes, 'earShape'>>().toEqualTypeOf<SuiFrenAppearance>();

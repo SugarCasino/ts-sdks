@@ -3,10 +3,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { AnimatedAccessory } from '../../animation/AnimatedAccessory.js';
-import { EMPTY_ACCESSORY_SLOTS } from '../../constants/accessory-slots.js';
 import { getAccessoryLayers } from '../../helpers/accessories/accessory-layers.js';
-import { getThemeFromSkin } from '../../helpers/appearance/capy-theme.js';
-import type { CapyImageProps } from '../../types/capy.type.js';
+import { getCapyTheme } from '../../helpers/appearance/skin-theme.js';
+import type { CapyAttributes } from '../../types/capy.type.js';
+import type { SpeciesImageProps } from '../../types/suifren.type.js';
+import { EMPTY_ACCESSORY_SLOTS } from '../../utils/accessories.js';
 import { AccessorySlot } from '../accessories/AccessorySlot.js';
 import { GestureArm } from '../shared/arms/left/GestureArm.js';
 import { LeftArm } from './arms/left/LeftArm.js';
@@ -26,13 +27,15 @@ import { RightLeg } from './legs/right/RightLeg.js';
 import { RightLegPattern } from './legs/right/RightLegPattern.js';
 import { Nostrils } from './Nostrils.js';
 
+type CapyImageProps = SpeciesImageProps<CapyAttributes>;
+
 function CapyHead({
 	attributes,
 	accessoriesByType = EMPTY_ACCESSORY_SLOTS,
 	incognito = false,
 	colorTheme,
 }: Pick<CapyImageProps, 'attributes' | 'accessoriesByType' | 'incognito'> & {
-	colorTheme: ReturnType<typeof getThemeFromSkin>;
+	colorTheme: ReturnType<typeof getCapyTheme>;
 }) {
 	const { skin, earShape, expression } = attributes;
 	const headAccessory = accessoriesByType['head'];
@@ -87,7 +90,7 @@ export function CapyImage({
 	renderMicrophoneArmInForeground = false,
 }: CapyImageProps) {
 	const { mainColor, secondaryColor, skin } = attributes;
-	const colorTheme = getThemeFromSkin(skin, `#${mainColor}`, `#${secondaryColor}`, incognito);
+	const colorTheme = getCapyTheme(skin, `#${mainColor}`, `#${secondaryColor}`, incognito);
 	const layers = getAccessoryLayers(accessoriesByType);
 
 	// Held objects retain their native grip and take precedence over a free-hand gesture.

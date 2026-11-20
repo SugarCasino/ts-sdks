@@ -4,17 +4,20 @@
 
 import type { AccessorySlots, SuiFrenAccessory } from '../types/accessory.type.js';
 
-function getAccessorySlotKey(accessory: SuiFrenAccessory): string {
-	if (accessory.type === 'feet') {
-		if (accessory.renderOptions.animationPart === 'leftLeg') {
+export const EMPTY_ACCESSORY_SLOTS: Readonly<AccessorySlots> = Object.freeze({});
+
+function getAccessorySlotKey({ type, renderOptions }: SuiFrenAccessory): string {
+	if (type === 'feet') {
+		const { animationPart } = renderOptions;
+		if (animationPart === 'leftLeg') {
 			return 'leftFeet';
 		}
-		if (accessory.renderOptions.animationPart === 'rightLeg') {
+		if (animationPart === 'rightLeg') {
 			return 'rightFeet';
 		}
 	}
 
-	return accessory.type;
+	return type;
 }
 
 export function getAccessoriesByType<T extends SuiFrenAccessory>(

@@ -1,7 +1,7 @@
 // Copyright (c) Sugar
 // SPDX-License-Identifier: Apache-2.0
 
-import { WHITESPACE_PATTERN } from '../../constants/svg-patterns.js';
+import { WHITESPACE_PATTERN } from '../../constants/patterns.js';
 import type { AnimationPart } from '../../types/animation.type.js';
 
 type PartDefinition = {

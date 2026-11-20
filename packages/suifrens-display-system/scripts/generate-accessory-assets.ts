@@ -94,11 +94,11 @@ const MANIFEST_IMPORTS: Array<string> = [];
 const MANIFEST_ENTRIES: Array<string> = [];
 const SPLIT_LIMB_ASSET_NAMES: Array<string> = [];
 
-// Inline imports stay separate so external-SVG consumers only bundle kit templates.
+// Embedded imports stay separate so external-SVG consumers only bundle kit templates.
 const SOURCE_DIR = 'src/accessories';
-const INLINE_IMPORTS: Array<string> = [];
+const LAYER_IMPORTS: Array<string> = [];
 const KIT_IMPORTS: Array<string> = [];
-const INLINE_ENTRIES: Array<string> = [];
+const LAYER_ENTRIES: Array<string> = [];
 const KIT_ENTRIES: Array<string> = [];
 
 async function readLayers(
@@ -150,7 +150,7 @@ for (const source of sources) {
 		// oxlint-disable-next-line no-await-in-loop -- Finish this source before starting the next so errors stop later writes.
 		await writeFile(
 			join(GENERATED_DIR, 'crown-data-urls.ts'),
-			`${GENERATED_HEADER}export const INLINE_CROWNS: Readonly<Record<string, string>> = {
+			`${GENERATED_HEADER}export const CROWN_DATA_URLS: Readonly<Record<string, string>> = {
 ${entries.join(',\n')}
 };
 `,
@@ -172,7 +172,7 @@ ${entries.join(',\n')}
 		continue;
 	}
 	// oxlint-disable-next-line no-await-in-loop -- Shared accumulators assign import IDs in source order.
-	const layers = await readLayers(source, INLINE_IMPORTS, INLINE_ENTRIES);
+	const layers = await readLayers(source, LAYER_IMPORTS, LAYER_ENTRIES);
 	const symbols: Array<string> = [];
 	const baseLayer = layers['default'];
 	if (baseLayer == null || baseLayer === '') {
@@ -237,7 +237,7 @@ await writeFile(MANIFEST_PATH, GENERATED_HEADER + MANIFEST);
 await Promise.all(
 	(
 		[
-			['inline-layers', 'INLINE_ACCESSORY_LAYERS', INLINE_IMPORTS, INLINE_ENTRIES],
+			['embedded-layers', 'EMBEDDED_ACCESSORY_LAYERS', LAYER_IMPORTS, LAYER_ENTRIES],
 			['kit-templates', 'KIT_TEMPLATES', KIT_IMPORTS, KIT_ENTRIES],
 		] as const
 	).map(([file, exportName, imports, entries]) =>

@@ -2,17 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { ACCESSORIES } from '@sugarcasino/suifrens-display-system/accessories';
-import { SuiFrenImageInline } from '@sugarcasino/suifrens-display-system/image-inline';
+import { ACCESSORIES, type AccessoryKit } from '@sugarcasino/suifrens-display-system/accessories';
+import { SuiFrenImage } from '@sugarcasino/suifrens-display-system/embed';
 import {
 	resolveSoccerCountryCode,
 	SOCCER_TEAM_KITS,
+	type SoccerTeamCountryCode,
+	type SoccerTeamSide,
 } from '@sugarcasino/suifrens-display-system/kits';
-import type {
-	AccessoryKit,
-	SoccerTeamCountryCode,
-	SoccerTeamSide,
-} from '@sugarcasino/suifrens-display-system/types';
 import { KitRendererComparison } from './KitRendererComparison.js';
 
 const capyAttributes = {
@@ -74,11 +71,11 @@ export const AllCountries: Story = {
 					<div className="mb-1 flex items-center justify-between">
 						<span className="story-heading">{country}</span>
 						<span className="text-[10px] font-bold text-slate-500 uppercase dark:text-slate-400">
-							Inline
+							Embedded accessories
 						</span>
 					</div>
 					<div className="h-36">
-						<SuiFrenImageInline
+						<SuiFrenImage
 							attributes={capyAttributes}
 							accessories={buildTeamGear(country)}
 							shadow

@@ -1,8 +1,8 @@
 // Copyright (c) Sugar
 // SPDX-License-Identifier: Apache-2.0
 
-import { interpolatePartPose } from '../helpers/animation/interpolate-part-pose.js';
 import { normalizePlayback } from '../helpers/animation/normalize-playback.js';
+import { interpolatePartPose } from '../helpers/animation/pose-interpolation.js';
 import type {
 	AnimationConfig,
 	AnimationPart,

@@ -27,7 +27,10 @@ export type AccessoryKit =
 			| { team: SoccerTeamKit; country?: never }
 	  ));
 
+export type AccessoryViewport = { x: number; y: number; width: number; height: number };
+
 export type AccessoryRenderOptions = {
+	viewport?: AccessoryViewport;
 	kit?: AccessoryKit;
 	showEars?: boolean;
 	showFin?: boolean;
@@ -71,5 +74,5 @@ export type SvgAccessoryProps = {
 	symbolId?: string | undefined;
 	species: SuiFrenSpecies;
 	placement?: Partial<Record<SuiFrenSpecies, AccessoryPlacement>> | undefined;
-	viewport?: { x: number; y: number; width: number; height: number } | undefined;
+	viewport?: AccessoryViewport | undefined;
 };

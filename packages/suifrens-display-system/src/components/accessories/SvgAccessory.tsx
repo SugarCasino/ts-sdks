@@ -2,10 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useMemo } from 'react';
+import { DEFAULT_VIEWPORT, SUIFREN_CANVAS_SIZE } from '../../constants/viewport.js';
 import type { AccessoryPlacement, SvgAccessoryProps } from '../../types/accessory.type.js';
 import { resolveEmbeddedSvgSymbolSource } from '../../utils/svg-symbol-data-url.js';
 
-const DEFAULT_ORIGIN = 1500;
+const DEFAULT_ORIGIN = SUIFREN_CANVAS_SIZE / 2;
 const SCALE_EPSILON = 0.0001;
 
 function buildPlacementTransform(placement?: AccessoryPlacement): string | undefined {
@@ -14,12 +15,14 @@ function buildPlacementTransform(placement?: AccessoryPlacement): string | undef
 	}
 
 	const transforms: Array<string> = [];
-	const x = placement.x ?? 0;
-	const y = placement.y ?? 0;
-	const rotation = placement.rotation ?? 0;
-	const scale = placement.scale ?? 1;
-	const originX = placement.originX ?? DEFAULT_ORIGIN;
-	const originY = placement.originY ?? DEFAULT_ORIGIN;
+	const {
+		x = 0,
+		y = 0,
+		rotation = 0,
+		scale = 1,
+		originX = DEFAULT_ORIGIN,
+		originY = DEFAULT_ORIGIN,
+	} = placement;
 
 	if (x !== 0 || y !== 0) {
 		transforms.push(`translate(${x} ${y})`);
@@ -43,7 +46,7 @@ export function SvgAccessory({
 	symbolId = '',
 	species,
 	placement,
-	viewport,
+	viewport: { x, y, width, height } = DEFAULT_VIEWPORT,
 }: SvgAccessoryProps) {
 	const resolvedPlacement = placement?.[species];
 	const transform = buildPlacementTransform(resolvedPlacement);
@@ -59,14 +62,14 @@ export function SvgAccessory({
 			{imageSrc ? (
 				<image
 					href={imageSrc}
-					x={viewport?.x ?? 0}
-					y={viewport?.y ?? 0}
-					width={viewport?.width ?? 3000}
-					height={viewport?.height ?? 3000}
+					x={x}
+					y={y}
+					width={width}
+					height={height}
 					preserveAspectRatio="xMidYMid meet"
 				/>
 			) : fragmentSrc ? (
-				<use href={fragmentSrc} x="0" y="0" width="3000" height="3000" />
+				<use href={fragmentSrc} x={x} y={y} width={width} height={height} />
 			) : null}
 		</g>
 	);

@@ -4,8 +4,8 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, test } from 'vitest';
 import { ACCESSORIES } from '../../../../src/constants/accessories.js';
+import { SuiFrenImage as EmbeddedSuiFrenImage } from '../../../../src/embed.js';
 import { getPartDefinition } from '../../../../src/helpers/animation/parts.js';
-import { SuiFrenImageInline } from '../../../../src/image-inline/index.js';
 import { SuiFrenImage } from '../../../../src/index.js';
 import { parseMatrix } from '../../../../src/utils/matrix.js';
 
@@ -19,7 +19,7 @@ const capy = {
 const restingArm = '1002.9,1719.3';
 
 describe.each([
-	['inline', SuiFrenImageInline],
+	['embedded', EmbeddedSuiFrenImage],
 	['asset', SuiFrenImage],
 ] as const)('%s capy gestures', (_name, Image) => {
 	test('draws point on the foreground arm only when free', () => {
@@ -108,7 +108,7 @@ describe.each([
 });
 
 test('point preserves the native shoulder-to-wrist distance', () => {
-	const markup = renderToStaticMarkup(<SuiFrenImageInline attributes={capy} gesture="point" />);
+	const markup = renderToStaticMarkup(<EmbeddedSuiFrenImage attributes={capy} gesture="point" />);
 	const transform = markup.match(/data-suifren-gesture="[^"]+"[^>]*><g transform="([^"]+)"/u);
 	const matrix = parseMatrix(transform?.[1])!;
 	const point = (x: number, y: number) => ({

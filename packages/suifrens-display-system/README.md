@@ -14,11 +14,11 @@ Use ESM imports and install React and React DOM `^18.2.0 || ^19.0.0` as peer dep
 
 ## Quick start
 
-Pass the character's appearance to `SuiFrenImage`. A capy has `earShape`; a bullshark has `finStyle`.
+The same `SuiFrenImage` component renders both species. It recognizes a capy by its `earShape` and a bullshark by its `finStyle`.
 
 ```tsx
 import { SuiFrenImage } from '@sugarcasino/suifrens-display-system';
-import type { CapyAttributes } from '@sugarcasino/suifrens-display-system/types';
+import type { CapyAttributes } from '@sugarcasino/suifrens-display-system/attributes';
 
 const attributes = {
 	mainColor: '6fbbee',
@@ -33,25 +33,27 @@ export function CapyAvatar() {
 }
 ```
 
-Colors are lowercase palette keys without a leading `#`. For a bullshark, use `BullsharkAttributes` with `finStyle: 'classic'`. The color, skin and expression fields stay the same. Import `SuiFrenAppearance` from `/types` to share those fields between species.
+Colors are lowercase palette keys without a leading `#`. For a bullshark, use `BullsharkAttributes` with `finStyle: 'classic'`. The color, skin and expression fields stay the same. Import `SuiFrenAppearance` from `/attributes` to share those fields between species.
 
 ## Rendering and animation
 
-`SuiFrenImage` uses cacheable external SVG accessories. For standalone SVG exports, use the inline renderer, which embeds built-in VIP crowns:
+The root `SuiFrenImage` loads accessory SVGs as separate files the browser can cache. For an SVG that includes the catalogue artwork, import the same component from `/embed`. That includes VIP crowns, so an app using only this renderer ships no separate crown SVG files.
 
 ```tsx
-import { SuiFrenImageInline } from '@sugarcasino/suifrens-display-system/image-inline';
+import { SuiFrenImage } from '@sugarcasino/suifrens-display-system/embed';
 
-<SuiFrenImageInline attributes={attributes} renderSize={240} />;
+<SuiFrenImage attributes={attributes} renderSize={240} />;
 ```
 
 Both renderers accept the same props. Set `detail="head"` for a portrait and pass catalogue entries or custom `SuiFrenAccessory` objects through `accessories`. The `gesture` prop accepts `thumbs_up`, `thumbs_down` or `point`. Held objects take precedence over gestures, and gestures don't affect portraits.
 
-For ordinary accessories, set `renderOptions.assetSrc` to replace the catalogue artwork. The inline renderer uses that source directly, so use an SVG data URL when the export needs to stand alone.
+For ordinary accessories, set `renderOptions.assetSrc` to replace the catalogue artwork. The embedded renderer uses that source directly, so use an SVG data URL when the export needs to stand alone.
 
-Use `AnimationPresetName` from `/types` to validate built-in preset names, for example `const preset = 'walk' satisfies AnimationPresetName`. It covers every registered catalogue. The renderer can play core presets immediately and loads each deferred catalogue the first time you use one of its presets. The synchronous helpers in `/animation` use the full catalogue.
+To adjust the framing in either renderer, set `renderOptions.viewport` in the character's SVG coordinates, for example `{ x: -100, y: 0, width: 3200, height: 3000 }`. Leave it unset to use the accessory's default framing. For a crown in the `crowns` category with a VIP catalogue name, that includes the padding around the artwork, even if you supply your own `assetSrc`.
 
-Choose one animation source, `preset` or `sequence`:
+Core presets are ready to play immediately. The renderer loads other catalogues the first time you use one of their presets. To check a preset name in TypeScript, import `AnimationPresetName` from `/animation` and write `const preset = 'walk' satisfies AnimationPresetName`. Both the type and the synchronous helpers in `/animation` cover the full catalogue.
+
+Pass either a built-in `preset` or your own `sequence`. This capy walks on a loop.
 
 ```tsx
 <SuiFrenImage
@@ -69,24 +71,21 @@ Enable `shadow` on the image to display its ground shadow. On an `AnimationSeque
 | `'falling'` | The shadow follows the rotating body, as in the three death presets. |
 | `'airborne'` | The shadow stays on the ground and shrinks and fades as the body moves above its resting height (negative body translation on the y-axis). Used by `jump` and `walkJumpSit`. |
 
-Omit `animation` or pass `null` for a static image. Animations play once at their original speed by default. Set `playState` to control playback and change `trigger` to restart it. The types for the other options, including `AnimationConfig` and component props, are available from `/types`.
+Omit `animation` or pass `null` for a static image. Animations play once at their original speed by default. Set `playState` to control playback and change `trigger` to restart it. Import `AnimationConfig` and `PlaybackOptions` from `/animation`.
 
 ## Public exports
 
-The root exports `SuiFrenImage`, `CapyImage` and `BullsharkImage`. Import other features from their subpaths and all public types from `/types`. Data constants and catalogues use uppercase names: `COLORS`, `ACCESSORIES`, `VIP_CROWN_ACCESSORIES` and `EAR_GENE_TO_EAR_SHAPE`. Functions and hooks use camelCase; components and types use PascalCase.
-
 | Entry point | Exports |
 | --- | --- |
-| `@sugarcasino/suifrens-display-system` | External SVG image renderer and species components |
-| `@sugarcasino/suifrens-display-system/image-inline` | `SuiFrenImageInline` for inline SVG accessories |
+| `@sugarcasino/suifrens-display-system` | External SVG image renderer and image props |
+| `@sugarcasino/suifrens-display-system/embed` | `SuiFrenImage` for embedded SVG accessories |
 | `@sugarcasino/suifrens-display-system/accessories` | Accessory catalogue, slot lookup and VIP crowns |
-| `@sugarcasino/suifrens-display-system/animation` | Animation provider, hooks and preset helpers |
+| `@sugarcasino/suifrens-display-system/animation` | Preset lookup, duration and animation types |
 | `@sugarcasino/suifrens-display-system/battle` | Battle sprite, health bar and duel script hook |
 | `@sugarcasino/suifrens-display-system/kits` | Runner and football outfit helpers |
 | `@sugarcasino/suifrens-display-system/colors` | Color palette |
 | `@sugarcasino/suifrens-display-system/attributes` | Ear gene mappings and skin values |
 | `@sugarcasino/suifrens-display-system/expressions` | Shared expression lists |
-| `@sugarcasino/suifrens-display-system/types` | Public props, attributes and configuration types |
 
 ## Documentation and agent skills
 

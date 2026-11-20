@@ -20,25 +20,29 @@ const NAME_SPECIFIC_FALLBACK: Partial<Record<string, AnimationPart>> = {
 	'superhero cape': 'body',
 };
 
-export function resolveAccessoryAnimationPart(
-	props: Pick<AccessoryRendererProps, 'accessory' | 'layer'>,
-): AnimationPart | undefined {
-	const { name, type, renderOptions } = props.accessory;
-	if (renderOptions.animationPart) {
-		return renderOptions.animationPart;
+export function resolveAccessoryAnimationPart({
+	accessory: {
+		name,
+		type,
+		renderOptions: { animationPart },
+	},
+	layer,
+}: Pick<AccessoryRendererProps, 'accessory' | 'layer'>): AnimationPart | undefined {
+	if (animationPart) {
+		return animationPart;
 	}
 	const nameSpecificPart = NAME_SPECIFIC_FALLBACK[name];
 	if (nameSpecificPart) {
 		return nameSpecificPart;
 	}
 
-	if ((type === 'body' || type === 'torso') && props.layer === 'left') {
+	if ((type === 'body' || type === 'torso') && layer === 'left') {
 		return 'rightArm';
 	}
-	if ((type === 'body' || type === 'torso') && props.layer === 'right') {
+	if ((type === 'body' || type === 'torso') && layer === 'right') {
 		return 'leftArm';
 	}
-	if (props.layer === 'body') {
+	if (layer === 'body') {
 		return 'body';
 	}
 

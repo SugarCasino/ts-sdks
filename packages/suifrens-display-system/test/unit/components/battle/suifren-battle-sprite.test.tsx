@@ -18,8 +18,8 @@ function MockSuiFrenImage() {
 	return <svg data-character />;
 }
 
-vi.mock('../../../../src/image-inline/index.js', () => ({
-	SuiFrenImageInline: MockSuiFrenImage,
+vi.mock('../../../../src/embed.js', () => ({
+	SuiFrenImage: MockSuiFrenImage,
 }));
 let view: ReturnType<typeof createTestRoot>;
 beforeEach(() => {

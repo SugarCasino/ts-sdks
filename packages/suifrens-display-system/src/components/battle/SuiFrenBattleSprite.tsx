@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useEffect, useRef, useState } from 'react';
-import { SuiFrenImageInline } from '../../image-inline/index.js';
+import { SuiFrenImage } from '../../embed.js';
 import type { SuiFrenBattleSpriteProps } from '../../types/battle.type.js';
 import { MinecraftHealthBar } from './MinecraftHealthBar.js';
 
@@ -36,12 +36,12 @@ export function SuiFrenBattleSprite({
 		});
 	}
 	const flashTimeoutRef = useRef<number | null>(null);
-	const baseFilter =
-		typeof imageStyle?.filter === 'string' && imageStyle.filter !== 'none' ? imageStyle.filter : '';
+	const filter = imageStyle?.filter;
+	const baseFilter = typeof filter === 'string' && filter !== 'none' ? filter : '';
 	const hitFlashFilter = `url(#${HIT_FLASH_FILTER_ID})`;
 	const combinedFilter = flash.active
 		? [baseFilter, hitFlashFilter].filter(Boolean).join(' ')
-		: (imageStyle?.filter ?? '');
+		: (filter ?? '');
 	const resolvedImageStyle = {
 		...imageStyle,
 		...(combinedFilter ? { filter: combinedFilter } : {}),
@@ -117,7 +117,7 @@ export function SuiFrenBattleSprite({
 				}}
 			>
 				<div style={{ width: '100%', height: '100%', ...resolvedImageStyle }}>
-					<SuiFrenImageInline
+					<SuiFrenImage
 						attributes={attributes}
 						shadow={shadow}
 						style={{ width: '100%', height: '100%' }}

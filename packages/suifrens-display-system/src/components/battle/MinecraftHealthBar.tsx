@@ -49,12 +49,12 @@ function buildHeartPixels(): { outlinePixels: Array<Pixel>; fillPixels: Array<Pi
 			{ x, y: y - 1 },
 		];
 		const isOutline = neighbors.some(
-			(neighbor) =>
-				neighbor.x < 0 ||
-				neighbor.x >= HEART_WIDTH ||
-				neighbor.y < 0 ||
-				neighbor.y >= HEART_HEIGHT ||
-				!isFilled(neighbor.x, neighbor.y),
+			({ x: neighborX, y: neighborY }) =>
+				neighborX < 0 ||
+				neighborX >= HEART_WIDTH ||
+				neighborY < 0 ||
+				neighborY >= HEART_HEIGHT ||
+				!isFilled(neighborX, neighborY),
 		);
 
 		if (isOutline) {
@@ -67,7 +67,7 @@ function buildHeartPixels(): { outlinePixels: Array<Pixel>; fillPixels: Array<Pi
 	return { outlinePixels, fillPixels };
 }
 
-const HEART_PIXELS = buildHeartPixels();
+const { outlinePixels, fillPixels } = buildHeartPixels();
 
 function PixelHeart({ fill, size = 16 }: { fill: HeartFill; size?: number }) {
 	const style: CSSProperties = { width: size, height: size * (HEART_HEIGHT / HEART_WIDTH) };
@@ -79,38 +79,17 @@ function PixelHeart({ fill, size = 16 }: { fill: HeartFill; size?: number }) {
 
 	return (
 		<svg viewBox={`0 0 ${HEART_WIDTH} ${HEART_HEIGHT}`} shapeRendering="crispEdges" style={style}>
-			{HEART_PIXELS.outlinePixels.map((pixel) => (
-				<rect
-					key={`${pixel.x}:${pixel.y}`}
-					x={pixel.x}
-					y={pixel.y}
-					width="1"
-					height="1"
-					fill={outline}
-				/>
+			{outlinePixels.map(({ x, y }) => (
+				<rect key={`${x}:${y}`} x={x} y={y} width="1" height="1" fill={outline} />
 			))}
-			{HEART_PIXELS.fillPixels.map((pixel) => (
-				<rect
-					key={`${pixel.x}:${pixel.y}`}
-					x={pixel.x}
-					y={pixel.y}
-					width="1"
-					height="1"
-					fill={emptyFill}
-				/>
+			{fillPixels.map(({ x, y }) => (
+				<rect key={`${x}:${y}`} x={x} y={y} width="1" height="1" fill={emptyFill} />
 			))}
 			{fill > 0
-				? HEART_PIXELS.fillPixels
-						.filter((pixel) => pixel.x + 0.5 <= threshold)
-						.map((pixel) => (
-							<rect
-								key={`${pixel.x}:${pixel.y}:filled`}
-								x={pixel.x}
-								y={pixel.y}
-								width="1"
-								height="1"
-								fill={fullFill}
-							/>
+				? fillPixels
+						.filter(({ x }) => x + 0.5 <= threshold)
+						.map(({ x, y }) => (
+							<rect key={`${x}:${y}:filled`} x={x} y={y} width="1" height="1" fill={fullFill} />
 						))
 				: null}
 		</svg>

@@ -15,8 +15,8 @@ import {
 } from 'lucide-react';
 import { type PointerEvent, type RefObject, useEffect, useRef, useState } from 'react';
 import { expect } from 'storybook/test';
-import { SuiFrenImageInline } from '@sugarcasino/suifrens-display-system/image-inline';
-import type { SuiFrenExpression } from '@sugarcasino/suifrens-display-system/types';
+import { SuiFrenImage } from '@sugarcasino/suifrens-display-system/embed';
+import type { SuiFrenExpression } from '@sugarcasino/suifrens-display-system/expressions';
 import {
 	type SuiFrenActorPose,
 	type SuiFrenActorSnapshot,
@@ -157,7 +157,7 @@ function SuiFrenStage({ state, spriteRef, title, note }: StageProps) {
 							</div>
 						) : null}
 						<div className="h-full w-full" style={{ transform: 'scaleX(var(--sprite-facing, 1))' }}>
-							<SuiFrenImageInline
+							<SuiFrenImage
 								attributes={{ ...baseAttributes, expression: state.expression }}
 								shadow
 								style={{ width: '100%', height: '100%' }}

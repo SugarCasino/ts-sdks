@@ -1,19 +1,14 @@
 // Copyright (c) Sugar
 // SPDX-License-Identifier: Apache-2.0
 
-import { HEX_COLOR_PATTERN } from '../../constants/hex-color.js';
-import {
-	SOCCER_TEAM_KITS,
-	SOCCER_TEAM_PATTERNS,
-	SOCCER_TEAM_SIDES,
-} from '../../constants/soccer-team-kit.js';
+import { HEX_COLOR_PATTERN, TEAM_CODE_PATTERN } from '../../constants/patterns.js';
+import { SOCCER_TEAM_KITS } from '../../constants/soccer-team-kit.js';
+import { SOCCER_TEAM_PATTERNS, SOCCER_TEAM_SIDES } from '../../constants/soccer-team-options.js';
 import type {
 	SoccerTeamCountryCode,
 	SoccerTeamKit,
 	SoccerTeamSide,
 } from '../../types/soccer-kit.type.js';
-
-const TEAM_CODE_PATTERN: RegExp = /^[A-Z0-9]{1,4}$/u;
 
 const DARK_STROKE = '#050916';
 

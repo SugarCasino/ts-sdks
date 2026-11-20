@@ -5,10 +5,11 @@
 import {
 	EAR_GENE_TO_EAR_SHAPE,
 	SUIFREN_SKINS,
+	type SuiFrenAttributes,
+	type SuiFrenSpecies,
 } from '@sugarcasino/suifrens-display-system/attributes';
 import { COLORS } from '@sugarcasino/suifrens-display-system/colors';
 import { ALL_EXPRESSIONS } from '@sugarcasino/suifrens-display-system/expressions';
-import type { SuiFrenAttributes, SuiFrenSpecies } from '@sugarcasino/suifrens-display-system/types';
 
 function isColor(value: string | undefined): value is keyof typeof COLORS {
 	return value != null && Object.hasOwn(COLORS, value);

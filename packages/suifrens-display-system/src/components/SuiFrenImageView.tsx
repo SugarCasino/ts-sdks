@@ -2,29 +2,18 @@
 // Copyright (c) Sugar (modifications)
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect, useMemo, useRef } from 'react';
-import { AnimatedAccessory } from '../animation/AnimatedAccessory.js';
-import {
-	AnimationProvider,
-	useAnimationShadow,
-	useAnimationStore,
-} from '../animation/AnimationContext.js';
-import { shouldRenderMicrophoneArmInForeground } from '../helpers/accessories/foreground-layering.js';
-import type { AccessoryRenderer, AccessorySlots } from '../types/accessory.type.js';
-import type { SuiFrenImageProps } from '../types/suifren.type.js';
+import { useMemo } from 'react';
+import { AnimationProvider } from '../animation/AnimationContext.js';
+import { SUIFREN_CANVAS_SIZE } from '../constants/viewport.js';
+import { shouldRenderMicrophoneArmInForeground } from '../helpers/accessories/accessory-layers.js';
+import type { AccessoryRenderer } from '../types/accessory.type.js';
+import type { SpeciesImageProps, SuiFrenImageProps } from '../types/suifren.type.js';
 import { getAccessoriesByType } from '../utils/accessories.js';
 import { assertUnreachable } from '../utils/assert-unreachable.js';
 import { AccessoryRendererProvider } from './accessories/AccessorySlot.js';
 import { BullsharkImage } from './bullshark/BullsharkImage.js';
 import { CapyImage } from './capy/CapyImage.js';
-
-type SpeciesImageProps = Pick<
-	SuiFrenImageProps,
-	'attributes' | 'detail' | 'gesture' | 'incognito'
-> & {
-	accessoriesByType?: AccessorySlots;
-	renderMicrophoneArmInForeground: boolean;
-};
+import { AnimatedGroundShadow, StandingGroundShadow } from './GroundShadow.js';
 
 function SpeciesImage({ attributes, ...props }: SpeciesImageProps) {
 	if ('finStyle' in attributes) {
@@ -34,47 +23,6 @@ function SpeciesImage({ attributes, ...props }: SpeciesImageProps) {
 		return <CapyImage attributes={attributes} {...props} />;
 	}
 	return assertUnreachable(attributes);
-}
-
-const standingShadow = <ellipse opacity={0.3} cx="1400.4" cy="2615.2" rx="472.8" ry="130.6" />;
-
-function AirborneGroundShadow({ visible }: { visible: boolean }) {
-	const store = useAnimationStore();
-	const ref = useRef<SVGGElement>(null);
-	useEffect(() => {
-		if (!ref.current || !store) {
-			return;
-		}
-		return store.registerAirborneShadow(ref.current);
-	}, [store]);
-
-	return (
-		<g transform="translate(1400.4 2615.2)">
-			<g ref={ref}>{visible && <ellipse opacity={0.3} rx="472.8" ry="130.6" />}</g>
-		</g>
-	);
-}
-
-function AnimatedGroundShadow({ visible }: { visible: boolean }) {
-	const shadow = useAnimationShadow();
-	if (shadow === 'airborne') {
-		return <AirborneGroundShadow visible={visible} />;
-	}
-	if (shadow === 'static') {
-		return visible ? standingShadow : null;
-	}
-
-	// Project the rotating silhouette's footprint onto the ground plane.
-	// At rest this has the same center and radii as the standing shadow.
-	return (
-		<g transform="translate(0 2435.2) scale(1 0.12)">
-			<AnimatedAccessory fallbackPart="body">
-				<g>
-					{visible && <ellipse opacity={0.3} cx="1400.4" cy="1500" rx="472.8" ry={130.6 / 0.12} />}
-				</g>
-			</AnimatedAccessory>
-		</g>
-	);
 }
 
 export function SuiFrenImageView({
@@ -125,12 +73,12 @@ export function SuiFrenImageView({
 			y="0px"
 			width={resolvedSize?.width}
 			height={resolvedSize?.height}
-			viewBox="0 -200 3000 3000"
+			viewBox={`0 -200 ${SUIFREN_CANVAS_SIZE} ${SUIFREN_CANVAS_SIZE}`}
 			overflow={accessoriesByType?.['head']?.category === 'crowns' ? 'visible' : undefined}
 			className={['suifren-image', className].filter(Boolean).join(' ')}
 			style={style}
 		>
-			{shadow && !animation && standingShadow}
+			{shadow && !animation && <StandingGroundShadow />}
 			{animation ? (
 				<AnimationProvider
 					key={'finStyle' in attributes ? 'bullshark' : 'capy'}

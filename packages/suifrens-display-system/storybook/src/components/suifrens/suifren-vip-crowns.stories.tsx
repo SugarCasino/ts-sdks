@@ -4,14 +4,14 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { SuiFrenImage } from '@sugarcasino/suifrens-display-system';
 import { VIP_CROWN_ACCESSORIES } from '@sugarcasino/suifrens-display-system/accessories';
-import { SuiFrenImageInline } from '@sugarcasino/suifrens-display-system/image-inline';
+import { SuiFrenImage as EmbeddedSuiFrenImage } from '@sugarcasino/suifrens-display-system/embed';
 import { accessoryLabel } from '../../utils/accessory-label.js';
 
 const LOOP = { iterations: 'infinite' as const };
 
 const RENDERERS = [
-	{ label: 'Inline', Renderer: SuiFrenImageInline },
-	{ label: 'Assets', Renderer: SuiFrenImage },
+	{ label: 'Embedded accessories', Renderer: EmbeddedSuiFrenImage },
+	{ label: 'External accessories', Renderer: SuiFrenImage },
 ] as const;
 
 const STATIC_VARIANTS = [
@@ -154,7 +154,7 @@ export const Gallery: Story = {
 						{STATIC_VARIANTS.map((variant) => (
 							<article key={variant.label} className="story-tile p-4">
 								<div className="mx-auto aspect-square w-full max-w-44">
-									<SuiFrenImageInline
+									<EmbeddedSuiFrenImage
 										attributes={variant.attributes}
 										accessories={[accessory]}
 										shadow
@@ -193,7 +193,7 @@ export const MotionCheck: Story = {
 						{MOTION_VARIANTS.map((variant) => (
 							<article key={variant.label} className="story-tile p-4">
 								<div className="mx-auto aspect-square w-full max-w-52">
-									<SuiFrenImageInline
+									<EmbeddedSuiFrenImage
 										attributes={variant.attributes}
 										accessories={[accessory]}
 										shadow

@@ -34,7 +34,7 @@ test.each(Object.entries(manifest.exports))(
 	},
 );
 
-test('built inline and asset renderers preserve custom kits for both species and sides', async () => {
+test('built embedded and asset renderers preserve custom kits for both species and sides', async () => {
 	const { ACCESSORIES: accessories } =
 		await import('@sugarcasino/suifrens-display-system/accessories');
 	const { resolveSoccerTeamKit } = await import('@sugarcasino/suifrens-display-system/kits');
@@ -47,8 +47,8 @@ test('built inline and asset renderers preserve custom kits for both species and
 	} as const;
 	for (const [SuiFrenImage, assertAssets] of [
 		[
-			(await import('@sugarcasino/suifrens-display-system/image-inline')).SuiFrenImageInline,
-			assertInlineAssets,
+			(await import('@sugarcasino/suifrens-display-system/embed')).SuiFrenImage,
+			assertEmbeddedAssets,
 		],
 		[(await import('@sugarcasino/suifrens-display-system')).SuiFrenImage, assertExternalAssets],
 	] as const) {
@@ -85,11 +85,15 @@ test('built inline and asset renderers preserve custom kits for both species and
 	assert.equal(resolveSoccerTeamKit({ code: 'BAD', primary: 'invalid' }).code, 'US');
 });
 
-test('historical root species renderers remain exported', async () => {
-	const library = await import('@sugarcasino/suifrens-display-system');
-	assert.equal(typeof library.CapyImage, 'function');
-	assert.equal(typeof library.BullsharkImage, 'function');
-});
+test.each(['@sugarcasino/suifrens-display-system', '@sugarcasino/suifrens-display-system/embed'])(
+	'%s exposes only SuiFrenImage at runtime',
+	async (entry) => {
+		const library: unknown = await import(entry);
+		assert.ok(library != null);
+		assert.ok(typeof library === 'object');
+		assert.deepEqual(Object.keys(library), ['SuiFrenImage']);
+	},
+);
 
 test('built goth boot assets contain only the selected boot without clipping', async () => {
 	const { ACCESSORIES: accessories } =
@@ -124,7 +128,7 @@ test('built goth boot assets contain only the selected boot without clipping', a
 test('built runner kits preserve configurable bibs and native limbs in every renderer and species', async () => {
 	const { buildRunnerAccessories } = await import('@sugarcasino/suifrens-display-system/kits');
 	for (const SuiFrenImage of [
-		(await import('@sugarcasino/suifrens-display-system/image-inline')).SuiFrenImageInline,
+		(await import('@sugarcasino/suifrens-display-system/embed')).SuiFrenImage,
 		(await import('@sugarcasino/suifrens-display-system')).SuiFrenImage,
 	] as const) {
 		for (const shape of [{ earShape: 'default' }, { finStyle: 'classic' }] as const) {
@@ -164,7 +168,7 @@ test('published data catalogues use uppercase export names', async () => {
 	assert.ok(!('earGeneToEarShape' in attributes));
 });
 
-function assertInlineAssets(svg: string): void {
+function assertEmbeddedAssets(svg: string): void {
 	assert.doesNotMatch(svg, EXTERNAL_SVG_URL_PATTERN);
 }
 

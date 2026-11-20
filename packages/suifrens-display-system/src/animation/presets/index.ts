@@ -10,6 +10,11 @@ import type {
 } from '../../types/animation.type.js';
 import { CORE_PRESET_SEQUENCES } from './core.js';
 
+/** Names of the built-in core and deferred animation presets. */
+export type AnimationPresetName =
+	| keyof typeof CORE_PRESET_SEQUENCES
+	| keyof typeof DEFERRED_PRESETS;
+
 const PRESETS: AnimationPresetCatalogue = {
 	...CORE_PRESET_SEQUENCES,
 	...DEFERRED_PRESETS,

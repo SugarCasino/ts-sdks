@@ -1,10 +1,10 @@
 // Copyright (c) Sugar
 // SPDX-License-Identifier: Apache-2.0
 
+import type { SuiFrenGesture } from '@sugarcasino/suifrens-display-system';
 import { SUIFREN_SKINS } from '@sugarcasino/suifrens-display-system/attributes';
 import { COLORS } from '@sugarcasino/suifrens-display-system/colors';
 import { ALL_EXPRESSIONS } from '@sugarcasino/suifrens-display-system/expressions';
-import type { SuiFrenGesture } from '@sugarcasino/suifrens-display-system/types';
 
 const gestures = ['thumbs_up', 'thumbs_down', 'point'] satisfies Array<SuiFrenGesture>;
 

@@ -7,7 +7,7 @@ import type { FastifyPluginCallback } from 'fastify';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { Type } from 'typebox';
 import { ACCESSORIES as suiFrensAccessories } from '@sugarcasino/suifrens-display-system/accessories';
-import { SuiFrenImageInline } from '@sugarcasino/suifrens-display-system/image-inline';
+import { SuiFrenImage } from '@sugarcasino/suifrens-display-system/embed';
 import { IMAGE_LOGO_SCHEMA, renderImageLogo } from '../lib/image-logo.js';
 import { renderImage } from '../lib/render-image.js';
 
@@ -51,7 +51,7 @@ export const accessories: FastifyPluginCallback = (fastify, _options, done) => {
 
 				try {
 					const renderedSvg = renderToStaticMarkup(
-						<SuiFrenImageInline
+						<SuiFrenImage
 							attributes={{
 								mainColor: 'ffffff',
 								secondaryColor: 'ffffff',

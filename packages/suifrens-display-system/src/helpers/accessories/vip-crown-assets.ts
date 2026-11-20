@@ -19,7 +19,6 @@ import platinum3Url from '../../accessories/crowns/platinum-3.svg?url';
 import silver1Url from '../../accessories/crowns/silver-1.svg?url';
 import silver2Url from '../../accessories/crowns/silver-2.svg?url';
 import silver3Url from '../../accessories/crowns/silver-3.svg?url';
-import { VIP_CROWN_IMAGE_VIEWPORT } from '../../constants/crown-viewport.js';
 
 const VIP_CROWN_ASSET_BY_NAME: Record<string, string> = {
 	'bronze-1': bronze1Url,
@@ -43,13 +42,5 @@ const VIP_CROWN_ASSET_BY_NAME: Record<string, string> = {
 };
 
 export function getVipCrownAssetSrc(name: string): string | undefined {
-	return VIP_CROWN_ASSET_BY_NAME[name];
-}
-
-const VIP_CROWN_ASSET_SOURCES = new Set(Object.values(VIP_CROWN_ASSET_BY_NAME));
-
-export function getVipCrownAssetViewport(
-	assetSrc: string,
-): typeof VIP_CROWN_IMAGE_VIEWPORT | undefined {
-	return VIP_CROWN_ASSET_SOURCES.has(assetSrc) ? VIP_CROWN_IMAGE_VIEWPORT : undefined;
+	return Object.hasOwn(VIP_CROWN_ASSET_BY_NAME, name) ? VIP_CROWN_ASSET_BY_NAME[name] : undefined;
 }

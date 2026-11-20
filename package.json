@@ -33,7 +33,7 @@
 		"oxlint": "^1.94.0",
 		"oxlint-tsgolint": "^7.0.2007",
 		"rimraf": "^6.1.4",
-		"turbo": "^2.11.11"
+		"turbo": "^2.11.12"
 	},
 	"devEngines": {
 		"packageManager": {
