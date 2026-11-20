@@ -36,6 +36,9 @@ allowBuilds:
   sharp: false
   unrs-resolver: false
 
+overrides:
+  '@joshwooding/vite-plugin-react-docgen-typescript@0.7.0>glob': 14.0.6
+
 autoInstallPeers: false
 
 blockExoticSubdeps: true
