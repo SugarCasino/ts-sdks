@@ -10,7 +10,7 @@ import { TEST_CONFIG } from '../../utils.js';
 import { getMoveCall } from './utils.js';
 
 describe('NFT V1 transaction builder', () => {
-	it('builds an NFT V1 mint with the configured specification price', () => {
+	it('builds an NFT V1 mint with the configured specification price', async () => {
 		const nftConfig = {
 			...TEST_CONFIG,
 			packageIds: {
@@ -60,6 +60,14 @@ describe('NFT V1 transaction builder', () => {
 			client,
 			config: nftConfig,
 		});
+		const capped = buildMintNftV1Transaction({
+			owner: '0x123',
+			specId: '0x999',
+			maxPrice: 14n,
+			config: nftConfig,
+			client,
+		});
+		await expect(capped.build({ client })).rejects.toThrow('spending limit');
 		const data = tx.getData();
 		const call = getMoveCall(data, 1);
 

@@ -114,6 +114,7 @@ describe('pvp coinflip transaction builder', () => {
 
 		buildPvPCoinflipTransactionWithMock({
 			action: 'join',
+			maxStake: 1000n,
 			owner: '0x123',
 			coinType: '0x2::sui::SUI',
 			gameId: '0x999',
@@ -133,6 +134,10 @@ describe('pvp coinflip transaction builder', () => {
 		const resolveStake = options.arguments[2];
 		expect.assert(typeof resolveStake === 'function');
 		await Reflect.apply(resolveStake, undefined, [new Transaction()]);
+		getGame.mockResolvedValueOnce({ json: { stake_per_player: 1001n } });
+		await expect(Reflect.apply(resolveStake, undefined, [new Transaction()])).rejects.toThrow(
+			'spending limit',
+		);
 		expect(getGame).toHaveBeenCalledWith({
 			client,
 			objectId: '0x999',

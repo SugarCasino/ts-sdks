@@ -16,6 +16,7 @@ import {
 import { resolvePriceInfoObjectId } from '../helpers/config.js';
 import { encodeBetMetadata } from '../helpers/metadata.js';
 import { optionalOptions } from '../helpers/options.js';
+import { checkSpendingLimit } from '../helpers/spending-limit.js';
 import type {
 	PvPCoinflipAction,
 	PvPCoinflipTransactionOptions,
@@ -43,7 +44,7 @@ type BuildPvPCoinflipTransactionOptions<TAction extends PvPCoinflipAction = PvPC
  */
 function buildPvPCoinflipJoinBetCoin(
 	options: WithClient<
-		Pick<PvPCoinflipTransactionOptions<'join'>, 'gameId' | 'coinType' | 'useGasCoin'>
+		Pick<PvPCoinflipTransactionOptions<'join'>, 'gameId' | 'coinType' | 'useGasCoin' | 'maxStake'>
 	>,
 ): TransactionArgument {
 	return async (tx: Transaction) => {
@@ -54,7 +55,7 @@ function buildPvPCoinflipJoinBetCoin(
 
 		return tx.coin({
 			type: options.coinType,
-			balance: BigInt(json.stake_per_player),
+			balance: checkSpendingLimit(BigInt(json.stake_per_player), options.maxStake),
 			...optionalOptions({ useGasCoin: options.useGasCoin }),
 		});
 	};
