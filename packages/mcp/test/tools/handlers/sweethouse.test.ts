@@ -39,11 +39,6 @@ afterEach(() => {
 });
 
 describe('SweetHouse transaction tools', () => {
-	it('reports hosted approval support before accessing the network or wallet', async () => {
-		await expect(
-			buildSweetHouseDepositTransactionTool({ network: 'testnet', mode: 'execute' }),
-		).rejects.toThrow(/hosted approval site/u);
-	});
 	it.each([
 		[
 			'deposit',
@@ -116,5 +111,11 @@ describe('SweetHouse transaction tools', () => {
 		expect(redeemSummary.commands).toEqual([]);
 		expect(claimSummary.commands).toEqual([]);
 		expect(mocks.buildTransactionBytes).toHaveBeenCalledTimes(3);
+	});
+
+	it('reports hosted approval support before accessing the network or wallet', async () => {
+		await expect(
+			buildSweetHouseDepositTransactionTool({ network: 'testnet', mode: 'execute' }),
+		).rejects.toThrow(/hosted approval site/u);
 	});
 });
